@@ -1,0 +1,118 @@
+#include "../../includes/parse/ServerConfig.hpp"
+
+ServerConfig::ServerConfig()
+	: _listen(0), _client_max_body_size(0), _host(""), _server_name(""), _error_page(""), _root(""), _index("")
+{}
+
+ServerConfig::ServerConfig(const ServerConfig &copy)
+{
+	*this = copy;
+}
+
+ServerConfig &ServerConfig::operator=(const ServerConfig &copy)
+{
+	if (this != &copy)
+	{
+		_listen = copy._listen;
+		_client_max_body_size = copy._client_max_body_size;
+		_host = copy._host;
+		_server_name = copy._server_name;
+		_error_page = copy._error_page;
+		_root = copy._root;
+		_index = copy._index;
+		_locations = copy._locations;
+	}
+	return *this;
+}
+
+ServerConfig::~ServerConfig()
+{}
+
+////////
+
+void ServerConfig::setListen(const int n)
+{
+	_listen = n;
+}
+
+void ServerConfig::setClientMaxSize(const size_t n)
+{
+	_client_max_body_size = n;
+}
+
+void ServerConfig::setHost(const std::string str)
+{
+	_host = str;
+}
+
+void ServerConfig::setServerName(const std::string str)
+{
+	_server_name = str;
+}
+
+void ServerConfig::setErrorPage(const std::string str)
+{
+	_error_page = str;
+}
+
+void ServerConfig::setRoot(const std::string str)
+{
+	_root = str;
+}
+
+void ServerConfig::setIndex(const std::string str)
+{
+	_index = str;
+}
+
+void ServerConfig::setLocations(const std::vector<LocationConfig> v)
+{
+	_locations = v;
+}
+
+void ServerConfig::addLocation(const LocationConfig &obj)
+{
+	_locations.push_back(obj);
+}
+
+/////////
+
+int ServerConfig::getListen()
+{
+	return _listen;
+}
+
+size_t ServerConfig::getClientmaxSize()
+{
+	return _client_max_body_size;
+}
+
+std::string ServerConfig::getHost()
+{
+	return _host;
+}
+
+std::string ServerConfig::getServerName()
+{
+	return _server_name;
+}
+
+std::string ServerConfig::getErrorPage()
+{
+	return _error_page;
+}
+
+std::string ServerConfig::getRoot()
+{
+	return _root;
+}
+
+std::string ServerConfig::getIndex()
+{
+	return _index;
+}
+
+std::vector<LocationConfig> ServerConfig::getLocations()
+{
+	return _locations;
+}

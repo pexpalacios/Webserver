@@ -19,6 +19,11 @@ class ServerConfig
 		std::vector<LocationConfig> _locations;
 	
 	public:
+		ServerConfig();
+		ServerConfig(const ServerConfig&);
+		ServerConfig &operator=(const ServerConfig&);
+		~ServerConfig();
+
 	//Setters
 		void setListen(const int);
 		void setClientMaxSize(const size_t);
@@ -29,6 +34,7 @@ class ServerConfig
 		void setIndex(const std::string);
 		void setLocations(const std::vector<LocationConfig>); //maybe this should just receive an obj and add to the vector
 		void addLocation(const LocationConfig&);
+
 	//Getters
 		int getListen();
 		size_t getClientmaxSize();
