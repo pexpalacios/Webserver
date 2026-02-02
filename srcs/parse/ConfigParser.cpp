@@ -28,9 +28,19 @@ static void setLocationBlockVars(LocationConfig &currentLocation, const std::str
 	else if (key == "upload" && tokens.size() > 1)
 		currentLocation.setUpload(tokens[1]);
 	else if (key == "autoindex" && tokens.size() > 1)
-		currentLocation.setAutoindex(tokens[1] == "on");
+	{
+		if (tokens[1] == "on")
+			currentLocation.setAutoindex(true);
+		else if (tokens[1] == "off")
+			currentLocation.setAutoindex(false);
+	}
 	else if (key == "protected" && tokens.size() > 1)
-		currentLocation.setProtected(tokens[1] == "on");
+	{
+		if (tokens[1] == "on")
+			currentLocation.setProtected(true);
+		else if (tokens[1] == "off")
+			currentLocation.setProtected(false);
+	}
 	else if (key == "allow_methods" && tokens.size() > 1)
 	{
 		std::vector<std::string> methods(tokens.begin() + 1, tokens.end());
@@ -83,7 +93,7 @@ std::vector<ServerConfig> ConfigParser::parse(const std::string &filename)
 		while (std::getline(file, line))
 		{
 			line = omitSpaces(line);
-			std::cout << " : " << line << std::endl;
+			//std::cout << " : " << line << std::endl;
 			if (line.empty()) //add if a line is a comment? check for # or //
 				continue;
 
@@ -113,7 +123,6 @@ std::vector<ServerConfig> ConfigParser::parse(const std::string &filename)
 				}
 				if (inLocation && line == "}")
 				{
-					currentLocation.printLocation();
 					currentServer.addLocation(currentLocation);
 					inLocation = false;
 					continue;
