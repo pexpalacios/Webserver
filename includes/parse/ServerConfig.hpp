@@ -44,6 +44,9 @@ class ServerConfig
 		std::string getRoot();
 		std::string getIndex();
 		std::vector<LocationConfig> getLocations();
+
+	//Print / debug
+	void printServer();
 };
 
 #endif

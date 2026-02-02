@@ -21,6 +21,8 @@ class ConfigParser
 	
 		//check file exists and isn't empty and can be opened
 		//check extension of file
+		std::vector<std::string> tokenize(const std::string &line);
+		std::string omitSpaces(const std::string str);
 };
 
 #endif

@@ -40,6 +40,9 @@ class LocationConfig
 		bool getAutoindex();
 		bool getProtected();
 		std::vector<std::string> getMethods();
+
+	//Print / debug
+	void printLocation();
 };
 
 #endif

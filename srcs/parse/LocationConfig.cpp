@@ -71,35 +71,51 @@ void LocationConfig::setProtected(bool b)
 ///////////
 std::string LocationConfig::getPath()
 {
-	return _path;
+	return (_path);
 }
 
 std::string LocationConfig::getRoot()
 {
-	return _root;
+	return (_root);
 }
 
 std::string LocationConfig::getIndex()
 {
-	return _index;
+	return (_index);
 }
 
 std::string LocationConfig::getUpload()
 {
-	return _upload;
+	return (_upload);
 }
 
 bool LocationConfig::getAutoindex()
 {
-	return _autoindex;
+	return (_autoindex);
 }
 
 bool LocationConfig::getProtected()
 {
-	return _protected_;
+	return (_protected_);
 }
 
 std::vector<std::string> LocationConfig::getMethods()
 {
-	return _allow_methods;
+	return (_allow_methods);
+}
+
+////////////
+
+void LocationConfig::printLocation()
+{
+	std::cout << "Path: " << this->getPath() << std::endl;
+	std::cout << "Root: " << this->getRoot() << std::endl;
+	std::cout << "Index: " << this->getIndex() << std::endl;
+	std::cout << "Upload: " << this->getUpload() << std::endl;
+	std::cout << "Autoindex: " << this->getAutoindex() << std::endl;
+	std::cout << "Protected: " << this->getProtected() << std::endl;
+
+	std::vector<std::string> methods = this->getMethods();
+	for (std::vector<std::string>::iterator i = methods.begin(); i < methods.end(); i++)
+		std::cout << "Method: " << i->c_str() << std::endl;
 }

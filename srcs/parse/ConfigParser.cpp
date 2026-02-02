@@ -7,15 +7,63 @@ ConfigParser::ConfigParser()
 
 ConfigParser::ConfigParser(const ConfigParser &copy)
 {
-
+	*this = copy;
 }
 
 ConfigParser &ConfigParser::operator=(const ConfigParser &copy)
 {
-
+	if (this != &copy)
+		*this = copy;
+	return (*this);
 }
 
 ////////////
+
+static void setLocationBlockVars(LocationConfig &currentLocation, const std::string &key, const std::vector<std::string> &tokens)
+{
+	if (key == "root" && tokens.size() > 1)
+		currentLocation.setRoot(tokens[1]);
+	else if (key == "index" && tokens.size() > 1)
+		currentLocation.setIndex(tokens[1]);
+	else if (key == "upload" && tokens.size() > 1)
+		currentLocation.setUpload(tokens[1]);
+	else if (key == "autoindex" && tokens.size() > 1)
+		currentLocation.setAutoindex(tokens[1] == "on");
+	else if (key == "protected" && tokens.size() > 1)
+		currentLocation.setProtected(tokens[1] == "on");
+	else if (key == "allow_methods" && tokens.size() > 1)
+	{
+		std::vector<std::string> methods(tokens.begin() + 1, tokens.end());
+		currentLocation.setMethods(methods);
+	}
+}
+
+static void setServerBlockVars(ServerConfig &currentServer, const std::string &key, const std::vector<std::string> &tokens)
+{
+	if (key== "listen" && tokens.size() > 1)
+		currentServer.setListen(std::atoi(tokens[1].c_str()));
+	else if (key == "host" && tokens.size() > 1)
+		currentServer.setHost(tokens[1]);
+	else if (key == "server_name" && tokens.size() > 1)
+		currentServer.setServerName(tokens[1]);
+	else if (key == "error_page" && tokens.size() > 2)
+		currentServer.setErrorPage(tokens[2]);
+	else if (key == "root" && tokens.size() > 1)
+		currentServer.setRoot(tokens[1]);
+	else if (key == "index" && tokens.size() > 1)
+		currentServer.setIndex(tokens[1]);
+	else if (key == "client_max_body_size" && tokens.size() > 1)
+	{
+		std::string len = tokens[1];
+		size_t size = 0;
+		if (len.find("mb") != std::string::npos)
+			size = std::atoi(len.c_str()) * 1024 * 1024;
+		else
+			size = std::atoi(len.c_str());
+		currentServer.setClientMaxSize(size);
+	}
+}
+
 
 std::vector<ServerConfig> ConfigParser::parse(const std::string &filename)
 {
@@ -23,54 +71,118 @@ std::vector<ServerConfig> ConfigParser::parse(const std::string &filename)
 	if (!file.is_open())
 		throw (std::runtime_error("Couldn't open config file"));
 
-	//read filename
-	//check if filename has keywords (listen, root, index, locations, host, etc)
-	//create a vector or some struct that contains all keywords
-	//create a ServerConfig obj when keyword "server" is found
-	//compare to new struct to check if the value is valid (maybe a map?)
-	//if value is valid assign it to a ServerConfig obj
-	//if not, throw exception (create my own exception in class? or is invalid_argument enough?)
-	//add obj to a vector and return it
-
-	std::vector<ServerConfig> servers;
 	std::string line;
 	bool inServer = false;
 	bool inLocation = false;
 	ServerConfig currentServer;
 	LocationConfig currentLocation;
+	std::vector<ServerConfig> servers;
 
-	while (std::getline(file, line))
+	try
 	{
-		line = omitSpaces(line); //create omitSpaces function to clean line
-		if (line.empty()) //add if a line is a comment? check for # or //
-			continue;
-
-		if (line.find("server") == 0 && line.find("{") != std::string::npos)
+		while (std::getline(file, line))
 		{
+			line = omitSpaces(line);
+			std::cout << " : " << line << std::endl;
+			if (line.empty()) //add if a line is a comment? check for # or //
+				continue;
+
+			if (line.find("server") == 0 && line.find("{") != std::string::npos)
+			{
+				if (inServer)
+					throw (std::runtime_error("Nested server blocks"));
+				inServer = true;
+				currentServer = ServerConfig();
+				continue;
+			}
+
 			if (inServer)
-				throw (std::runtime_error("Server inside server"));
-			inServer = true;
-			currentServer = ServerConfig();
-			continue;
+			{
+				//check if inside a location
+				if (line.find("location") == 0 && line.find("{") != std::string::npos)
+				{
+					if (inLocation)
+						throw (std::runtime_error("Nested location blocks"));
+					inLocation = true;
+					std::vector<std::string> tokens = tokenize(line);
+					if (tokens.size() < 3)
+						throw (std::runtime_error("Invalid location block"));
+					currentLocation = LocationConfig();
+					currentLocation.setPath(tokens[1]);
+					continue;
+				}
+				if (inLocation && line == "}")
+				{
+					currentLocation.printLocation();
+					currentServer.addLocation(currentLocation);
+					inLocation = false;
+					continue;
+				}
+				// tokenize the line and vars to corresponding block
+				std::vector<std::string> tokens = tokenize(line);
+				if (tokens.empty())
+					continue;
+				std::string key = tokens[0];
+				if (inLocation)
+					setLocationBlockVars(currentLocation, key, tokens);
+				else
+					setServerBlockVars(currentServer, key, tokens);
+			}
+			//check the last line is }
+			if (inServer && line == "}")
+			{
+				if (inLocation)
+					throw (std::runtime_error("Location not closed"));
+				servers.push_back(currentServer);
+				inServer = false;
+				continue;
+			}
 		}
-
-		if (inServer && line == "}")
-		{
-			if (inLocation)
-				throw (std::runtime_error("Location not closed"));
-			servers.push_back(currentServer);
-			inServer = false;
-			continue;
-		}
-
+		currentServer.printServer();
+		//checkServerValues(currentServer);
 		if (inServer)
-		{
-			//check if inside a location
-			//create a token vector and tokenize the line
-		}
-
-		//check the closing of locations
-
+			throw (std::runtime_error("Unclosed server block"));
+		if (!inServer && servers.empty())
+			throw (std::runtime_error("Config file is empty"));
+	}
+	catch (const std::exception &e)
+	{
+		std::cerr << "Error: " << e.what() << std::endl;
 	}
 	return (servers);
 }
+
+std::string ConfigParser::omitSpaces(const std::string str)
+{
+	size_t start = str.find_first_not_of(" \t\r\n");
+	size_t end = str.find_last_not_of("\t\r\n");
+
+	if (start == std::string::npos)
+		return ("");
+	else
+		return (str.substr(start, end - start + 1));
+}
+
+std::vector<std::string> ConfigParser::tokenize(const std::string &line)
+{
+	std::istringstream iss(line);
+	std::vector<std::string> tokens;
+	std::string token;
+	while (iss >> token)
+		tokens.push_back(token);
+	return (tokens);
+}
+
+// static void checkServerValues(ServerConfig &server)
+// {
+// 	//check if all the values are valid
+// 	if (!std::isdigit(server.getListen()))
+// 		std::cout << "Listen in server: " << server.getServerName() << " is not numeric" << std::endl;
+// 	//listen needs a comparison with a minimun and maximun
+// 	//host needs to check that it's 4 numbers separated by "." and minimun and maximun
+// 	//server_name needs to be compatible with a directory in www/
+// 	//error_page must be 404 and be an .html in www/servername/error/
+// 	//clientmaxbodysie must be a number with minimun and maximun
+// 	//root must be a directory www/serveername
+// 	//index must be a .html in root directory
+// }

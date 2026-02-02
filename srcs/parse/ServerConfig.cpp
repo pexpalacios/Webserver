@@ -116,3 +116,19 @@ std::vector<LocationConfig> ServerConfig::getLocations()
 {
 	return _locations;
 }
+
+//////////
+
+void ServerConfig::printServer()
+{
+	std::cout << "Listen: " << this->getListen() << std::endl;
+	std::cout << "Host: " << this->getHost() << std::endl;
+	std::cout << "ServerName: " << this->getServerName() << std::endl;
+	std::cout << "ErrorPage: " << this->getErrorPage() << std::endl;
+	std::cout << "Root: " << this->getRoot() << std::endl;
+	std::cout << "Index: " << this->getIndex() << std::endl;
+
+	std::vector<LocationConfig> locations = this->getLocations();
+	for (std::vector<LocationConfig>::iterator i = locations.begin(); i < locations.end(); i++)
+		i->printLocation();
+}

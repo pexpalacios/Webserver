@@ -2,3 +2,8 @@
 - May need to do two different pages? Not sure.
 - ^ Subject says server should listen in different ports for different content, so at least two pages are needed. 
 But that could also be the menu page and then the game or something.
+
+Errors to make:
+- Empty config file should throw exception
+- Only server and no vars should throw exception
+- Wrong values not trhowing exception
