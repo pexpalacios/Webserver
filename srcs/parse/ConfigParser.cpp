@@ -148,7 +148,7 @@ std::vector<ServerConfig> ConfigParser::parse(const std::string &filename)
 			}
 		}
 		currentServer.printServer();
-		//checkServerValues(currentServer);
+		checkServerValues(currentServer);
 		if (inServer)
 			throw (std::runtime_error("Unclosed server block"));
 		if (!inServer && servers.empty())
@@ -160,6 +160,8 @@ std::vector<ServerConfig> ConfigParser::parse(const std::string &filename)
 	}
 	return (servers);
 }
+
+///////////
 
 std::string ConfigParser::omitSpaces(const std::string str)
 {
@@ -182,16 +184,45 @@ std::vector<std::string> ConfigParser::tokenize(const std::string &line)
 	return (tokens);
 }
 
-// static void checkServerValues(ServerConfig &server)
-// {
-// 	//check if all the values are valid
-// 	if (!std::isdigit(server.getListen()))
-// 		std::cout << "Listen in server: " << server.getServerName() << " is not numeric" << std::endl;
-// 	//listen needs a comparison with a minimun and maximun
-// 	//host needs to check that it's 4 numbers separated by "." and minimun and maximun
-// 	//server_name needs to be compatible with a directory in www/
-// 	//error_page must be 404 and be an .html in www/servername/error/
-// 	//clientmaxbodysie must be a number with minimun and maximun
-// 	//root must be a directory www/serveername
-// 	//index must be a .html in root directory
-// }
+////////////////
+
+static int isValidIPv4(const std::string &ip)
+{
+	int dots = 0;
+	int nums = 0;
+	int start = 0;
+
+	for (int i = 0; i < ip.size(); i++)
+	{
+		if (!std::isdigit(ip[i]) && ip[i] != '.')
+			return (0);
+		int end = ip.find('.', start);
+		dots++;
+		int n = std::atoi(ip.substr(start, end - start));
+		if (!(n >= 0 && n <= 255))
+			return (0);
+		else
+			nums++;
+	}
+
+	if (dots != 3 || nums != 4)
+		return (0);
+	return (1);
+}
+
+void ConfigParser::checkServerValues(ServerConfig &server)
+{
+	if (!std::isdigit(server.getListen()))
+		std::cout << "Listen in server: " << server.getServerName() << " is not numeric" << std::endl;
+	if (!(server.getListen() >= 1 && server.getListen() <= 65535))
+		std::cout << "Listen is server: " << server.getServerName() << " is out of listening range" << std::endl;
+
+	//host needs to check that it's 4 numbers separated by "." and minimun and maximun
+	if (!isValidIPv4(server.getHost()))
+		std::cout << "Host in server: " << server.getServerName() << " is not a valid IPv4 value" << std::endl;
+	//server_name needs to be compatible with a directory in www/
+	//error_page must be 404 and be an .html in www/servername/error/
+	//clientmaxbodysie must be a number with minimun and maximun
+	//root must be a directory www/serveername
+	//index must be a .html in root directory
+}

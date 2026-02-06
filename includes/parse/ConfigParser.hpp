@@ -23,6 +23,7 @@ class ConfigParser
 		//check extension of file
 		std::vector<std::string> tokenize(const std::string &line);
 		std::string omitSpaces(const std::string str);
+		void checkServerValues(ServerConfig &server);
 };
 
 #endif
