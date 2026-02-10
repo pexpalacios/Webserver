@@ -1,6 +1,37 @@
-# Terto's SRCS for Webserver project
-SRCS =	srcs/main.cpp
-		srcs/Server.cpp
-		srcs/sockets.cpp
+NAME		:= webserver
+CXX			:= g++
+CXXFLAGS	:= -Wall -Wextra -Werror -std=c++98
+RM			:= rm -f
 
-OBJS = $(SRCS:.cpp=.o)
+SRCS := srcs/main.cpp \
+		srcs/Server.cpp \
+		srcs/handleConn.cpp \
+		srcs/Signal.cpp
+OBJS	:= $(SRCS:.cpp=.o)
+
+
+all: $(NAME)
+
+$(NAME): $(OBJS)
+	@echo "Linking $(NAME)..."
+	$(CXX) $(CXXFLAGS) $(OBJS) -o $(NAME)
+	@echo "✅ Build complete."
+
+%.o: %.cpp
+	@echo "Compiling $<..."
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+
+up: all
+
+clean:
+	@echo "Cleaning object files..."
+	$(RM) $(OBJS)
+
+fclean: clean
+	@echo "Removing executable..."
+	$(RM) $(NAME)
+
+re: fclean all
+
+.PHONY: all clean fclean re up

@@ -1,20 +1,17 @@
 #include "../includes/Server.hpp"
 #include "../includes/handleConn.hpp"
+#include "../includes/Signal.hpp"
 
-// 20260129 Terto: Variable global (TEMPORALMENTE) para controlar el bucle del servidor
-volatile	sig_atomic_t server_running = 1;
+Server::Server() {}
+Server::~Server() {}
 
 
-Server::Server(){}
-Server::~Server()
-{}
-
-// 20260129 Terto: Configura socket para escuchar IP y puerto
-// main -> server::listenOn(ip, port);
-void Server::listenOn(const std::string& ip, int port) {
+//20260210 Terto: configure server socket to listen on specific IP and port
+// main -> server.listenOn(ip, port)
+void Server::listenOn(const std::string& ip, int port) 
+{
 	int sock = socket(AF_INET, SOCK_STREAM, 0);
-	if (sock == -1) 
-	{
+	if (sock == -1) {
 		std::cerr << "Error (0.1): creating socket" << std::endl;
 		exit(EXIT_FAILURE);
 	}
@@ -42,21 +39,30 @@ void Server::listenOn(const std::string& ip, int port) {
 }
 
 
-// 20260129 Terto: Establish the static root folder for serving files
-// main -> server::setStaticRoot("www");
-void Server::setStaticRoot(const std::string& root) {
+//20260210 Terto: define static root folder for serving static files (www/index.html)
+// main -> server.setStaticRoot("www")
+void Server::setStaticRoot(const std::string& root) 
+{
 	staticRoot = root;
 	std::cout << "Static root set to: " << staticRoot << std::endl;
 }
 
+//20260210 Terto: define custom error page (error.html)
+// main -> server.setErrorPage(code, path)
+void Server::setErrorPage(int code, const std::string& filePath) 
+{
+	errorPages[code] = filePath;
+	std::cout << "Error page " << code << " set to: " << filePath << std::endl;
+}
 
-// 20260207 Terto: Read the content of a file and return it as a string
-// main -> server::run() -> readFile(filePath);
-std::string Server::readFile(const std::string& path) {
+
+//20260210 Terto: read file content and return as string
+// main -> server.run()
+std::string Server::readFile(const std::string& path) 
+{
 	std::ifstream file(path.c_str());
-	if (!file.is_open())
-	{
-		std::cerr << "Error (0.1) Failed to open file: " << path << std::endl;
+	if (!file.is_open()) {
+		std::cerr << "Error (0.1): Failed to open file: " << path << std::endl;
 		return "";
 	}
 
@@ -70,17 +76,15 @@ std::string Server::readFile(const std::string& path) {
 }
 
 
-// 20260207 Terto: Start the main server loop to accept and handle client connections
-// main -> Server::run()
-void Server::run()
+//20260210 Terto: Inicia el bucle principal del servidor, usando poll() para manejar múltiples conexiones
+// main -> server.run()
+void Server::run() 
 {
-	// 20260207 Terto: Handle signals: SIGINT (Ctrl+C)
-	signal(SIGINT, handleSignal);
-
-	// 20260207 Terto: Set up pollfd array for all sockets in listenSockets
 	std::vector<struct pollfd> fds;
+
+	// Agrega los sockets de escucha al array de pollfd
 	size_t i = 0;
-	while (i < listenSockets.size())
+	while (i < listenSockets.size()) 
 	{
 		struct pollfd pfd;
 		pfd.fd = listenSockets[i];
@@ -91,32 +95,27 @@ void Server::run()
 	}
 	std::cout << "Waiting for connections..." << std::endl;
 
-	// 20260207 Terto: Main server loop
-	while (server_running)
+	// main loop with SIGINT (Ctrl+C)
+	while (SignalHandler::running == 1)
 	{
-		// 20260207 Terto: Wait for events on all sockets
 		int ret = poll(&fds[0], fds.size(), -1);
-		if (ret < 0)
-		{
+		if (ret < 0) {
 			std::cerr << "Error (0.1): poll() failed." << std::endl;
 			break;
 		}
 
-		// 20260207 Terto: Check which sockets have events
+		// Check for events on each socket
 		size_t j = 0;
-		while (j < fds.size())
-		{
-			if (fds[j].revents & POLLIN)
+		while (j < fds.size()) {
+			if (fds[j].revents & POLLIN) 
 			{
-				// 20260207 Terto: Check if it's a new connection on a listen socket
-				if (std::find(listenSockets.begin(), listenSockets.end(), fds[j].fd) != listenSockets.end())
+				if (std::find(listenSockets.begin(), listenSockets.end(), fds[j].fd) != listenSockets.end()) 
 				{
 					handleNewConnection(fds[j].fd, fds);
-				}
-				// 20260207 Terto: Otherwise, it's an existing client connection
-				else
+				} 
+				else 
 				{
-					handleClientConnection(fds[j].fd, staticRoot);
+					handleClientConnection(fds[j].fd, *this);
 					fds.erase(fds.begin() + j);
 					continue;
 				}

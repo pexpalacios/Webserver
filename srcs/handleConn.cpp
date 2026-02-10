@@ -1,7 +1,7 @@
-#include "../includes/Server.hpp"
 #include "../includes/handleConn.hpp"
 
-// 20260207 Terto: Accept a new connection and add to pollfd array
+//20260207 Terto: Accept a new connection and add to pollfd array
+// main -> server.run() -> handleNewConnection() -> accept() + push_back a fds
 void handleNewConnection(int listenSock, std::vector<struct pollfd>& fds)
 {
 	struct sockaddr_in clientAddr;
@@ -13,7 +13,6 @@ void handleNewConnection(int listenSock, std::vector<struct pollfd>& fds)
 		std::cerr << "accept() failed." << std::endl;
 		return;
 	}
-
 	std::cout << "Client connected. FD = " << clientSock << std::endl;
 
 	// Set client socket to non-blocking
@@ -28,7 +27,8 @@ void handleNewConnection(int listenSock, std::vector<struct pollfd>& fds)
 }
 
 // 20260207 Terto: Handle a connected client socket
-void handleClientConnection(int clientSock, const std::string& staticRoot)
+// main -> server.run() -> handleClientConnection() -> recv() + server.readFile() + send() + close()
+void handleClientConnection(int clientSock, Server& server)
 {
 	char buffer[1024];
 	int bytesRead = recv(clientSock, buffer, sizeof(buffer) - 1, 0);
@@ -42,14 +42,16 @@ void handleClientConnection(int clientSock, const std::string& staticRoot)
 
 	std::cout << "Request received from FD " << clientSock << ":\n" << buffer << std::endl;
 
-	std::string filePath = staticRoot + "/index.html";
-	std::string body = readFile(filePath);
+	std::string filePath = server.staticRoot + "/index.html";
+	std::string body = server.readFile(filePath);
 	if (body.empty())
 		body = "<h1>404 Not Found</h1>";
 
 	std::string response = "HTTP/1.1 200 OK\r\n";
 	response += "Content-Type: text/html\r\n";
-	response += "Content-Length: " + std::to_string(body.length()) + "\r\n";
+	std::ostringstream oss;
+	oss << body.length();
+	response += "Content-Length: " + oss.str() + "\r\n";
 	response += "Connection: close\r\n\r\n";
 	response += body;
 
