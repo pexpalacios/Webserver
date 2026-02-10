@@ -2,6 +2,7 @@
 
 //20260207 Terto: Accept a new connection and add to pollfd array
 // main -> server.run() -> handleNewConnection() -> accept() + push_back a fds
+// Accepts a new incoming connection and adds it to the pollfd array for monitoring
 void handleNewConnection(int listenSock, std::vector<struct pollfd>& fds)
 {
 	struct sockaddr_in clientAddr;
@@ -28,6 +29,7 @@ void handleNewConnection(int listenSock, std::vector<struct pollfd>& fds)
 
 // 20260207 Terto: Handle a connected client socket
 // main -> server.run() -> handleClientConnection() -> recv() + server.readFile() + send() + close()
+// Receives an HTTP request from a client, responds with index.html or 404, then closes the connection
 void handleClientConnection(int clientSock, Server& server)
 {
 	char buffer[1024];

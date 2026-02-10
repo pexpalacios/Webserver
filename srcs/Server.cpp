@@ -76,13 +76,11 @@ std::string Server::readFile(const std::string& path)
 }
 
 
-//20260210 Terto: Inicia el bucle principal del servidor, usando poll() para manejar múltiples conexiones
-// main -> server.run()
-void Server::run() 
+// 20260210 Terto: Build and return pollfd array from listenSockets
+// main -> run() -> buildPollFdArray()
+std::vector<struct pollfd> Server::buildPollFdArray()
 {
 	std::vector<struct pollfd> fds;
-
-	// Agrega los sockets de escucha al array de pollfd
 	size_t i = 0;
 	while (i < listenSockets.size()) 
 	{
@@ -94,8 +92,20 @@ void Server::run()
 		++i;
 	}
 	std::cout << "Waiting for connections..." << std::endl;
+	return fds;
+}
 
-	// main loop with SIGINT (Ctrl+C)
+
+
+//20260210 Terto: Inicia el bucle principal del servidor, usando poll() para manejar múltiples conexiones
+// main -> server.run()
+void Server::run() 
+{
+	// Agrega los sockets de escucha al array de pollfd
+	std::vector<struct pollfd> fds = buildPollFdArray();
+
+
+	// main loop with SIGINT (Ctrl+C) to stop the server
 	while (SignalHandler::running == 1)
 	{
 		int ret = poll(&fds[0], fds.size(), -1);
