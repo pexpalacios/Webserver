@@ -19,14 +19,21 @@ ConfigParser &ConfigParser::operator=(const ConfigParser &copy)
 
 ////////////
 
+static std::string stripSemicolon(const std::string &token)
+{
+	if (!token.empty() && token.back() == ';') //it says there's no element .back in a std::string :/
+		return (token.substr(0, token.size() - 1));
+	return (token);
+}
+
 static void setLocationBlockVars(LocationConfig &currentLocation, const std::string &key, const std::vector<std::string> &tokens)
 {
 	if (key == "root" && tokens.size() > 1)
-		currentLocation.setRoot(tokens[1]);
+		currentLocation.setRoot(stripSemicolon(tokens[1]));
 	else if (key == "index" && tokens.size() > 1)
-		currentLocation.setIndex(tokens[1]);
+		currentLocation.setIndex(stripSemicolon(tokens[1]));
 	else if (key == "upload" && tokens.size() > 1)
-		currentLocation.setUpload(tokens[1]);
+		currentLocation.setUpload(stripSemicolon(tokens[1]));
 	else if (key == "autoindex" && tokens.size() > 1)
 	{
 		if (tokens[1] == "on")
@@ -53,15 +60,15 @@ static void setServerBlockVars(ServerConfig &currentServer, const std::string &k
 	if (key== "listen" && tokens.size() > 1)
 		currentServer.setListen(std::atoi(tokens[1].c_str()));
 	else if (key == "host" && tokens.size() > 1)
-		currentServer.setHost(tokens[1]);
+		currentServer.setHost(stripSemicolon(tokens[1]));
 	else if (key == "server_name" && tokens.size() > 1)
-		currentServer.setServerName(tokens[1]);
+		currentServer.setServerName(stripSemicolon(tokens[1]));
 	else if (key == "error_page" && tokens.size() > 2)
-		currentServer.setErrorPage(tokens[2]);
+		currentServer.setErrorPage(stripSemicolon(tokens[2]));
 	else if (key == "root" && tokens.size() > 1)
-		currentServer.setRoot(tokens[1]);
+		currentServer.setRoot(stripSemicolon(tokens[1]));
 	else if (key == "index" && tokens.size() > 1)
-		currentServer.setIndex(tokens[1]);
+		currentServer.setIndex(stripSemicolon(tokens[1]));
 	else if (key == "client_max_body_size" && tokens.size() > 1)
 	{
 		std::string len = tokens[1];
@@ -119,6 +126,12 @@ std::vector<ServerConfig> ConfigParser::parse(const std::string &filename)
 						throw (std::runtime_error("Invalid location block"));
 					currentLocation = LocationConfig();
 					currentLocation.setPath(tokens[1]);
+					if (line.find("}") != std::string::npos)
+					{
+						currentServer.addLocation(currentLocation);
+						inLocation = false;
+						continue;
+					}
 					continue;
 				}
 				if (inLocation && line == "}")
@@ -190,15 +203,19 @@ static int isValidIPv4(const std::string &ip)
 {
 	int dots = 0;
 	int nums = 0;
-	int start = 0;
 
-	for (int i = 0; i < ip.size(); i++)
+	for (size_t i = 0; i < ip.size(); i++)
 	{
 		if (!std::isdigit(ip[i]) && ip[i] != '.')
 			return (0);
-		int end = ip.find('.', start);
-		dots++;
-		int n = std::atoi(ip.substr(start, end - start));
+		int n = 0;
+		while (std::isdigit(ip[i]))
+		{
+			n = n * 10 + (ip[i] - '0');
+			i++;
+		}
+		if (ip[i] == '.')
+			dots++;
 		if (!(n >= 0 && n <= 255))
 			return (0);
 		else
@@ -210,9 +227,44 @@ static int isValidIPv4(const std::string &ip)
 	return (1);
 }
 
+static int findServer(std::string name)
+{
+	struct stat st;
+	std::string path = "/www/" + name;
+	if (lstat(path.c_str(), &st) == 0)
+	{
+		if (!S_ISDIR(st.st_mode))
+			return (0);
+	}
+	else
+		return (0);
+	return (1);
+}
+
+static int findPage(std::string name, std::string server)
+{
+	if (name.length() < 5 || name.substr(name.length() - 5) != ".html")
+        return (0);
+
+	struct stat st;
+	std::string path = "/www/" + server + "/" + name;
+	if (lstat(path.c_str(), &st) == 0)
+	{
+		if (!S_ISREG(st.st_mode))
+			return (0);
+	}
+	else
+		return (0);
+	return (1);
+}
+
+
+
 void ConfigParser::checkServerValues(ServerConfig &server)
 {
-	if (!std::isdigit(server.getListen()))
+	std::cout << std::endl;
+	std::cout << "[ERROR CHECKS]" << std::endl;
+	if (std::isdigit(server.getListen()))
 		std::cout << "Listen in server: " << server.getServerName() << " is not numeric" << std::endl;
 	if (!(server.getListen() >= 1 && server.getListen() <= 65535))
 		std::cout << "Listen is server: " << server.getServerName() << " is out of listening range" << std::endl;
@@ -221,7 +273,11 @@ void ConfigParser::checkServerValues(ServerConfig &server)
 	if (!isValidIPv4(server.getHost()))
 		std::cout << "Host in server: " << server.getServerName() << " is not a valid IPv4 value" << std::endl;
 	//server_name needs to be compatible with a directory in www/
+	if (!findServer(server.getServerName()))
+		std::cout << "Server: " << server.getServerName() << " does not exist or is innaccesible" << std::endl;
 	//error_page must be 404 and be an .html in www/servername/error/
+	if (!findPage(server.getErrorPage(), server.getServerName()))
+		std::cout << "Page: " << server.getErrorPage() << " does not exist in Server: " << server.getServerName() << std::endl;
 	//clientmaxbodysie must be a number with minimun and maximun
 	//root must be a directory www/serveername
 	//index must be a .html in root directory

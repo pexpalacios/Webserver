@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <vector>
+#include <sys/stat.h>
 #include "LocationConfig.hpp"
 
 class ServerConfig
