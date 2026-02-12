@@ -5,7 +5,7 @@ RM			:= rm -f
 
 SRCS := srcs/main.cpp \
 		srcs/Server.cpp \
-		srcs/handleConn.cpp \
+		srcs/Server.run.cpp \
 		srcs/Signal.cpp
 OBJS	:= $(SRCS:.cpp=.o)
 

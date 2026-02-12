@@ -1,22 +1,26 @@
 //20260210 Terto includes
 #include "../includes/Server.hpp"
-#include "../includes/handleConn.hpp"
 #include "../includes/Signal.hpp"
 
-//20260210 Terto: main
+//20260212 Terto: main
 int main() 
 {
 	SignalHandler::registerSignal();
 
 	Server 			server;
-	std::string		ip		= "127.0.0.1";
-	int				port	= 8080;
+	std::string		ip						= "127.0.0.1";
+	int				port					= 8080;
+	std::string		server_name				= "webserv";
+	std::string		root					= "www";
+	std::string		index					= "index.html";
+	std::string		error_404				= "error_pages/404.html"; 
+	std::string		error_500				= "error_pages/500.html";
+	size_t			client_max_body_size	= 1024 * 1024; // 1 MB
 
-	server.listenOn(ip, port);								// Configura el socket del servidor para que escuche en una IP y puerto concretos
-	server.setStaticRoot("www");							// Define la carpeta base (www/index.html)
-	server.setErrorPage(404, "error_pages/404.html");		// Define la página de error 404 (error.html)
-	server.setErrorPage(500, "error_pages/500.html");		// Define la página de error 500 (error.html)
-	server.run();											// Inicia el bucle principal del servidor
 
-	return (0);
+	(void)client_max_body_size; // Variable no utilizada en esta versión
+	server.configureServer(ip, port, root, index);
+	server.configureErrorPages(error_404, error_500);
+	server.run();
+	return 0;
 }

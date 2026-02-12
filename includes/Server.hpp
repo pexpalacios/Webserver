@@ -19,27 +19,31 @@
 #include <map>				// std::map
 
 
+//20260210 Terto: Server class definition
 class Server
 {
 public:
 	Server();
 	~Server();
 
-	void						listenOn(const std::string& ip, int port);			// Configura socket del servidor para escuchar IP y puerto concretos
-	void						setStaticRoot(const std::string& root);				// Define la carpeta base (www/index.html)
-	void						setErrorPage(int code, const std::string& path);	// Define la ruta personalizada para errores
-	std::vector<struct pollfd>	buildPollFdArray();									// Construye y devuelve un array de pollfd para los sockets en escucha
-	void						run();												// Inicia el bucle principal del servidor
-
-	std::string					readFile(const std::string& path);		// Lee el contenido de un archivo y lo devuelve como string
-	std::vector<int>			listenSockets;							// Lista de sockets en escucha
-	std::string					staticRoot;								// Carpeta base para archivos estáticos
-	std::map<int, std::string>	errorPages;								// Mapa de códigos de error y rutas a sus páginas
+	void	configureServer(const std::string& ip, int port, const std::string& root, const std::string& indexFile);
+	void	configureErrorPages(std::string error_404, std::string error_500);
+	void	handleNewConnection(int listenSock, std::vector<struct pollfd>& fds);
+	void	handleClientConnection(int clientSock, Server& server);
+	void	run();
 
 private:
-	static			Server* instance;									// puntero estático a la instancia
-	volatile		sig_atomic_t server_running;						// Variable de control del bucle
-	void			handleSignal(int signal);							// Manejador de señales (SIGINT)
+	void						listenOn(const std::string& ip, int port);								
+	void						setStaticRoot(const std::string& root, const std::string& indexFile);	
+	void						setErrorPage(int code, const std::string& path);						
+	std::vector<struct pollfd>	buildPollFdArray();														
+	std::string					readFile(const std::string& path);										
+
+	std::vector<int>			listenSockets;	// Sockets en los que el servidor está escuchando
+	std::string					staticRoot;		// Carpeta base para archivos estáticos
+	std::string 				indexFile;		// Archivo index (index.html)
+	std::map<int, std::string>	errorPages;		// Mapa de códigos de error y rutas a sus páginas
+
 };
 
 #endif
