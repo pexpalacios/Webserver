@@ -14,9 +14,9 @@ class ServerConfig
 
 		std::string _host;
 		std::string _server_name;
-		std::string _error_page;
 		std::string _root;
 		std::string _index;
+		std::vector<std::string> _error_page;
 		std::vector<LocationConfig> _locations;
 	
 	public:
@@ -30,9 +30,10 @@ class ServerConfig
 		void setClientMaxSize(const size_t);
 		void setHost(const std::string);
 		void setServerName(const std::string);
-		void setErrorPage(const std::string);
 		void setRoot(const std::string);
 		void setIndex(const std::string);
+		void addErrorPage(const std::string);
+		void setErrorPage(const std::vector<std::string>);
 		void setLocations(const std::vector<LocationConfig>); //maybe this should just receive an obj and add to the vector
 		void addLocation(const LocationConfig&);
 
@@ -41,7 +42,7 @@ class ServerConfig
 		size_t getClientmaxSize();
 		std::string getHost();
 		std::string getServerName();
-		std::string getErrorPage();
+		std::vector<std::string> getErrorPage();
 		std::string getRoot();
 		std::string getIndex();
 		std::vector<LocationConfig> getLocations();

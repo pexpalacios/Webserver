@@ -1,9 +1,7 @@
 #include "../../includes/parse/ConfigParser.hpp"
 
 ConfigParser::ConfigParser()
-{
-
-}
+{}
 
 ConfigParser::ConfigParser(const ConfigParser &copy)
 {
@@ -21,7 +19,7 @@ ConfigParser &ConfigParser::operator=(const ConfigParser &copy)
 
 static std::string stripSemicolon(const std::string &token)
 {
-	if (!token.empty() && token.back() == ';') //it says there's no element .back in a std::string :/
+	if (!token.empty() && token[token.size() - 1] == ';')
 		return (token.substr(0, token.size() - 1));
 	return (token);
 }
@@ -64,7 +62,7 @@ static void setServerBlockVars(ServerConfig &currentServer, const std::string &k
 	else if (key == "server_name" && tokens.size() > 1)
 		currentServer.setServerName(stripSemicolon(tokens[1]));
 	else if (key == "error_page" && tokens.size() > 2)
-		currentServer.setErrorPage(stripSemicolon(tokens[2]));
+		currentServer.addErrorPage(stripSemicolon(tokens[2]));
 	else if (key == "root" && tokens.size() > 1)
 		currentServer.setRoot(stripSemicolon(tokens[1]));
 	else if (key == "index" && tokens.size() > 1)
@@ -209,12 +207,12 @@ static int isValidIPv4(const std::string &ip)
 		if (!std::isdigit(ip[i]) && ip[i] != '.')
 			return (0);
 		int n = 0;
-		while (std::isdigit(ip[i]))
+		while (i < ip.size() && std::isdigit(ip[i]))
 		{
 			n = n * 10 + (ip[i] - '0');
 			i++;
 		}
-		if (ip[i] == '.')
+		if (i < ip.size() && ip[i] == '.')
 			dots++;
 		if (!(n >= 0 && n <= 255))
 			return (0);
@@ -230,7 +228,7 @@ static int isValidIPv4(const std::string &ip)
 static int findServer(std::string name)
 {
 	struct stat st;
-	std::string path = "/www/" + name;
+	std::string path = "./www/" + name;
 	if (lstat(path.c_str(), &st) == 0)
 	{
 		if (!S_ISDIR(st.st_mode))
@@ -241,14 +239,13 @@ static int findServer(std::string name)
 	return (1);
 }
 
-static int findPage(std::string name, std::string server)
-{
+static int findPage(std::string name)
+{	
 	if (name.length() < 5 || name.substr(name.length() - 5) != ".html")
         return (0);
 
 	struct stat st;
-	std::string path = "/www/" + server + "/" + name;
-	if (lstat(path.c_str(), &st) == 0)
+	if (lstat(name.c_str(), &st) == 0)
 	{
 		if (!S_ISREG(st.st_mode))
 			return (0);
@@ -258,27 +255,35 @@ static int findPage(std::string name, std::string server)
 	return (1);
 }
 
-
-
 void ConfigParser::checkServerValues(ServerConfig &server)
 {
 	std::cout << std::endl;
 	std::cout << "[ERROR CHECKS]" << std::endl;
-	if (std::isdigit(server.getListen()))
-		std::cout << "Listen in server: " << server.getServerName() << " is not numeric" << std::endl;
 	if (!(server.getListen() >= 1 && server.getListen() <= 65535))
-		std::cout << "Listen is server: " << server.getServerName() << " is out of listening range" << std::endl;
+		std::cout << "Listen in server: " << server.getServerName() << " is out of listening range" << std::endl;
 
-	//host needs to check that it's 4 numbers separated by "." and minimun and maximun
 	if (!isValidIPv4(server.getHost()))
 		std::cout << "Host in server: " << server.getServerName() << " is not a valid IPv4 value" << std::endl;
-	//server_name needs to be compatible with a directory in www/
+
 	if (!findServer(server.getServerName()))
 		std::cout << "Server: " << server.getServerName() << " does not exist or is innaccesible" << std::endl;
-	//error_page must be 404 and be an .html in www/servername/error/
-	if (!findPage(server.getErrorPage(), server.getServerName()))
-		std::cout << "Page: " << server.getErrorPage() << " does not exist in Server: " << server.getServerName() << std::endl;
-	//clientmaxbodysie must be a number with minimun and maximun
-	//root must be a directory www/serveername
-	//index must be a .html in root directory
+
+	std::vector<std::string> errorPages = server.getErrorPage();
+	for (size_t i = 0; i < errorPages.size(); i++)
+	{
+		if (!errorPages[i].empty() && !findPage(errorPages[i]))
+			std::cout << "Page: " << errorPages[i] << " does not exist in Server: " << server.getServerName() << std::endl;
+	}
+
+	if (server.getClientmaxSize() == 0)
+		std::cout << "Client max body size in server: " << server.getServerName() << " is zero" << std::endl;
+	if (server.getClientmaxSize() > 1073741824) // 1GB max
+		std::cout << "Client max body size in server: " << server.getServerName() << " exceeds maximum (1GB)" << std::endl;
+
+	struct stat st;
+	if (lstat(server.getRoot().c_str(), &st) != 0 || !S_ISDIR(st.st_mode))
+		std::cout << "Root directory: " << server.getRoot() << " does not exist or is not a directory" << std::endl;
+
+	if (!findPage(server.getIndex()))
+		std::cout << "Index page: " << server.getIndex() << " does not exist" << std::endl;
 }

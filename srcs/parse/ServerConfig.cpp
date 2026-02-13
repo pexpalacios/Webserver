@@ -1,8 +1,10 @@
 #include "../../includes/parse/ServerConfig.hpp"
 
 ServerConfig::ServerConfig()
-	: _listen(0), _client_max_body_size(0), _host(""), _server_name(""), _error_page(""), _root(""), _index("")
-{}
+	: _listen(0), _client_max_body_size(0), _host(""), _server_name(""), _root(""), _index("")
+{
+	addLocation(LocationConfig());
+}
 
 ServerConfig::ServerConfig(const ServerConfig &copy)
 {
@@ -17,9 +19,9 @@ ServerConfig &ServerConfig::operator=(const ServerConfig &copy)
 		_client_max_body_size = copy._client_max_body_size;
 		_host = copy._host;
 		_server_name = copy._server_name;
-		_error_page = copy._error_page;
 		_root = copy._root;
 		_index = copy._index;
+		_error_page = copy._error_page;
 		_locations = copy._locations;
 	}
 	return *this;
@@ -50,9 +52,14 @@ void ServerConfig::setServerName(const std::string str)
 	_server_name = str;
 }
 
-void ServerConfig::setErrorPage(const std::string str)
+void ServerConfig::setErrorPage(const std::vector<std::string> v)
 {
-	_error_page = str;
+	_error_page = v;
+}
+
+void ServerConfig::addErrorPage(const std::string str)
+{
+	_error_page.push_back(str);
 }
 
 void ServerConfig::setRoot(const std::string str)
@@ -97,7 +104,7 @@ std::string ServerConfig::getServerName()
 	return _server_name;
 }
 
-std::string ServerConfig::getErrorPage()
+std::vector<std::string> ServerConfig::getErrorPage()
 {
 	return _error_page;
 }
@@ -121,12 +128,16 @@ std::vector<LocationConfig> ServerConfig::getLocations()
 
 void ServerConfig::printServer()
 {
-	std::cout << "Listen:     " << this->getListen() << "-" << std::endl;
-	std::cout << "Host:       " << this->getHost() << "-" << std::endl;
-	std::cout << "ServerName: " << this->getServerName() << "-" << std::endl;
-	std::cout << "ErrorPage:  " << this->getErrorPage() << "-" << std::endl;
-	std::cout << "Root:       " << this->getRoot() << "-" << std::endl;
-	std::cout << "Index:      " << this->getIndex() << "-" << std::endl;
+	std::cout << "Listen:     " << this->getListen() << std::endl;
+	std::cout << "Host:       " << this->getHost() << std::endl;
+	std::cout << "ServerName: " << this->getServerName() << std::endl;
+	std::cout << "ErrorPage:  ";
+	std::vector<std::string> errorPages = this->getErrorPage();
+	for (size_t i = 0; i < errorPages.size(); i++)
+		std::cout << errorPages[i] << " ";
+	std::cout << std::endl;
+	std::cout << "Root:       " << this->getRoot() << std::endl;
+	std::cout << "Index:      " << this->getIndex() << std::endl;
 
 	std::vector<LocationConfig> locations = this->getLocations();
 	for (std::vector<LocationConfig>::iterator i = locations.begin(); i < locations.end(); i++)

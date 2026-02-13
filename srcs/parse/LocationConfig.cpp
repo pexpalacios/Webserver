@@ -108,14 +108,14 @@ std::vector<std::string> LocationConfig::getMethods()
 
 void LocationConfig::printLocation()
 {
-	std::cout << "Path:      " << this->getPath() << "-" << std::endl;
-	std::cout << "Root:      " << this->getRoot() << "-" << std::endl;
-	std::cout << "Index:     " << this->getIndex() << "-" << std::endl;
-	std::cout << "Upload:    " << this->getUpload() << "-" << std::endl;
-	std::cout << "Autoindex: " << this->getAutoindex() << "-" << std::endl;
-	std::cout << "Protected: " << this->getProtected() << "-" << std::endl;
+	std::cout << "Path:      " << this->getPath() << std::endl;
+	std::cout << "Root:      " << this->getRoot() << std::endl;
+	std::cout << "Index:     " << this->getIndex() << std::endl;
+	std::cout << "Upload:    " << this->getUpload() << std::endl;
+	std::cout << "Autoindex: " << this->getAutoindex() << std::endl;
+	std::cout << "Protected: " << this->getProtected() << std::endl;
 
 	std::vector<std::string> methods = this->getMethods();
 	for (std::vector<std::string>::iterator i = methods.begin(); i < methods.end(); i++)
-		std::cout << "Method: " << i->c_str() << "-" << std::endl;
+		std::cout << "Method: " << i->c_str() << std::endl;
 }
