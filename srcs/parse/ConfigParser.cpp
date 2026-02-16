@@ -15,7 +15,28 @@ ConfigParser &ConfigParser::operator=(const ConfigParser &copy)
 	return (*this);
 }
 
-////////////
+///// AUXILIARY FUNCTIONS
+
+std::string ConfigParser::omitSpaces(const std::string str)
+{
+	size_t start = str.find_first_not_of(" \t\r\n");
+	size_t end = str.find_last_not_of("\t\r\n");
+
+	if (start == std::string::npos)
+		return ("");
+	else
+		return (str.substr(start, end - start + 1));
+}
+
+std::vector<std::string> ConfigParser::tokenize(const std::string &line)
+{
+	std::istringstream iss(line);
+	std::vector<std::string> tokens;
+	std::string token;
+	while (iss >> token)
+		tokens.push_back(token);
+	return (tokens);
+}
 
 static std::string stripSemicolon(const std::string &token)
 {
@@ -24,16 +45,14 @@ static std::string stripSemicolon(const std::string &token)
 	return (token);
 }
 
+///// SERVER VALUES SETTERS
+
 static void setLocationBlockVars(LocationConfig &currentLocation, const std::string &key, const std::vector<std::string> &tokens)
 {
 	if (key == "root" && tokens.size() > 1)
 		currentLocation.setRoot(stripSemicolon(tokens[1]));
 	else if (key == "index" && tokens.size() > 1)
-	{
-		int len = currentLocation.getRoot().length();
-		std::string tmp = tokens[1].substr(len, tokens[1].length());
-		currentLocation.setIndex(stripSemicolon(tmp));
-	}
+		currentLocation.setIndex(stripSemicolon(tokens[1]));
 	else if (key == "upload" && tokens.size() > 1)
 		currentLocation.setUpload(stripSemicolon(tokens[1]));
 	else if (key == "autoindex" && tokens.size() > 1)
@@ -66,20 +85,11 @@ static void setServerBlockVars(ServerConfig &currentServer, const std::string &k
 	else if (key == "server_name" && tokens.size() > 1)
 		currentServer.setServerName(stripSemicolon(tokens[1]));
 	else if (key == "error_page" && tokens.size() > 2)
-	{
-		int len = currentServer.getRoot().length();
-		std::string tmp = tokens[2].substr(len, tokens[2].length());
-		currentServer.addErrorPage(stripSemicolon(tmp));
-		std::cout << "Error page: " << tokens[2] << ", " << tmp << std::endl;
-	}
+		currentServer.addErrorPage(stripSemicolon(tokens[2]));
 	else if (key == "root" && tokens.size() > 1)
 		currentServer.setRoot(stripSemicolon(tokens[1]));
 	else if (key == "index" && tokens.size() > 1)
-	{
-		int len = currentServer.getRoot().length();
-		std::string tmp = tokens[1].substr(len, tokens[1].length());
-		currentServer.setIndex(stripSemicolon(tmp));
-	}
+		currentServer.setIndex(stripSemicolon(tokens[1]));
 	else if (key == "client_max_body_size" && tokens.size() > 1)
 	{
 		std::string len = tokens[1];
@@ -92,6 +102,19 @@ static void setServerBlockVars(ServerConfig &currentServer, const std::string &k
 	}
 }
 
+static void cleanPageUrl(ServerConfig &currentServer)
+{
+	int len = currentServer.getRoot().length();
+	currentServer.setIndex(currentServer.getIndex().substr(len, currentServer.getIndex().length()));
+
+	std::vector<std::string> errorPages = currentServer.getErrorPage();
+	std::vector<std::string> newPages;
+	for (std::vector<std::string>::iterator it = errorPages.begin(); it != errorPages.end(); ++it)
+		newPages.push_back(it->substr(len));
+	currentServer.setErrorPage(newPages);
+}
+
+///// MAIN PARSING FUNCTION
 
 std::vector<ServerConfig> ConfigParser::parse(const std::string &filename)
 {
@@ -111,8 +134,7 @@ std::vector<ServerConfig> ConfigParser::parse(const std::string &filename)
 		while (std::getline(file, line))
 		{
 			line = omitSpaces(line);
-			//std::cout << " : " << line << std::endl;
-			if (line.empty()) //add if a line is a comment? check for # or //
+			if (line.empty())
 				continue;
 
 			if (line.find("server") == 0 && line.find("{") != std::string::npos)
@@ -126,7 +148,6 @@ std::vector<ServerConfig> ConfigParser::parse(const std::string &filename)
 
 			if (inServer)
 			{
-				//check if inside a location
 				if (line.find("location") == 0 && line.find("{") != std::string::npos)
 				{
 					if (inLocation)
@@ -151,7 +172,7 @@ std::vector<ServerConfig> ConfigParser::parse(const std::string &filename)
 					inLocation = false;
 					continue;
 				}
-				// tokenize the line and vars to corresponding block
+
 				std::vector<std::string> tokens = tokenize(line);
 				if (tokens.empty())
 					continue;
@@ -161,18 +182,17 @@ std::vector<ServerConfig> ConfigParser::parse(const std::string &filename)
 				else
 					setServerBlockVars(currentServer, key, tokens);
 			}
-			//check the last line is }
 			if (inServer && line == "}")
 			{
 				if (inLocation)
 					throw (std::runtime_error("Location not closed"));
+				cleanPageUrl(currentServer);
+				checkServerValues(currentServer);
 				servers.push_back(currentServer);
 				inServer = false;
 				continue;
 			}
 		}
-		currentServer.printServer();
-		checkServerValues(currentServer);
 		if (inServer)
 			throw (std::runtime_error("Unclosed server block"));
 		if (!inServer && servers.empty())
@@ -183,121 +203,4 @@ std::vector<ServerConfig> ConfigParser::parse(const std::string &filename)
 		std::cerr << "Error: " << e.what() << std::endl;
 	}
 	return (servers);
-}
-
-///////////
-
-std::string ConfigParser::omitSpaces(const std::string str)
-{
-	size_t start = str.find_first_not_of(" \t\r\n");
-	size_t end = str.find_last_not_of("\t\r\n");
-
-	if (start == std::string::npos)
-		return ("");
-	else
-		return (str.substr(start, end - start + 1));
-}
-
-std::vector<std::string> ConfigParser::tokenize(const std::string &line)
-{
-	std::istringstream iss(line);
-	std::vector<std::string> tokens;
-	std::string token;
-	while (iss >> token)
-		tokens.push_back(token);
-	return (tokens);
-}
-
-////////////////
-
-static int isValidIPv4(const std::string &ip)
-{
-	int dots = 0;
-	int nums = 0;
-
-	for (size_t i = 0; i < ip.size(); i++)
-	{
-		if (!std::isdigit(ip[i]) && ip[i] != '.')
-			return (0);
-		int n = 0;
-		while (i < ip.size() && std::isdigit(ip[i]))
-		{
-			n = n * 10 + (ip[i] - '0');
-			i++;
-		}
-		if (i < ip.size() && ip[i] == '.')
-			dots++;
-		if (!(n >= 0 && n <= 255))
-			return (0);
-		else
-			nums++;
-	}
-
-	if (dots != 3 || nums != 4)
-		return (0);
-	return (1);
-}
-
-static int findServer(std::string name)
-{
-	struct stat st;
-	std::string path = "./www/" + name;
-	if (lstat(path.c_str(), &st) == 0)
-	{
-		if (!S_ISDIR(st.st_mode))
-			return (0);
-	}
-	else
-		return (0);
-	return (1);
-}
-
-static int findPage(std::string name, std::string root)
-{	
-	if (name.length() < 5 || name.substr(name.length() - 5) != ".html")
-        return (0);
-
-	std::string fullurl = root + name;
-	struct stat st;
-	if (lstat(fullurl.c_str(), &st) == 0)
-	{
-		if (!S_ISREG(st.st_mode))
-			return (0);
-	}
-	else
-		return (0);
-	return (1);
-}
-
-void ConfigParser::checkServerValues(ServerConfig &server)
-{
-	std::cout << std::endl;
-	std::cout << "[ERROR CHECKS]" << std::endl;
-	if (!(server.getListen() >= 1 && server.getListen() <= 65535))
-		std::cout << "Listen in server: " << server.getServerName() << " is out of listening range" << std::endl;
-
-	if (!isValidIPv4(server.getHost()))
-		std::cout << "Host in server: " << server.getServerName() << " is not a valid IPv4 value" << std::endl;
-
-	if (!findServer(server.getServerName()))
-		std::cout << "Server: " << server.getServerName() << " does not exist or is innaccesible" << std::endl;
-
-	std::vector<std::string> errorPages = server.getErrorPage();
-	for (size_t i = 0; i < errorPages.size(); i++)
-	{
-		if (!errorPages[i].empty() && !findPage(errorPages[i], server.getRoot()))
-			std::cout << "Page: " << errorPages[i] << " does not exist in Server: " << server.getServerName() << std::endl;
-	}
-
-	if (server.getClientmaxSize() == 0)
-		std::cout << "Client max body size in server: " << server.getServerName() << " is zero" << std::endl;
-	if (server.getClientmaxSize() > 1073741824) // 1GB max
-		std::cout << "Client max body size in server: " << server.getServerName() << " exceeds maximum (1GB)" << std::endl;
-
-	struct stat st;
-	if (lstat(server.getRoot().c_str(), &st) != 0 || !S_ISDIR(st.st_mode))
-		std::cout << "Root directory: " << server.getRoot() << " does not exist or is not a directory" << std::endl;
-
-	if (!findPage(server.getIndex(), server.getRoot()))
-		std::cout << "Index page: " << server.getIndex() << " does not exist" << std::endl;
 }

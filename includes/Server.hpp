@@ -17,6 +17,7 @@
 #include <algorithm>		// std::find
 #include <sstream>			// std::stringstream
 #include <map>				// std::map
+#include <stdexcept>
 
 #include "parse/ConfigParser.hpp"
 #include "parse/LocationConfig.hpp"

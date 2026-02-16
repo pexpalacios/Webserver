@@ -18,12 +18,11 @@ class ConfigParser
 		ConfigParser &operator=(const ConfigParser&);
 
 		std::vector<ServerConfig> parse(const std::string &filename);
+		void checkServerValues(ServerConfig &server);
 	
-		//check file exists and isn't empty and can be opened
-		//check extension of file
+		//AUXILIARY FUNCTIONS
 		std::vector<std::string> tokenize(const std::string &line);
 		std::string omitSpaces(const std::string str);
-		void checkServerValues(ServerConfig &server);
 };
 
 #endif
