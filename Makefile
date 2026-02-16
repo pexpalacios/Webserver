@@ -6,9 +6,11 @@ RM			:= rm -f
 SRCS := srcs/main.cpp \
 		srcs/Server.cpp \
 		srcs/Server.run.cpp \
-		srcs/Signal.cpp
+		srcs/Signal.cpp \
+		srcs/parse/ConfigParser.cpp \
+		srcs/parse/LocationConfig.cpp \
+		srcs/parse/ServerConfig.cpp
 OBJS	:= $(SRCS:.cpp=.o)
-
 
 all: $(NAME)
 
