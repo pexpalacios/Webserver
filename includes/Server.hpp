@@ -16,7 +16,11 @@
 #include <csignal>			// signal handling
 #include <algorithm>		// std::find
 #include <sstream>			// std::stringstream
-#include <map>				// std::map
+#include <map>	
+
+#include "parse/ConfigParser.hpp"
+#include "parse/LocationConfig.hpp"
+#include "parse/ServerConfig.hpp"// std::map
 
 
 //20260210 Terto: Server class definition
