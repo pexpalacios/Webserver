@@ -84,7 +84,6 @@ void ConfigParser::checkServerValues(ServerConfig &server)
 	struct stat st;
 	if (lstat(server.getRoot().c_str(), &st) != 0 || !S_ISDIR(st.st_mode))
 		std::invalid_argument("Root directory: " + server.getRoot() + " does not exist or is not a directory");
-	std::cout << "INDEX HERE  " << server.getIndex() << std::endl;
 	if (!findPage(server.getIndex(), server.getRoot()))
 		std::invalid_argument("Index page: " + server.getIndex() + " does not exist");
 }
