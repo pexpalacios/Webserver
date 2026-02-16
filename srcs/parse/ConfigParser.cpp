@@ -34,16 +34,16 @@ static void setLocationBlockVars(LocationConfig &currentLocation, const std::str
 		currentLocation.setUpload(stripSemicolon(tokens[1]));
 	else if (key == "autoindex" && tokens.size() > 1)
 	{
-		if (tokens[1] == "on")
+		if (stripSemicolon(tokens[1]) == "on")
 			currentLocation.setAutoindex(true);
-		else if (tokens[1] == "off")
+		else if (stripSemicolon(tokens[1]) == "off")
 			currentLocation.setAutoindex(false);
 	}
 	else if (key == "protected" && tokens.size() > 1)
 	{
-		if (tokens[1] == "on")
+		if (stripSemicolon(tokens[1]) == "on")
 			currentLocation.setProtected(true);
-		else if (tokens[1] == "off")
+		else if (stripSemicolon(tokens[1]) == "off")
 			currentLocation.setProtected(false);
 	}
 	else if (key == "allow_methods" && tokens.size() > 1)
