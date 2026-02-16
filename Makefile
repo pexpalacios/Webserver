@@ -1,40 +1,37 @@
-MAKEFLAGS += --no-print-directory
+NAME		:= webserver
+CXX			:= g++
+CXXFLAGS	:= -Wall -Wextra -Werror -std=c++98
+RM			:= rm -f
 
-NAME = WebServer
+SRCS := srcs/main.cpp \
+		srcs/Server.cpp \
+		srcs/Server.run.cpp \
+		srcs/Signal.cpp
+OBJS	:= $(SRCS:.cpp=.o)
 
-FLAGS = -Wall -Wextra -Werror -std=c++98
-
-DIR_SRC = srcs
-DIR_OBJ = build/obj
-DIR_INC = includes
-
-PARSING = ConfigParser LocationConfig ServerConfig
-
-SRC_FILES = $(addsuffix .cpp, $(addprefix srcs/parse/, $(PARSING))) \
-			srcs/main.cpp
-
-OBJS = $(patsubst srcs/%.cpp, build/obj/%.o, $(SRC_FILES))
-
-##################
 
 all: $(NAME)
 
-$(DIR_OBJ):
-	mkdir -p $(DIR_OBJ)
-
 $(NAME): $(OBJS)
-	c++ $(FLAGS) -o $(NAME) $(OBJS)
+	@echo "Linking $(NAME)..."
+	$(CXX) $(CXXFLAGS) $(OBJS) -o $(NAME)
+	@echo "✅ Build complete."
 
-$(DIR_OBJ)/%.o: $(DIR_SRC)/%.cpp
-	mkdir -p $(dir $@)
-	c++ $(FLAGS) -c $< -o $@
+%.o: %.cpp
+	@echo "Compiling $<..."
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-clean: 
-	rm -rf build
+
+up: all
+
+clean:
+	@echo "Cleaning object files..."
+	$(RM) $(OBJS)
 
 fclean: clean
-	rm -f $(NAME)
+	@echo "Removing executable..."
+	$(RM) $(NAME)
 
 re: fclean all
 
--PHONY: all clean fclean re
+.PHONY: all clean fclean re up
