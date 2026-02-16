@@ -29,7 +29,11 @@ static void setLocationBlockVars(LocationConfig &currentLocation, const std::str
 	if (key == "root" && tokens.size() > 1)
 		currentLocation.setRoot(stripSemicolon(tokens[1]));
 	else if (key == "index" && tokens.size() > 1)
-		currentLocation.setIndex(stripSemicolon(tokens[1]));
+	{
+		int len = currentLocation.getRoot().length();
+		std::string tmp = tokens[1].substr(len, tokens[1].length());
+		currentLocation.setIndex(stripSemicolon(tmp));
+	}
 	else if (key == "upload" && tokens.size() > 1)
 		currentLocation.setUpload(stripSemicolon(tokens[1]));
 	else if (key == "autoindex" && tokens.size() > 1)
@@ -62,11 +66,20 @@ static void setServerBlockVars(ServerConfig &currentServer, const std::string &k
 	else if (key == "server_name" && tokens.size() > 1)
 		currentServer.setServerName(stripSemicolon(tokens[1]));
 	else if (key == "error_page" && tokens.size() > 2)
-		currentServer.addErrorPage(stripSemicolon(tokens[2]));
+	{
+		int len = currentServer.getRoot().length();
+		std::string tmp = tokens[2].substr(len, tokens[2].length());
+		currentServer.addErrorPage(stripSemicolon(tmp));
+		std::cout << "Error page: " << tokens[2] << ", " << tmp << std::endl;
+	}
 	else if (key == "root" && tokens.size() > 1)
 		currentServer.setRoot(stripSemicolon(tokens[1]));
 	else if (key == "index" && tokens.size() > 1)
-		currentServer.setIndex(stripSemicolon(tokens[1]));
+	{
+		int len = currentServer.getRoot().length();
+		std::string tmp = tokens[1].substr(len, tokens[1].length());
+		currentServer.setIndex(stripSemicolon(tmp));
+	}
 	else if (key == "client_max_body_size" && tokens.size() > 1)
 	{
 		std::string len = tokens[1];
@@ -239,13 +252,14 @@ static int findServer(std::string name)
 	return (1);
 }
 
-static int findPage(std::string name)
+static int findPage(std::string name, std::string root)
 {	
 	if (name.length() < 5 || name.substr(name.length() - 5) != ".html")
         return (0);
 
+	std::string fullurl = root + name;
 	struct stat st;
-	if (lstat(name.c_str(), &st) == 0)
+	if (lstat(fullurl.c_str(), &st) == 0)
 	{
 		if (!S_ISREG(st.st_mode))
 			return (0);
@@ -271,7 +285,7 @@ void ConfigParser::checkServerValues(ServerConfig &server)
 	std::vector<std::string> errorPages = server.getErrorPage();
 	for (size_t i = 0; i < errorPages.size(); i++)
 	{
-		if (!errorPages[i].empty() && !findPage(errorPages[i]))
+		if (!errorPages[i].empty() && !findPage(errorPages[i], server.getRoot()))
 			std::cout << "Page: " << errorPages[i] << " does not exist in Server: " << server.getServerName() << std::endl;
 	}
 
@@ -284,6 +298,6 @@ void ConfigParser::checkServerValues(ServerConfig &server)
 	if (lstat(server.getRoot().c_str(), &st) != 0 || !S_ISDIR(st.st_mode))
 		std::cout << "Root directory: " << server.getRoot() << " does not exist or is not a directory" << std::endl;
 
-	if (!findPage(server.getIndex()))
+	if (!findPage(server.getIndex(), server.getRoot()))
 		std::cout << "Index page: " << server.getIndex() << " does not exist" << std::endl;
 }
