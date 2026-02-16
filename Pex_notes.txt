@@ -2,4 +2,19 @@
 - May need to do two different pages? Not sure.
 - ^ Subject says server should listen in different ports for different content, so at least two pages are needed. 
 But that could also be the menu page and then the game or something.
- 
+
+
+CGIs --
+Subject:
+	Execution of CGI, based on file extension (for example .php). Here are some specific remarks regarding CGIs:
+	∗ Do you wonder what a CGI is?
+	∗ Have a careful look at the environment variables involved in the web server-CGI communication. The full 
+	request and arguments provided by the client must be available to the CGI.
+	∗ Just remember that, for chunked requests, your server needs to un-chunk them, the CGI will expect EOF as the end of the body.
+	∗ The same applies to the output of the CGI. If no content_length is returned from the CGI, EOF will mark the end of the returned data.
+	∗ The CGI should be run in the correct directory for relative path file access.
+	∗ Your server should support at least one CGI (php-CGI, Python, and so forth).
+
+CGIs are just bash or python scripts (in our case anyway). They must be executed by the server and can practically do whatever we want them to.
+The server will need a way to handle CGIs: read, execute them and clean them.
+

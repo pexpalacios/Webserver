@@ -9,7 +9,8 @@ SRCS := srcs/main.cpp \
 		srcs/Signal.cpp \
 		srcs/parse/ConfigParser.cpp \
 		srcs/parse/LocationConfig.cpp \
-		srcs/parse/ServerConfig.cpp
+		srcs/parse/ServerConfig.cpp \
+		srcs/parse/ValueParser.cpp
 OBJS	:= $(SRCS:.cpp=.o)
 
 all: $(NAME)
