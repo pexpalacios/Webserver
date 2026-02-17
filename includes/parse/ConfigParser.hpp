@@ -19,6 +19,7 @@ class ConfigParser
 
 		std::vector<ServerConfig> parse(const std::string &filename);
 		void checkServerValues(ServerConfig &server);
+		void checkLocationValues(LocationConfig &location);
 	
 		//AUXILIARY FUNCTIONS
 		std::vector<std::string> tokenize(const std::string &line);

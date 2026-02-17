@@ -2,6 +2,8 @@
 - May need to do two different pages? Not sure.
 - ^ Subject says server should listen in different ports for different content, so at least two pages are needed. 
 But that could also be the menu page and then the game or something.
+- Need to look up how to connect servers. WIll probably be a link in an HTML towards the execution of the other server, but I 
+don't know if that would need any change in server functions or it'll just work
 
 
 CGIs --
@@ -17,4 +19,10 @@ Subject:
 
 CGIs are just bash or python scripts (in our case anyway). They must be executed by the server and can practically do whatever we want them to.
 The server will need a way to handle CGIs: read, execute them and clean them.
+
+Gave them a little ty and the gist of it is:
+- HTML has a link to a CGI
+- CGI must be executable, that's why python, bash or php are used
+- The server must read the file and decide if it's executable or just readable //changed function Server::handleClientConnection for this
+- I need to add the executable extensions into parsing so that the server can locate them easily
 

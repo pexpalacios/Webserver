@@ -17,6 +17,7 @@ int main(int ac, char **av)
 	Server 			server;
 	
 	//(void)client_max_body_size; // Variable no utilizada en esta versión
+	// To send the executables here I wuld need to put them diretly into the server and not into the cgi location
 	server.configureServer(conf[0].getHost(), conf[0].getListen(), conf[0].getRoot(), conf[0].getIndex());
 	server.configureErrorPages(conf[0].getRoot(), conf[0].getErrorPage()[0], conf[0].getErrorPage()[1]);
 	server.run();

@@ -86,4 +86,46 @@ void ConfigParser::checkServerValues(ServerConfig &server)
 		std::invalid_argument("Root directory: " + server.getRoot() + " does not exist or is not a directory");
 	if (!findPage(server.getIndex(), server.getRoot()))
 		std::invalid_argument("Index page: " + server.getIndex() + " does not exist");
+
+	std::vector<LocationConfig> locations = server.getLocations();
+	for (std::vector<LocationConfig>::iterator it = locations.begin(); it != locations.end(); ++it)
+		checkLocationValues(*it);
+}
+
+///////////////
+
+void ConfigParser::checkLocationValues(LocationConfig &location)
+{
+	struct stat st;
+	if (lstat(location.getPath().c_str(), &st) != 0 || !S_ISDIR(st.st_mode))
+		std::invalid_argument("Location path: " + location.getPath() + " doesn't exist or is innaccesible");
+	if (lstat(location.getRoot().c_str(), &st) != 0 || !S_ISDIR(st.st_mode))
+		std::invalid_argument("Root on location: " + location.getPath() + " doesn't exist or is innaccesible");
+	if (lstat(location.getUpload().c_str(), &st) != 0 || !S_ISDIR(st.st_mode))
+		std::invalid_argument("Upload on location: " + location.getPath() + " doesn't exist or is innaccesible");
+	if (!findPage(location.getIndex(), location.getPath()))
+		std::invalid_argument("2");
+
+	if (location.getAutoindex() != 0 && location.getAutoindex() != 1)
+		std::invalid_argument("3");
+	if (location.getProtected() != 0 && location.getProtected() != 1)
+		std::invalid_argument("4");
+	
+	//It must be GET POST and DELETE
+	std::vector<std::string> methods = location.getMethods();
+	for (std::vector<std::string>::iterator it = methods.begin(); it != methods.end(); ++it)
+		if (!);
+			std::invalid_argument("5");
+
+	//I think this one should only check the cgi-bin folder
+	std::vector<std::string> cgipath = location.getCGIPath();
+	for (std::vector<std::string>::iterator it = cgipath.begin(); it != cgipath.end(); ++it)
+		if (!);
+			std::invalid_argument("6");
+
+	//check .py and .sh and .php
+	std::vector<std::string> cgiexts = location.getCGIExt();
+	for (std::vector<std::string>::iterator it = cgiexts.begin(); it != cgiexts.end(); ++it)
+		if (!);
+			std::invalid_argument("7");
 }

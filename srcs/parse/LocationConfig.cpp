@@ -1,7 +1,7 @@
 #include "../../includes/parse/LocationConfig.hpp"
 
 LocationConfig::LocationConfig()
-	: _path(""), _root(""), _index(""), _upload(""), _autoindex(false), _protected_(false)
+	: _path(""), _root(""), _index(""), _upload(""), _autoindex(false), _protected(false)
 {}
 
 LocationConfig::LocationConfig(const LocationConfig &copy)
@@ -19,7 +19,7 @@ LocationConfig &LocationConfig::operator=(const LocationConfig &copy)
 		_index = copy._index;
 		_upload = copy._upload;
 		_autoindex = copy._autoindex;
-		_protected_ = copy._protected_;
+		_protected = copy._protected;
 	}
 	return *this;
 }
@@ -48,14 +48,34 @@ void LocationConfig::setUpload(const std::string str)
 	_upload = str;
 }
 
+void LocationConfig::addMethods(const std::string str)
+{
+	_allow_methods.push_back(str);
+}
+
 void LocationConfig::setMethods(const std::vector<std::string> v)
 {
 	_allow_methods = v;
 }
 
-void LocationConfig::addMethods(const std::string str)
+void LocationConfig::addCGIPath(const std::string str)
 {
-	_allow_methods.push_back(str);
+	_cgi_path.push_back(str);
+}
+
+void LocationConfig::setCGIPath(const std::vector<std::string> v)
+{
+	_cgi_path = v;
+}
+
+void LocationConfig::addCGIExt(const std::string str)
+{
+	_cgi_ext.push_back(str);
+}
+
+void LocationConfig::setCGIExt(const std::vector<std::string> v)
+{
+	_cgi_ext = v;
 }
 
 void LocationConfig::setAutoindex(bool b)
@@ -65,10 +85,11 @@ void LocationConfig::setAutoindex(bool b)
 
 void LocationConfig::setProtected(bool b)
 {
-	_protected_ = b;
+	_protected = b;
 }
 
 ///////////
+
 std::string LocationConfig::getPath()
 {
 	return (_path);
@@ -96,12 +117,22 @@ bool LocationConfig::getAutoindex()
 
 bool LocationConfig::getProtected()
 {
-	return (_protected_);
+	return (_protected);
 }
 
 std::vector<std::string> LocationConfig::getMethods()
 {
 	return (_allow_methods);
+}
+
+std::vector<std::string> LocationConfig::getCGIPath()
+{
+	return (_cgi_path);
+}
+
+std::vector<std::string> LocationConfig::getCGIExt()
+{
+	return (_cgi_ext);
 }
 
 ////////////

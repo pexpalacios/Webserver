@@ -74,6 +74,16 @@ static void setLocationBlockVars(LocationConfig &currentLocation, const std::str
 		std::vector<std::string> methods(tokens.begin() + 1, tokens.end());
 		currentLocation.setMethods(methods);
 	}
+	else if (key == "cgi_path" && tokens.size() > 1)
+	{
+		std::vector<std::string> paths(tokens.begin() + 1, tokens.end());
+		currentLocation.setCGIPath(paths);
+	}
+	else if (key == "cgi_ext" && tokens.size() > 1)
+	{
+		std::vector<std::string> extensions(tokens.begin() + 1, tokens.end());
+		currentLocation.setCGIExt(extensions);
+	}
 }
 
 static void setServerBlockVars(ServerConfig &currentServer, const std::string &key, const std::vector<std::string> &tokens)

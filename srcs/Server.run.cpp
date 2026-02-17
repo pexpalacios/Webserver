@@ -84,18 +84,61 @@ void Server::handleClientConnection(int clientSock, Server& server)
 
 	std::cout << "Request received from FD " << clientSock << ":\n" << buffer << std::endl;
 
-	std::string filePath = server.staticRoot + "/" + server.indexFile;
-	std::string body = server.readFile(filePath);
-	if (body.empty())
-		body = "<h1>404 Not Found</h1>";
 
-	std::string response = "HTTP/1.1 200 OK\r\n";
-	response += "Content-Type: text/html\r\n";
-	std::ostringstream oss;
-	oss << body.length();
-	response += "Content-Length: " + oss.str() + "\r\n";
-	response += "Connection: close\r\n\r\n";
-	response += body;
+
+	// 20260217 Pex: Added script execution so the CGIs work
+	// First there's a path check to see if it's an executable and then the execution
+	// Files that are just readable are on the else
+    std::istringstream iss(buffer);
+    std::string method, path, version;
+    iss >> method >> path >> version;
+    std::string response;
+    std::string body;
+
+	// I would separate this into a different aux function
+	//make this
+    if (path.find(".py") != std::string::npos) 
+	{
+        std::string scriptPath = "." + path; // adjust as needed
+		std::string command = NULL;
+		if (path.find(".py") != std::string::npos)
+        	command = "python3 " + scriptPath;
+		else if (path.find(".sh") != std::string::npos)
+			command = "bash " + scriptPath;
+        FILE* fp = popen(command.c_str(), "r");
+        if (fp) 
+		{
+            char cgiBuffer[4096];
+			std::ostringstream oss;
+
+            while (fgets(cgiBuffer, sizeof(cgiBuffer), fp))
+                body += cgiBuffer;
+            pclose(fp);
+            response = "HTTP/1.1 200 OK\r\n";
+            response += "Content-Type: text/html\r\n";
+            oss << body.length();
+            response += "Content-Length: " + oss.str() + "\r\n";
+            response += "Connection: close\r\n\r\n";
+            response += body;
+        } 
+		else
+            response = "HTTP/1.1 500 Internal Server Error\r\n\r\n";
+	}
+	else
+	{
+		std::string filePath = server.staticRoot + "/" + server.indexFile;
+		body = server.readFile(filePath);
+		if (body.empty())
+			body = "<h1>404 Not Found</h1>";
+
+		response = "HTTP/1.1 200 OK\r\n";
+		response += "Content-Type: text/html\r\n";
+		std::ostringstream oss;
+		oss << body.length();
+		response += "Content-Length: " + oss.str() + "\r\n";
+		response += "Connection: close\r\n\r\n";
+		response += body;
+	}
 
 	send(clientSock, response.c_str(), response.length(), 0);
 	close(clientSock);
