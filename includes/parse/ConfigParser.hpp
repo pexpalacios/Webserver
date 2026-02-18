@@ -16,6 +16,7 @@ class ConfigParser
 		ConfigParser();
 		ConfigParser(const ConfigParser&);
 		ConfigParser &operator=(const ConfigParser&);
+		~ConfigParser();
 
 		std::vector<ServerConfig> parse(const std::string &filename);
 		void checkServerValues(ServerConfig &server);

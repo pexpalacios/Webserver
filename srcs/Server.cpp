@@ -62,15 +62,13 @@ void Server::setErrorPage(int code, const std::string& filePath)
 
 //20260212 Terto: Configura IP, puerto, carpeta base e index
 // main -> server.configureServer() -> server.listenOn() + server.setStaticRoot()
-void Server::configureServer(const std::string& ip, int port, const std::string& root, const std::string& indexFile, const std::vector<std::string>& execs)
+void Server::configureServer(const std::string& ip, int port, const std::string& root, const std::string& indexFile)
 {
 	listenOn(ip, port);
 	setStaticRoot(root, indexFile);
 
 	std::cout << " Server configured: " << ip << ":" << port << std::endl;
 	std::cout << " Root: " << root << " | Index: " << indexFile << std::endl;
-
-	executables = execs;
 }
 
 //20260212 Terto: Asocia páginas de error personalizadas

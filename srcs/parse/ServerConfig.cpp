@@ -32,9 +32,14 @@ ServerConfig::~ServerConfig()
 
 ////////
 
-void ServerConfig::setListen(const int n)
+void ServerConfig::addListen(const int n)
 {
-	_listen = n;
+	_listen.push_back(n);
+}
+
+void ServerConfig::setListen(const std::vector<int> v)
+{
+	_listen = v;
 }
 
 void ServerConfig::setClientMaxSize(const size_t n)
@@ -84,7 +89,7 @@ void ServerConfig::addLocation(const LocationConfig &obj)
 
 /////////
 
-int ServerConfig::getListen()
+std::vector<int> ServerConfig::getListen()
 {
 	return _listen;
 }
@@ -128,7 +133,10 @@ std::vector<LocationConfig> ServerConfig::getLocations()
 
 void ServerConfig::printServer()
 {
-	std::cout << "Listen:     " << this->getListen() << std::endl;
+	std::vector<int> ports = this->getListen();
+	for (std::vector<int>::iterator it = ports.begin(); it < ports.end(); ++it)
+		std::cout << "Listen:     " << *it << std::endl;
+	
 	std::cout << "Host:       " << this->getHost() << std::endl;
 	std::cout << "ServerName: " << this->getServerName() << std::endl;
 	std::cout << "ErrorPage:  ";
@@ -140,6 +148,6 @@ void ServerConfig::printServer()
 	std::cout << "Index:      " << this->getIndex() << std::endl;
 
 	std::vector<LocationConfig> locations = this->getLocations();
-	for (std::vector<LocationConfig>::iterator i = locations.begin(); i < locations.end(); i++)
-		i->printLocation();
+	for (std::vector<LocationConfig>::iterator it = locations.begin(); it < locations.end(); ++it)
+		it->printLocation();
 }

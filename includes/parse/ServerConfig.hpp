@@ -9,9 +9,8 @@
 class ServerConfig
 {
 	private:
-		int _listen;
+		std::vector<int> _listen;
 		size_t _client_max_body_size;
-
 		std::string _host;
 		std::string _server_name;
 		std::string _root;
@@ -26,7 +25,8 @@ class ServerConfig
 		~ServerConfig();
 
 	//Setters
-		void setListen(const int);
+		void addListen(const int);
+		void setListen(const std::vector<int>);
 		void setClientMaxSize(const size_t);
 		void setHost(const std::string);
 		void setServerName(const std::string);
@@ -38,7 +38,7 @@ class ServerConfig
 		void addLocation(const LocationConfig&);
 
 	//Getters
-		int getListen();
+		std::vector<int> getListen();
 		size_t getClientmaxSize();
 		std::string getHost();
 		std::string getServerName();
