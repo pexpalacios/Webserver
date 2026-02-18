@@ -132,18 +132,6 @@ static void setServerBlockVars(ServerConfig &currentServer, const std::string &k
 		currentServer.setClientMaxSize(size);
 	}
 }
-//This gets rid of the whole URL of a page, leaving just the file's name
-static void cleanPageUrl(ServerConfig &currentServer)
-{
-	int len = currentServer.getRoot().length();
-	currentServer.setIndex(currentServer.getIndex().substr(len, currentServer.getIndex().length()));
-
-	std::vector<std::string> errorPages = currentServer.getErrorPage();
-	std::vector<std::string> newPages;
-	for (std::vector<std::string>::iterator it = errorPages.begin(); it != errorPages.end(); ++it)
-		newPages.push_back(it->substr(len));
-	currentServer.setErrorPage(newPages);
-}
 
 ///// MAIN PARSING FUNCTION
 //This is a loop that check a config file line by line, detecting when there's a server and location and setting each
@@ -217,7 +205,6 @@ std::vector<ServerConfig> ConfigParser::parse(const std::string &filename)
 		{
 			if (inLocation)
 				throw (std::runtime_error("Location not closed"));
-			cleanPageUrl(currentServer);
 			checkServerValues(currentServer);
 			servers.push_back(currentServer);
 			inServer = false;

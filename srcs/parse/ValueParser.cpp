@@ -1,5 +1,6 @@
 #include "../../includes/parse/ConfigParser.hpp"
 
+//This checks if a IP/host is valid (contains 4 numbers and 3 dots)
 static int isValidIPv4(const std::string &ip)
 {
 	int dots = 0;
@@ -28,6 +29,7 @@ static int isValidIPv4(const std::string &ip)
 	return (1);
 }
 
+//This checks if the server exists in the directory /www
 static int findServer(std::string name)
 {
 	struct stat st;
@@ -42,6 +44,7 @@ static int findServer(std::string name)
 	return (1);
 }
 
+//This checks if an extension is valid, was in findPage before but i though it could be used for other extensions
 static int isValidExtension(std::string name, std::string extension)
 {
 	size_t len = extension.length();
@@ -50,6 +53,7 @@ static int isValidExtension(std::string name, std::string extension)
 	return (1);
 }
 
+//This checks is a file exists wihin the server
 static int findPage(std::string name, std::string root)
 {	
 	if (!isValidExtension(name, ".html"))
@@ -67,6 +71,18 @@ static int findPage(std::string name, std::string root)
 	return (1);
 }
 
+//This gets rid of the whole URL of a page, leaving just the file's name
+static std::string cleanPageUrl(std::string url, std::string root)
+{
+	size_t len = root.length();
+	if (len > url.length())
+		return ("");
+	std::string newstr = url.substr(len, url.length());
+	return (newstr);
+}
+
+//// MAIN ONES
+//This checks all possible server values to see if they are valid
 void ConfigParser::checkServerValues(ServerConfig &server)
 {
 	std::vector<int> ports = server.getListen();
@@ -84,9 +100,11 @@ void ConfigParser::checkServerValues(ServerConfig &server)
 	std::vector<std::string> errorPages = server.getErrorPage();
 	for (size_t i = 0; i < errorPages.size(); i++)
 	{
+		errorPages[i] = cleanPageUrl(errorPages[i], server.getRoot());
 		if (!errorPages[i].empty() && !findPage(errorPages[i], server.getRoot()))
 			throw std::invalid_argument("Page: " + errorPages[i] + " does not exist in Server: " + server.getServerName());
 	}
+	server.setErrorPage(errorPages);
 
 	if (server.getClientmaxSize() == 0)
 		throw std::invalid_argument("Client max body size in server: " + server.getServerName() + " is zero");
@@ -96,48 +114,57 @@ void ConfigParser::checkServerValues(ServerConfig &server)
 	struct stat st;
 	if (lstat(server.getRoot().c_str(), &st) != 0 || !S_ISDIR(st.st_mode))
 		throw std::invalid_argument("Root directory: " + server.getRoot() + " does not exist or is not a directory");
+	server.setIndex(cleanPageUrl(server.getIndex(), server.getRoot()));
 	if (!findPage(server.getIndex(), server.getRoot()))
 		throw std::invalid_argument("Index page: " + server.getIndex() + " does not exist");
 
 	std::vector<LocationConfig> locations = server.getLocations();
 	for (std::vector<LocationConfig>::iterator it = locations.begin(); it != locations.end(); ++it)
-		checkLocationValues(*it);
+		checkLocationValues(*it, server.getRoot());
 }
 
 ///////////////
-
-void ConfigParser::checkLocationValues(LocationConfig &location)
+//This checks all possible location values to see if they are valid
+void ConfigParser::checkLocationValues(LocationConfig &location, const std::string root)
 {
 	struct stat st;
-	if (lstat(location.getPath().c_str(), &st) != 0 || !S_ISDIR(st.st_mode))
-		throw std::invalid_argument("Location path: " + location.getPath() + " doesn't exist or is innaccesible");
-	if (lstat(location.getRoot().c_str(), &st) != 0 || !S_ISDIR(st.st_mode))
-		throw std::invalid_argument("Root on location: " + location.getPath() + " doesn't exist or is innaccesible");
-	if (lstat(location.getUpload().c_str(), &st) != 0 || !S_ISDIR(st.st_mode))
-		throw std::invalid_argument("Upload on location: " + location.getPath() + " doesn't exist or is innaccesible");
-	if (!findPage(location.getIndex(), location.getPath()))
-		throw std::invalid_argument("Index page on location: " + location.getPath() + " doesn't exist or is innaccesible");
+
+	if (!location.getPath().empty())
+		if (lstat(location.getPath().c_str(), &st) != 0 || !S_ISDIR(st.st_mode))
+			throw std::invalid_argument("Location path: " + location.getPath() + " doesn't exist or is innaccesible");
+	if (!location.getRoot().empty())
+		if (lstat(location.getRoot().c_str(), &st) != 0 || !S_ISDIR(st.st_mode))
+			throw std::invalid_argument("Root on location: " + location.getPath() + " doesn't exist or is innaccesible");
+	if (!location.getUpload().empty())
+		if (lstat(location.getUpload().c_str(), &st) != 0 || !S_ISDIR(st.st_mode))
+			throw std::invalid_argument("Upload on location: " + location.getPath() + " doesn't exist or is innaccesible");
+
+	location.setIndex(cleanPageUrl(location.getIndex(), root));
+	if (!location.getIndex().empty())
+		if (!findPage(location.getIndex(), location.getPath()))
+			throw std::invalid_argument("Index page: " + location.getIndex() + " on location: " + location.getPath() + " doesn't exist or is innaccesible");
 
 	if (location.getAutoindex() != 0 && location.getAutoindex() != 1)
-		throw std::invalid_argument("Autroindex on location: " + location.getPath() + " is invalid (must be 'on' or 'off')");
+		throw std::invalid_argument("Autoindex on location: " + location.getPath() + " is invalid (must be 'on' or 'off')");
 	if (location.getProtected() != 0 && location.getProtected() != 1)
 		throw std::invalid_argument("Protected on location: " + location.getPath() + " is invalid (must be 'on' or 'off')");
-	
-	//It must be GET POST and DELETE
+
 	std::vector<std::string> methods = location.getMethods();
 	for (std::vector<std::string>::iterator it = methods.begin(); it != methods.end(); ++it)
 		if (*it != "GET" && *it != "POST" && *it != "DELETE")
 			throw std::invalid_argument("Methods on location: " + location.getPath() + " is invalid (must be 'GET', 'POST', 'DELETE')");
 
-	//I think this one should only check the cgi-bin folder
+	// CGI paths: only check if not empty
 	std::vector<std::string> cgipath = location.getCGIPath();
 	for (std::vector<std::string>::iterator it = cgipath.begin(); it != cgipath.end(); ++it)
-		if (lstat(it->c_str(), &st) != 0 || !S_ISDIR(st.st_mode))
-			throw std::invalid_argument("CGIPath on location: " + location.getPath() + " doesn't exist or is innaccesible");
+		if (!it->empty())
+			if (lstat(it->c_str(), &st) != 0 || !S_ISDIR(st.st_mode))
+				throw std::invalid_argument("CGIPath on location: " + location.getPath() + " doesn't exist or is innaccesible");
 
-	//check .py and .sh and .php
+	// CGI extensions: only check if not empty
 	std::vector<std::string> cgiexts = location.getCGIExt();
 	for (std::vector<std::string>::iterator it = cgiexts.begin(); it != cgiexts.end(); ++it)
-		if (*it != ".py" && *it != ".sh" && *it != ".php")
-			throw std::invalid_argument("CGIExtension on location: " + location.getPath() + " is invalid (only accepts '.py', '.sh', '.php')");
+		if (!it->empty())
+			if (*it != ".py" && *it != ".sh" && *it != ".php")
+				throw std::invalid_argument("CGIExtension on location: " + location.getPath() + " is invalid (only accepts '.py', '.sh', '.php')");
 }
