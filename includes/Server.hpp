@@ -22,7 +22,9 @@
 #include "parse/LocationConfig.hpp"
 #include "parse/ServerConfig.hpp"
 
-// 20260216 Terto: Includes
+#include "http/Request.hpp"
+#include "http/Response.hpp"
+
 #include "Signal.hpp"
 
 
@@ -41,7 +43,7 @@ public:
 
 private:
 	void						listenOn(const std::string& ip, int port);								
-	void						setStaticRoot(const std::string& root, const std::string& indexFile);	
+	void						setStaticRoot(const std::string& root, const std::string& indexFile);
 	void						setErrorPage(int code, const std::string& path);						
 	std::vector<struct pollfd>	buildPollFdArray();														
 	std::string					readFile(const std::string& path);										
