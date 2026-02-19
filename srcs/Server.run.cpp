@@ -109,7 +109,6 @@ void Server::run()
 	// Agrega los sockets de escucha al array de pollfd
 	std::vector<struct pollfd> fds = buildPollFdArray();
 
-
 	// main loop with SIGINT (Ctrl+C) to stop the server
 	while (SignalHandler::running == 1)
 	{

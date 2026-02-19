@@ -59,7 +59,6 @@ void Server::setErrorPage(int code, const std::string& filePath)
 }
 
 
-
 //20260212 Terto: Configura IP, puerto, carpeta base e index
 // main -> server.configureServer() -> server.listenOn() + server.setStaticRoot()
 void Server::configureServer(const std::string& ip, int port, const std::string& root, const std::string& indexFile)
