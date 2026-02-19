@@ -21,7 +21,7 @@ ConfigParser::~ConfigParser()
 
 ///// AUXILIARY FUNCTIONS
 //Gets rid of spaces in line read
-std::string ConfigParser::omitSpaces(const std::string str)
+std::string ConfigParser::omitSpaces(const std::string &str)
 {
 	size_t start = str.find_first_not_of(" \t\r\n");
 	size_t end = str.find_last_not_of("\t\r\n");
@@ -129,7 +129,7 @@ static void setServerBlockVars(ServerConfig &currentServer, const std::string &k
 	{
 		std::string len = tokens[1];
 		size_t size = 0;
-		if (len.find("mb") != std::string::npos)
+		if (len.find("mb") != std::string::npos && len.find("Mb") != std::string::npos && len.find("MB") != std::string::npos)
 			size = std::atoi(len.c_str()) * 1024 * 1024;
 		else
 			size = std::atoi(len.c_str());

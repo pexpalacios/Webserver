@@ -28,7 +28,7 @@ class ConfigParser
 	
 		//AUXILIARY FUNCTIONS
 		std::vector<std::string> tokenize(const std::string &line);
-		std::string omitSpaces(const std::string str);
+		std::string omitSpaces(const std::string &str);
 };
 
 #endif
