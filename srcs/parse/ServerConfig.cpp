@@ -1,5 +1,6 @@
 #include "../../includes/parse/ServerConfig.hpp"
 
+/// CONSTRUCTORS AND DESTRUCTORS
 ServerConfig::ServerConfig()
 	: _listen(0), _client_max_body_size(0), _host(""), _server_name(""), _root(""), _index("")
 {

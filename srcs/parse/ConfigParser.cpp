@@ -1,5 +1,6 @@
 #include "../../includes/parse/ConfigParser.hpp"
 
+/// CONSTRUCTORS AND DESTRUCTORS
 ConfigParser::ConfigParser()
 {}
 
@@ -85,16 +86,19 @@ static void setLocationBlockVars(LocationConfig &currentLocation, const std::str
 	else if (key == "allow_methods" && tokens.size() > 1)
 	{
 		std::vector<std::string> methods(tokens.begin() + 1, tokens.end());
+		methods.back() = stripSemicolon(methods.back());
 		currentLocation.setMethods(methods);
 	}
 	else if (key == "cgi_path" && tokens.size() > 1)
 	{
 		std::vector<std::string> paths(tokens.begin() + 1, tokens.end());
+		paths.back() = stripSemicolon(paths.back());
 		currentLocation.setCGIPath(paths);
 	}
 	else if (key == "cgi_ext" && tokens.size() > 1)
 	{
 		std::vector<std::string> extensions(tokens.begin() + 1, tokens.end());
+		extensions.back() = stripSemicolon(extensions.back());
 		currentLocation.setCGIExt(extensions);
 	}
 }

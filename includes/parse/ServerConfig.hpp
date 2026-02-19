@@ -6,6 +6,8 @@
 #include <sys/stat.h>
 #include "LocationConfig.hpp"
 
+//This class stores every value a server block can have
+
 class ServerConfig
 {
 	private:

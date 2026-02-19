@@ -1,5 +1,6 @@
 #include "../../includes/parse/LocationConfig.hpp"
 
+/// CONSTRUCTORS AND DESTRUCTORS
 LocationConfig::LocationConfig()
 	: _path(""), _root(""), _index(""), _upload(""), _autoindex(false), _protected(false)
 {}

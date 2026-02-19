@@ -4,6 +4,9 @@
 #include <iostream>
 #include <vector>
 
+//This class stores every possible value a location block can have. It is never instantiatiated
+//by itself, it is always a part of a ServerConfig object
+
 class LocationConfig
 {
 	private:

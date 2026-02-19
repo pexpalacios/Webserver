@@ -1,5 +1,7 @@
 #include "../../includes/parse/ConfigParser.hpp"
 
+//This whole file is part of the ConfigParser class. It only has comprobations for valid values
+
 //This checks if a IP/host is valid (contains 4 numbers and 3 dots)
 static int isValidIPv4(const std::string &ip)
 {
@@ -130,8 +132,11 @@ void ConfigParser::checkLocationValues(LocationConfig &location, const std::stri
 	struct stat st;
 
 	if (!location.getPath().empty())
-		if (lstat(location.getPath().c_str(), &st) != 0 || !S_ISDIR(st.st_mode))
+	{
+		std::string fullPath = root + location.getPath();
+		if (lstat(fullPath.c_str(), &st) != 0 || !S_ISDIR(st.st_mode))
 			throw std::invalid_argument("Location path: " + location.getPath() + " doesn't exist or is innaccesible");
+	}
 	if (!location.getRoot().empty())
 		if (lstat(location.getRoot().c_str(), &st) != 0 || !S_ISDIR(st.st_mode))
 			throw std::invalid_argument("Root on location: " + location.getPath() + " doesn't exist or is innaccesible");
@@ -141,7 +146,7 @@ void ConfigParser::checkLocationValues(LocationConfig &location, const std::stri
 
 	location.setIndex(cleanPageUrl(location.getIndex(), root));
 	if (!location.getIndex().empty())
-		if (!findPage(location.getIndex(), location.getPath()))
+		if (!findPage(location.getIndex(), root))
 			throw std::invalid_argument("Index page: " + location.getIndex() + " on location: " + location.getPath() + " doesn't exist or is innaccesible");
 
 	if (location.getAutoindex() != 0 && location.getAutoindex() != 1)
@@ -154,14 +159,12 @@ void ConfigParser::checkLocationValues(LocationConfig &location, const std::stri
 		if (*it != "GET" && *it != "POST" && *it != "DELETE")
 			throw std::invalid_argument("Methods on location: " + location.getPath() + " is invalid (must be 'GET', 'POST', 'DELETE')");
 
-	// CGI paths: only check if not empty
 	std::vector<std::string> cgipath = location.getCGIPath();
 	for (std::vector<std::string>::iterator it = cgipath.begin(); it != cgipath.end(); ++it)
 		if (!it->empty())
 			if (lstat(it->c_str(), &st) != 0 || !S_ISDIR(st.st_mode))
 				throw std::invalid_argument("CGIPath on location: " + location.getPath() + " doesn't exist or is innaccesible");
 
-	// CGI extensions: only check if not empty
 	std::vector<std::string> cgiexts = location.getCGIExt();
 	for (std::vector<std::string>::iterator it = cgiexts.begin(); it != cgiexts.end(); ++it)
 		if (!it->empty())
