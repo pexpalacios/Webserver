@@ -129,7 +129,7 @@ static void setServerBlockVars(ServerConfig &currentServer, const std::string &k
 	{
 		std::string len = tokens[1];
 		size_t size = 0;
-		if (len.find("mb") != std::string::npos && len.find("Mb") != std::string::npos && len.find("MB") != std::string::npos)
+		if (len.find("mb") != std::string::npos || len.find("Mb") != std::string::npos || len.find("MB") != std::string::npos)
 			size = std::atoi(len.c_str()) * 1024 * 1024;
 		else
 			size = std::atoi(len.c_str());
@@ -149,6 +149,7 @@ std::vector<ServerConfig> ConfigParser::parse(const std::string &filename)
 	std::string line;
 	bool inServer = false;
 	bool inLocation = false;
+	int lineNumber = 0;
 	ServerConfig currentServer;
 	LocationConfig currentLocation;
 	std::vector<ServerConfig> servers;
@@ -157,12 +158,13 @@ std::vector<ServerConfig> ConfigParser::parse(const std::string &filename)
 	while (std::getline(file, line))
 	{
 		line = omitSpaces(line);
+		lineNumber++;
 		if (line.empty())
 			continue;
 		if (line.find("server") == 0 && line.find("{") != std::string::npos)
 		{
 			if (inServer)
-				throw (std::runtime_error("Nested server blocks"));
+				throw (std::runtime_error("Nested server blocks. Line: " + lineNumber));
 			inServer = true;
 			currentServer = ServerConfig();
 			continue;
@@ -174,11 +176,11 @@ std::vector<ServerConfig> ConfigParser::parse(const std::string &filename)
 			if (line.find("location") == 0 && line.find("{") != std::string::npos)
 			{
 				if (inLocation)
-						throw (std::runtime_error("Nested location blocks"));
+						throw (std::runtime_error("Nested location blocks Line: " + lineNumber));
 				inLocation = true;
 				std::vector<std::string> tokens = tokenize(line);
 				if (tokens.size() < 3)
-					throw (std::runtime_error("Invalid location block"));
+					throw (std::runtime_error("Invalid location block Line: " + lineNumber));
 				currentLocation = LocationConfig();
 				currentLocation.setPath(tokens[1]);
 				if (line.find("}") != std::string::npos)
@@ -208,7 +210,7 @@ std::vector<ServerConfig> ConfigParser::parse(const std::string &filename)
 		if (inServer && line == "}")
 		{
 			if (inLocation)
-				throw (std::runtime_error("Location not closed"));
+				throw (std::runtime_error("Location not closed Line: " + lineNumber));
 			checkServerValues(currentServer);
 			servers.push_back(currentServer);
 			inServer = false;
@@ -217,7 +219,7 @@ std::vector<ServerConfig> ConfigParser::parse(const std::string &filename)
 	}
 	//These two check if the file is empty or missing brackets
 	if (inServer)
-		throw (std::runtime_error("Unclosed server block"));
+		throw (std::runtime_error("Unclosed server block Line: " + lineNumber));
 	if (!inServer && servers.empty())
 		throw (std::runtime_error("Config file is empty"));
 	return (servers);

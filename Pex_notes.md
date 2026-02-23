@@ -7,6 +7,8 @@ But that could also be the menu page and then the game or something.
 don't know if that would need any change in server functions or it'll just work
 - ^ New plan involves making Listen() a vector<int> so it can take several ports at the same time, hence, the other server is optional
 
+---
+
 ### Changes in execution
 - Need two changes in server execution to connect well with the parsing:
 ```
@@ -47,6 +49,91 @@ void Server::handleClientConnection(int clientSock, Server& server)
 ```
 Which needs a way to execute files instead of just reading them. The server should have access to the locations to be able to read what extensions are executable (.py, .sh, .php). Inside the server configuration, a localizations configuration should be added, and then sent in main().
 
+handleClientConnection should also look into .css and other types of files to send them correctly to the server. Right now it sens every file with a html/text header and cannot read .css
+
+*Note that the following code has been written by copilot. It compiles and works:*
+```
+void Server::handleClientConnection(int clientSock, Server& server)
+{
+	char buffer[1024];
+	int bytesRead = recv(clientSock, buffer, sizeof(buffer) - 1, 0);
+	if (bytesRead <= 0)
+	{
+		std::cerr << "recv() failed or client disconnected. FD " << clientSock << std::endl;
+		close(clientSock);
+		return;
+	}
+	buffer[bytesRead] = '\0';
+
+	std::cout << "Request received from FD " << clientSock << ":\n" << buffer << std::endl;
+
+	// Parse HTTP request to get the requested path
+	std::string request(buffer);
+	std::string path = "/";
+	size_t getPos = request.find("GET ");
+	if (getPos != std::string::npos) {
+		size_t start = getPos + 4;
+		size_t end = request.find(' ', start);
+		if (end != std::string::npos)
+			path = request.substr(start, end - start);
+	}
+	// Remove query string if present
+	size_t qpos = path.find('?');
+	if (qpos != std::string::npos)
+		path = path.substr(0, qpos);
+	// Default to index file if root
+	if (path == "/" || path.empty())
+		path = "/" + server.indexFile;
+	std::string filePath = server.staticRoot + path;
+	std::string body = server.readFile(filePath);
+	bool fileFound = !body.empty();
+
+	// Determine Content-Type by extension
+	std::string contentType = "text/html";
+	size_t dot = path.rfind('.');
+	if (dot != std::string::npos) {
+		std::string ext = path.substr(dot);
+		if (ext == ".css")
+			contentType = "text/css";
+		else if (ext == ".js")
+			contentType = "application/javascript";
+		else if (ext == ".png")
+			contentType = "image/png";
+		else if (ext == ".jpg" || ext == ".jpeg")
+			contentType = "image/jpeg";
+		else if (ext == ".gif")
+			contentType = "image/gif";
+		else if (ext == ".svg")
+			contentType = "image/svg+xml";
+		else if (ext == ".ico")
+			contentType = "image/x-icon";
+		else if (ext == ".html" || ext == ".htm")
+			contentType = "text/html";
+		// Add more types as needed
+	}
+
+	std::string response;
+	if (fileFound) {
+		response = "HTTP/1.1 200 OK\r\n";
+	} else {
+		response = "HTTP/1.1 404 Not Found\r\n";
+		body = "<h1>404 Not Found</h1>";
+		contentType = "text/html";
+	}
+	response += "Content-Type: " + contentType + "\r\n";
+	std::ostringstream oss;
+	oss << body.length();
+	response += "Content-Length: " + oss.str() + "\r\n";
+	response += "Connection: close\r\n\r\n";
+	response += body;
+
+	send(clientSock, response.c_str(), response.length(), 0);
+	close(clientSock);
+}
+```
+
+
+---
 
 ### CGIs
 Subject:

@@ -50,7 +50,7 @@ static int findServer(std::string name)
 static int isValidExtension(std::string name, std::string extension)
 {
 	size_t len = extension.length();
-	if ((name.length() < len) || name.substr(name.length() - len) != extension.c_str())
+	if ((name.length() < len) || name.substr(name.length() - len) != extension)
 		return (0);
 	return (1);
 }
