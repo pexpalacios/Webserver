@@ -1,5 +1,6 @@
 #include "../includes/Server.hpp"
 #include "../includes/Signal.hpp"
+#include "../includes/http/RequestHandler.hpp"
 
 
 //20260210 Terto: read file content and return as string
@@ -21,6 +22,7 @@ std::string Server::readFile(const std::string& path)
 	return content;
 }
 
+
 // 20260210 Terto: Build and return pollfd array from listenSockets
 // main -> server.run() -> buildPollFdArray() -> pollfd array with listenSockets
 std::vector<struct pollfd> Server::buildPollFdArray()
@@ -39,6 +41,7 @@ std::vector<struct pollfd> Server::buildPollFdArray()
 	std::cout << "Waiting for connections..." << std::endl;
 	return fds;
 }
+
 
 //20260207 Terto: Accept a new connection and add to pollfd array
 // main -> server.run() -> handleNewConnection() -> accept() + push_back a fds
@@ -67,37 +70,46 @@ void Server::handleNewConnection(int listenSock, std::vector<struct pollfd>& fds
 	fds.push_back(newPollFd);
 }
 
+
 // 20260207 Terto: Handle a connected client socket
-// main -> server.run() -> handleClientConnection() -> recv() + server.readFile() + send() + close()
-// Receives an HTTP request from a client, responds with index.html or 404, then closes the connection
+// main -> server.run() -> handleClientConnection()
 void Server::handleClientConnection(int clientSock, Server& server)
 {
 	char buffer[1024];
 	int bytesRead = recv(clientSock, buffer, sizeof(buffer) - 1, 0);
+
 	if (bytesRead <= 0)
 	{
 		std::cerr << "recv() failed or client disconnected. FD " << clientSock << std::endl;
 		close(clientSock);
 		return;
 	}
+
 	buffer[bytesRead] = '\0';
+	std::string raw(buffer, bytesRead);
+	std::cout << "Request received from FD " << clientSock << ":\n" << raw << std::endl;
 
-	std::cout << "Request received from FD " << clientSock << ":\n" << buffer << std::endl;
+	//20260223 Parse and error handling of request
+	Request request;
+	if (!request.parse(raw))
+	{
+		std::cerr << "Invalid HTTP request" << std::endl;
 
-	std::string filePath = server.staticRoot + "/" + server.indexFile;
-	std::string body = server.readFile(filePath);
-	if (body.empty())
-		body = "<h1>404 Not Found</h1>";
+		RequestHandler handler(server);
+		Response responseObj = handler.handleBadRequest();
+		std::string responseStr = responseObj.toString();
 
-	std::string response = "HTTP/1.1 200 OK\r\n";
-	response += "Content-Type: text/html\r\n";
-	std::ostringstream oss;
-	oss << body.length();
-	response += "Content-Length: " + oss.str() + "\r\n";
-	response += "Connection: close\r\n\r\n";
-	response += body;
+		send(clientSock, responseStr.c_str(), responseStr.size(), 0);
+		close(clientSock);
+		return;
+	}
 
-	send(clientSock, response.c_str(), response.length(), 0);
+	//20260223 Handle request
+	RequestHandler handler(server);
+	Response responseObj = handler.handleRequest(request);
+	std::string response = responseObj.toString();
+
+	send(clientSock, response.c_str(), response.size(), 0);
 	close(clientSock);
 }
 
@@ -113,8 +125,10 @@ void Server::run()
 	while (SignalHandler::running == 1)
 	{
 		int ret = poll(&fds[0], fds.size(), -1);
-		if (ret < 0) {
-			std::cerr << "Error (0.1): poll() failed." << std::endl;
+		if (ret < 0) 
+		{
+			if (SignalHandler::running == 1)
+				std::cerr << "Error (0.1): poll() failed." << std::endl;
 			break;
 		}
 

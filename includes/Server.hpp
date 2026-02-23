@@ -41,6 +41,10 @@ public:
 	void	handleClientConnection(int clientSock, Server& server);
 	void	run();
 
+	const std::string&	getStaticRoot() const;
+	const std::string&	getIndexFile() const;
+	const std::map<int, std::string>& getErrorPages() const;
+
 private:
 	void						listenOn(const std::string& ip, int port);								
 	void						setStaticRoot(const std::string& root, const std::string& indexFile);

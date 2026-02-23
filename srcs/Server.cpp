@@ -4,6 +4,14 @@
 Server::Server() {}
 Server::~Server() {}
 
+const std::string& Server::getStaticRoot() const
+{return staticRoot;}
+
+const std::string& Server::getIndexFile() const
+{return indexFile;}
+
+const std::map<int, std::string>& Server::getErrorPages() const
+{return errorPages;}
 
 //20260212 Terto: configure server socket to listen on specific IP and port
 // main -> server.configureServer() -> server.listenOn()
@@ -65,32 +73,35 @@ void Server::configureServer(const std::string& ip, int port, const std::string&
 {
 	listenOn(ip, port);
 	setStaticRoot(root, indexFile);
-
-	std::cout << " Server configured: " << ip << ":" << port << std::endl;
 	std::cout << " Root: " << root << " | Index: " << indexFile << std::endl;
 }
 
-//20260212 Terto: Asocia páginas de error personalizadas
+
+//20260223 Terto: Asocia páginas de error personalizadas
 // main -> server.configureErrorPages() -> server.setErrorPage()
 void Server::configureErrorPages(const std::string& root, std::string error_404, std::string error_500)
 {
-	std::string full404;
-	std::string full500;
-	if (!root.empty() && root[root.length() - 1] == '/')
-	{
-		full404 = root + error_404;
-		full500 = root + error_500;
-	}
-	else
-	{
-		full404 = root + "/" + error_404;
-		full500 = root + "/" + error_500;
-	}
+	if (!error_404.empty() && error_404[error_404.size() - 1] == ';')
+		error_404.erase(error_404.size() - 1);
+
+	if (!error_500.empty() && error_500[error_500.size() - 1] == ';')
+		error_500.erase(error_500.size() - 1);
+
+	if (!error_404.empty() && error_404[0] == '/')
+		error_404.erase(0, 1);
+
+	if (!error_500.empty() && error_500[0] == '/')
+		error_500.erase(0, 1);
+
+	std::string cleanRoot = root;
+
+	if (!cleanRoot.empty() && cleanRoot[cleanRoot.size() - 1] != '/')
+		cleanRoot += '/';
+
+	std::string full404 = cleanRoot + error_404;
+	std::string full500 = cleanRoot + error_500;
 	setErrorPage(404, full404);
 	setErrorPage(500, full500);
-	std::cout << " Error pages configured." << std::endl;
+
+	std::cout << "Error pages configured." << std::endl;
 }
-
-
-
-

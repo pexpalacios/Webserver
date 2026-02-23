@@ -7,9 +7,9 @@
 class ResponseHandler
 {
 public:
-    Response buildStaticFileResponse(const std::string& filePath);
-    Response buildErrorResponse(int statusCode);
-    Response buildMethodNotAllowed();
+	Response buildStaticFileResponse(const std::string& filePath);
+	Response buildErrorResponse(int statusCode);
+	Response buildMethodNotAllowed();
 };
 
 #endif
