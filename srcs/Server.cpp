@@ -79,29 +79,35 @@ void Server::configureServer(const std::string& ip, int port, const std::string&
 
 //20260223 Terto: Asocia páginas de error personalizadas
 // main -> server.configureErrorPages() -> server.setErrorPage()
-void Server::configureErrorPages(const std::string& root, std::string error_404, std::string error_500)
+void Server::configureErrorPages(const std::string& root, const std::vector<std::string>& errorPaths)
 {
-	if (!error_404.empty() && error_404[error_404.size() - 1] == ';')
-		error_404.erase(error_404.size() - 1);
-
-	if (!error_500.empty() && error_500[error_500.size() - 1] == ';')
-		error_500.erase(error_500.size() - 1);
-
-	if (!error_404.empty() && error_404[0] == '/')
-		error_404.erase(0, 1);
-
-	if (!error_500.empty() && error_500[0] == '/')
-		error_500.erase(0, 1);
-
 	std::string cleanRoot = root;
 
 	if (!cleanRoot.empty() && cleanRoot[cleanRoot.size() - 1] != '/')
 		cleanRoot += '/';
 
-	std::string full404 = cleanRoot + error_404;
-	std::string full500 = cleanRoot + error_500;
-	setErrorPage(404, full404);
-	setErrorPage(500, full500);
+	size_t i = 0;
 
+	while (i < errorPaths.size())
+	{
+		std::string path = errorPaths[i];
+
+		if (!path.empty() && path[path.size() - 1] == ';')
+			path.erase(path.size() - 1);
+
+		if (!path.empty() && path[0] == '/')
+			path.erase(0, 1);
+
+		std::string fullPath = cleanRoot + path;
+
+		// De momento:
+		// posición 0 → 404
+		// posición 1 → 500
+		if (i == 0)
+			setErrorPage(404, fullPath);
+		else if (i == 1)
+			setErrorPage(500, fullPath);
+		++i;
+	}
 	std::cout << "Error pages configured." << std::endl;
 }

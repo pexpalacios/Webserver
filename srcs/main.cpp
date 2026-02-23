@@ -16,7 +16,7 @@ int main(int ac, char **av)
 
 	//(void)client_max_body_size; // Variable no utilizada en esta versión
 	server.configureServer(conf[0].getHost(), conf[0].getListen(), conf[0].getRoot(), conf[0].getIndex());
-	server.configureErrorPages(conf[0].getRoot(), conf[0].getErrorPage()[0], conf[0].getErrorPage()[1]);
+	server.configureErrorPages(conf[0].getRoot(), conf[0].getErrorPage());
 	server.run();
 	return 0;
 }

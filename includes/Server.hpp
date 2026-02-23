@@ -36,7 +36,7 @@ public:
 	~Server();
 
 	void	configureServer(const std::string& ip, int port, const std::string& root, const std::string& indexFile);
-	void	configureErrorPages(const std::string& root, std::string error_404, std::string error_500);
+	void	configureErrorPages(const std::string& root, const std::vector<std::string>& errorPaths);
 	void	handleNewConnection(int listenSock, std::vector<struct pollfd>& fds);
 	void	handleClientConnection(int clientSock, Server& server);
 	void	run();
