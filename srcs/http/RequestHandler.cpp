@@ -11,6 +11,7 @@ RequestHandler::RequestHandler(const Server& server)
 Response RequestHandler::handleBadRequest()
 {return buildErrorResponse(400);}
 
+
 //20260223 - Implemented basic GET request handling, including file reading and response generation.
 // main -> server.run() -> handleClientConnection() -> handleRequest -> handleGet/handlePost/handleDelete -> isPathSafe
 bool RequestHandler::isPathSafe(const std::string& path) const
@@ -70,6 +71,39 @@ Response RequestHandler::buildErrorResponse(int statusCode) const
 	return response;
 }
 
+
+//20260225 find the best matching location for the requested path, based on longest prefix match
+// main -> handleRequest -> handleGet -> findMatchingLocation
+const LocationConfig* RequestHandler::findMatchingLocation(const std::string& path) const
+{
+	const std::vector<LocationConfig>& locations = _server.getLocations();
+
+	const LocationConfig* matched = NULL;
+	size_t longestMatch = 0;
+	size_t i = 0;
+
+	while (i < locations.size())
+	{
+		// local copy to avoid getter const problems
+		LocationConfig loc = locations[i];
+
+		std::string locPath = loc.getPath();
+
+		if (!locPath.empty() &&
+			path.find(locPath) == 0 &&
+			locPath.length() > longestMatch)
+		{
+			matched = &locations[i];   // return pointer to the original
+			longestMatch = locPath.length();
+		}
+
+		++i;
+	}
+
+	return (matched);
+}
+
+
 //20260223 - switched to route requests based on HTTP method
 // main -> server.run() -> handleClientConnection() -> handleRequest -> handleGet/handlePost/handleDelete
 Response RequestHandler::handleDelete(const Request& request)
@@ -108,6 +142,28 @@ Response RequestHandler::handlePost(const Request& request)
 }
 
 
+//20260225 - Debug method to print the requested path and the resolved file path for GET requests
+// main -> handleRequest -> handleGet -> resolveGetPath -> DebugHandleGet
+void RequestHandler::DebugHandleGet(const std::string& path, const std::string& resolvedPath) const
+{
+	static std::vector<std::string> history;
+	static int counter = 0;
+
+	++counter;
+	history.push_back(path + " -> " + resolvedPath);
+
+	std::cout << "GET call number: " << counter << "\n\n";
+	size_t i = 0;
+	while (i < history.size())
+	{
+		std::cout << i + 1 << ") " << history[i] << "\n";
+		++i;
+	}
+
+	std::cout << "\nTotal GET: " << history.size() << "\n";
+}
+
+
 //20260223 - Implemented basic GET request handling, including file reading and response generation.
 // main -> server.run() -> handleClientConnection() -> handleRequest -> handleGet/handlePost/handleDelete
 Response RequestHandler::handleGet(const Request& request)
@@ -121,9 +177,9 @@ Response RequestHandler::handleGet(const Request& request)
 	if (filePath.find(root) != 0)
 		return buildErrorResponse(403);
 
-	// DEBUG temporal: ver qué ruta de fichero se resuelve
-	std::cout << "[GET] path='" << path << "'" << std::endl;
-	std::cout << "[GET] resolved filePath='" << filePath << "'" << std::endl;
+	// Debug method to print the requested path and the resolved file path for GET requests
+	DebugHandleGet(path, filePath);
+
 	if (!fileExists(filePath))
 		return buildErrorResponse(404);
 

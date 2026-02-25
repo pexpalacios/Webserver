@@ -3,43 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <title>404 - Página no encontrada</title>
-    <style>
-        body {
-            background-color: #111;
-            color: #fff;
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin-top: 10%;
-        }
-        h1 {
-            font-size: 80px;
-            margin-bottom: 0;
-            color: #ff4c4c;
-        }
-        h2 {
-            margin-top: 0;
-        }
-        p {
-            color: #ccc;
-        }
-        a {
-            display: inline-block;
-            margin-top: 20px;
-            padding: 10px 20px;
-            background-color: #ff4c4c;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-        }
-        a:hover {
-            background-color: #ff1f1f;
-        }
-    </style>
+
+    <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-    <h1>404</h1>
-    <h2>Página no encontrada</h2>
-    <p>Lo sentimos, el recurso que buscas no existe.</p>
-    <a href="/">Volver al inicio</a>
+
+    <div class="main-div">
+        <div style="width: 100%; text-align: center;">
+            <h1 style="font-size: 72px;">404</h1>
+            <h2>Página no encontrada</h2>
+
+            <p>El recurso solicitado no existe en el servidor.</p>
+
+            <div class="status-bar">
+                Error 404 - Not Found
+            </div>
+
+            <br>
+            <button onclick="location.href='/'">
+                Volver al inicio
+            </button>
+        </div>
+    </div>
+
 </body>
 </html>

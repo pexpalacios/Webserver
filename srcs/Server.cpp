@@ -13,6 +13,10 @@ const std::string& Server::getIndexFile() const
 const std::map<int, std::string>& Server::getErrorPages() const
 {return errorPages;}
 
+const std::vector<LocationConfig>& Server::getLocations() const
+{return locations;}
+
+
 //20260212 Terto: configure server socket to listen on specific IP and port
 // main -> server.configureServer() -> server.listenOn()
 void Server::listenOn(const std::string& ip, int port) 
@@ -77,6 +81,14 @@ void Server::configureServer(const std::string& ip, int port, const std::string&
 }
 
 
+//20260225 Terto: Locations inside server configuration
+// main -> server.configureLocations()
+void Server::configureLocations(const std::vector<LocationConfig>& locations)
+{
+	this->locations = locations;
+}
+
+
 //20260223 Terto: Asocia páginas de error personalizadas
 // main -> server.configureErrorPages() -> server.setErrorPage()
 void Server::configureErrorPages(const std::string& root, const std::vector<std::string>& errorPaths)
@@ -100,7 +112,7 @@ void Server::configureErrorPages(const std::string& root, const std::vector<std:
 
 		std::string fullPath = cleanRoot + path;
 
-		// De momento:
+		// De momento los siguientes errores se asignan en orden:
 		// posición 0 → 404
 		// posición 1 → 500
 		if (i == 0)

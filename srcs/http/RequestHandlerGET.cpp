@@ -1,27 +1,56 @@
 #include "../../includes/http/RequestHandler.hpp"
 #include <fstream>
 
-//20260223 - resolve the requested path to a file system path, ensuring it points to the www directory
+//20260225 Terto: Implemented basic POST request handling, including file saving and response generation.
 // main -> handleRequest -> handleGet -> resolveGetPath
 std::string RequestHandler::resolveGetPath(const std::string& path) const
 {
-	std::string finalPath = path;
-
-	// Si es "/", usamos index
-	if (path == "/")
-		finalPath = _server.getIndexFile();
+	std::string requestPath = path;
 	std::string root = _server.getStaticRoot();
+	std::string index = _server.getIndexFile();
 
-	// Asegurar que root termina en '/'
+	const LocationConfig* locPtr = findMatchingLocation(path);
+
+	// if there's a matching location, we need to adjust the root and index based on that location's config
+	if (locPtr)
+	{
+		// Local copy to avoid const issues
+		LocationConfig loc = *locPtr;
+
+		std::string locPath = loc.getPath();
+
+		if (!loc.getRoot().empty())
+			root = loc.getRoot();
+
+		if (requestPath.find(locPath) == 0)
+			requestPath = requestPath.substr(locPath.length());
+
+		if (requestPath.empty() || requestPath == "/")
+		{
+			if (!loc.getIndex().empty())
+				requestPath = loc.getIndex();
+			else
+				requestPath = index;
+		}
+	}
+	else
+	{
+		if (requestPath == "/")
+			requestPath = index;
+	}
+
+	if (requestPath.find(root) == 0)
+		return requestPath;
+
 	if (!root.empty() && root[root.size() - 1] != '/')
 		root += '/';
 
-	// Si finalPath empieza con '/', quitarlo
-	if (!finalPath.empty() && finalPath[0] == '/')
-		finalPath.erase(0, 1);
+	if (!requestPath.empty() && requestPath[0] == '/')
+		requestPath.erase(0, 1);
 
-	return root + finalPath;
+	return root + requestPath;
 }
+
 
 //20260223 - read the content of the file into a string, return empty string if file cannot be read or have no permission
 // main -> handleRequest -> handleGet -> readFileContent
@@ -36,6 +65,7 @@ std::string RequestHandler::readFileContent(const std::string& path) const
 	file.close();
 	return content;
 }
+
 
 //20260223 - determine the content type based on file extension
 // main -> handleRequest -> handleGet -> getContentType
@@ -57,6 +87,8 @@ std::string RequestHandler::getContentType(const std::string& path) const
 	return ("text/plain");
 }
 
+//20260223 - build a successful response with the file content and appropriate headers
+// main -> handleRequest -> handleGet -> buildFileResponse
 Response RequestHandler::buildFileResponse(const std::string& content, const std::string& filePath) const
 {
 	Response response;
@@ -66,3 +98,4 @@ Response RequestHandler::buildFileResponse(const std::string& content, const std
 
 	return (response);
 }
+

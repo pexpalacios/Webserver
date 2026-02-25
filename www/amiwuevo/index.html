@@ -3,38 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <title>Webserv 42</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #1e1e1e;
-            color: #f0f0f0;
-            text-align: center;
-            margin-top: 50px;
-        }
-        h1 {
-            color: #4CAF50;
-        }
-        .box {
-            background: #2c2c2c;
-            padding: 20px;
-            border-radius: 10px;
-            display: inline-block;
-        }
-        a {
-            color: #4CAF50;
-            text-decoration: none;
-        }
-    </style>
+
+    <!-- 🔥 CSS externo servido por tu Webserv -->
+    <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-    <div class="box">
-        <h1>🚀 Webserv funcionando</h1>
-        <p>Tu servidor HTTP en C++ está vivo.</p>
-        <p>Prueba:</p>
-        <ul style="list-style: none; padding: 0;">
-            <li><a href="/noexiste.html">Probar 404</a></li>
-            <li><a href="/images/">Probar directorio</a></li>
-        </ul>
+
+    <div class="main-div">
+        <div style="width: 80%;">
+            <h1>🚀 Webserv funcionando</h1>
+            <p>Tu servidor HTTP en C++ está vivo.</p>
+
+            <div class="status-bar">
+                Servidor activo en 127.0.0.1:8001
+            </div>
+
+            <h3>Pruebas:</h3>
+            <ul style="list-style: none; padding: 0;">
+                <li><a href="/noexiste.html">Probar 404</a></li>
+                <li><a href="/styles.css">Ver CSS directamente</a></li>
+                <li><a href="/images/">Probar directorio</a></li>
+            </ul>
+        </div>
+
+        <div class="button-div">
+            <button onclick="location.href='/'">Inicio</button>
+            <button onclick="location.href='/noexiste.html'">Error 404</button>
+        </div>
     </div>
+
 </body>
 </html>

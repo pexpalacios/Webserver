@@ -15,6 +15,7 @@ public:
 	RequestHandler(const Server& server);
 	Response	handleRequest(const Request& request);
 	Response	handleBadRequest();
+	static void	DebugPrintSummary();
 
 private:
 	const Server& _server;
@@ -29,11 +30,15 @@ private:
 	bool		fileExists(const std::string& path) const;
 	Response	buildErrorResponse(int statusCode) const;
 
+	// Location matching
+	const LocationConfig*	findMatchingLocation(const std::string& path) const;
+
 	// GET
 	std::string	resolveGetPath(const std::string& path) const;
 	std::string	readFileContent(const std::string& path) const;
 	std::string	getContentType(const std::string& path) const;
 	Response	buildFileResponse(const std::string& content, const std::string& filePath) const;
+	void		DebugHandleGet(const std::string& path, const std::string& resolvedPath) const;
 
 	// POST
 	std::string	resolvePostPath(const std::string& path) const;
