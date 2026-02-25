@@ -99,3 +99,25 @@ Response RequestHandler::buildFileResponse(const std::string& content, const std
 	return (response);
 }
 
+
+
+//20260225 - Debug method to print the requested path and the resolved file path for GET requests
+// main -> handleRequest -> handleGet -> resolveGetPath -> DebugHandleGet
+void RequestHandler::DebugHandleGet(const std::string& path, const std::string& resolvedPath) const
+{
+	static std::vector<std::string> history;
+	static int counter = 0;
+
+	++counter;
+	history.push_back(path + " -> " + resolvedPath);
+
+	std::cout << "GET call number: " << counter << "\n\n";
+	size_t i = 0;
+	while (i < history.size())
+	{
+		std::cout << i + 1 << ") " << history[i] << "\n";
+		++i;
+	}
+
+	std::cout << "\nTotal GET: " << history.size() << "\n";
+}

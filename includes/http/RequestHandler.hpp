@@ -15,7 +15,6 @@ public:
 	RequestHandler(const Server& server);
 	Response	handleRequest(const Request& request);
 	Response	handleBadRequest();
-	static void	DebugPrintSummary();
 
 private:
 	const Server& _server;
