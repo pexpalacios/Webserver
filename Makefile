@@ -1,6 +1,6 @@
 NAME		:= webserver
-CXX			:= g++
-CXXFLAGS	:= -Wall -Wextra -Werror -std=c++98
+CXX			:= c++
+CXXFLAGS	:= -Wall -Wextra -Werror -std=c++98 -g
 RM			:= rm -f
 
 SRCS := srcs/main.cpp \

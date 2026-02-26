@@ -72,8 +72,6 @@ body {
 	width: 10vw;
 	max-width: 360px;
 	margin: 0 auto;
-	pointer-events: none;
-	/* so clicks pass through */
 	object-fit: cover;
 }
 
