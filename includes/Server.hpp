@@ -51,6 +51,7 @@ private:
 	std::string					staticRoot;		// Carpeta base para archivos estáticos
 	std::string 				indexFile;		// Archivo index (index.html)
 	std::map<int, std::string>	errorPages;		// Mapa de códigos de error y rutas a sus páginas
+	std::vector<std::string>	executables;	// Extensiones ejecutables
 
 };
 

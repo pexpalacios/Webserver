@@ -10,15 +10,23 @@ int main(int ac, char **av)
 		std::cout << "Invalid number of arguments" << std::endl;
 		return (1);
 	}
-	ConfigParser parser;
-	std::vector<ServerConfig> conf = parser.parse(av[1]);
 	SignalHandler::registerSignal();
 
-	Server 			server;
-	
-	//(void)client_max_body_size; // Variable no utilizada en esta versión
-	server.configureServer(conf[0].getHost(), conf[0].getListen(), conf[0].getRoot(), conf[0].getIndex());
-	server.configureErrorPages(conf[0].getRoot(), conf[0].getErrorPage()[0], conf[0].getErrorPage()[1]);
-	server.run();
+	try
+	{
+		ConfigParser parser;
+		std::vector<ServerConfig> conf = parser.parse(av[1]);
+
+		Server 			server;
+		std::vector<int> ports = conf[0].getListen();
+		server.configureServer(conf[0].getHost(), ports[0], conf[0].getRoot(), conf[0].getIndex());
+		server.configureErrorPages(conf[0].getRoot(), conf[0].getErrorPage()[0], conf[0].getErrorPage()[1]);
+		server.run();
+	} 
+	catch (const std::invalid_argument& e)
+	{
+		std::cerr << "Error in config parsing:\n" << e.what() << std::endl;
+		return (1);
+	}
 	return 0;
 }
