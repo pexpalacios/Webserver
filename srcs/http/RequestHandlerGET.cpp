@@ -17,19 +17,25 @@ std::string RequestHandler::resolveGetPath(const std::string& path) const
 			root = loc.getRoot();
 	}
 
-	// lets index with "/"
-	if (requestPath == "/")
-		requestPath = "/" + index;
-
-	// normalize slashes
+	// NORMALIZE ROOT (remove trailing slash)
 	if (!root.empty() && root[root.size() - 1] == '/')
-		root.push_back('/');
+		root.erase(root.size() - 1);
 
-	// requestPath start with '/'
+	// HANDLE INDEX
+	if (requestPath == "/")
+	{
+		// remove leading slash from index if present
+		if (!index.empty() && index[0] == '/')
+			index.erase(0, 1);
+
+		requestPath = "/" + index;
+	}
+
+	// ENSURE requestPath starts with '/'
 	if (requestPath.empty() || requestPath[0] != '/')
 		requestPath = "/" + requestPath;
 
-	return root + requestPath;
+	return (root + requestPath);
 }
 
 
