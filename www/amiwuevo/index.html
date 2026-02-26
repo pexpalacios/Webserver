@@ -1,37 +1,30 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Webserv 42</title>
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <link rel="stylesheet" href="/styles.css">
-</head>
-<body>
-
-    <div class="main-div">
-        <div style="width: 80%;">
-            <h1>🚀 Webserv funcionando</h1>
-            <p>Tu servidor HTTP en C++ está vivo.</p>
-
-            <div class="status-bar">
-                Servidor activo en 127.0.0.1:8001
-            </div>
-
-            <h3>Pruebas de errores:</h3>
-            <ul style="list-style: none; padding: 0;">
-                <li><a href="/noexiste.html">Probar 404</a></li>
-                <li><a href="/trigger500">Probar 500</a></li>
-                <li><a href="/styles.css">Ver CSS directamente</a></li>
-                <li><a href="/images/">Probar directorio</a></li>
-            </ul>
-        </div>
-
-        <div class="button-div">
-            <button onclick="location.href='/'">Inicio</button>
-            <button onclick="location.href='/noexiste.html'">Error 404</button>
-            <button onclick="location.href='/trigger500'">Error 500</button>
-        </div>
-    </div>
-
-</body>
-</html>
+	<HEAD>
+		<title class="title">AMIWUEVO</title>
+		<link rel="stylesheet" type="text/css" href="styles.css">
+	</HEAD>
+	<BODY>
+		<!--main image, occupies most of the screen-->
+		<div class="main-div">
+			<div class="title"><p>amiwuevo name</p>
+			</div>
+			<div class="content">
+				<div class="content-left">
+					<div class="tamagotchi-container">
+  						<div class="egg-base"></div>
+  						<img src="images/face.gif" class="egg-face" alt="Egg Face">
+					</div>
+				</div>
+			<!--buttons, one of top of each other, they are divs cause they need styles, at the outost right of the screen-->
+				<div class="button-div">
+					<button onclick="/cgi-bin/"><img src="images/icons/bowl-food-solid.svg" alt="give food"></button> <!--onclick wil call a cgi-->
+					<button onclick="/cgi-bin/"><img src="images/icons/shirt-solid.svg" alt="change outfit"></button>
+					<button onclick="/cgi-bin/"><img src="images/icons/image-solid.svg" alt="change decor"></button>
+					<button onclick="/cgi-bin/"><img src="images/icons/xmark-solid.svg" alt="kill amiwuevo"></button>
+				</div>
+			</div>
+			<!--this is teh hope bar, it will change based on interaction, so I'm no sure which kind of elemnet it is yet-->
+			<div class="status-bar"></div>
+		</div>
+	</BODY>
+</HTML>
