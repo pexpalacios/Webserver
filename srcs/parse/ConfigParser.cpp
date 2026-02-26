@@ -1,5 +1,6 @@
 #include "../../includes/parse/ConfigParser.hpp"
 
+/// CONSTRUCTORS AND DESTRUCTORS
 ConfigParser::ConfigParser()
 {}
 
@@ -15,8 +16,32 @@ ConfigParser &ConfigParser::operator=(const ConfigParser &copy)
 	return (*this);
 }
 
-////////////
+ConfigParser::~ConfigParser()
+{}
 
+///// AUXILIARY FUNCTIONS
+//Gets rid of spaces in line read
+std::string ConfigParser::omitSpaces(const std::string &str)
+{
+	size_t start = str.find_first_not_of(" \t\r\n");
+	size_t end = str.find_last_not_of("\t\r\n");
+
+	if (start == std::string::npos)
+		return ("");
+	else
+		return (str.substr(start, end - start + 1));
+}
+//Gets the contents in line read, both the key and the value
+std::vector<std::string> ConfigParser::tokenize(const std::string &line)
+{
+	std::istringstream iss(line);
+	std::vector<std::string> tokens;
+	std::string token;
+	while (iss >> token)
+		tokens.push_back(token);
+	return (tokens);
+}
+//Gets rid of the semicolon at the end of the line if it perssist after tokenization
 static std::string stripSemicolon(const std::string &token)
 {
 	if (!token.empty() && token[token.size() - 1] == ';')
@@ -24,16 +49,24 @@ static std::string stripSemicolon(const std::string &token)
 	return (token);
 }
 
+bool isNumber(const std::string& str) 
+{
+	if (str.empty()) 
+		return false;
+	for (size_t i = 0; i < stripSemicolon(str).size(); ++i)
+		if (!std::isdigit(stripSemicolon(str)[i])) 
+			return false;
+	return true;
+}
+
+///// SERVER VALUES SETTERS
+//Sets location specific variables to current location read in server
 static void setLocationBlockVars(LocationConfig &currentLocation, const std::string &key, const std::vector<std::string> &tokens)
 {
 	if (key == "root" && tokens.size() > 1)
 		currentLocation.setRoot(stripSemicolon(tokens[1]));
 	else if (key == "index" && tokens.size() > 1)
-	{
-		int len = currentLocation.getRoot().length();
-		std::string tmp = tokens[1].substr(len, tokens[1].length());
-		currentLocation.setIndex(stripSemicolon(tmp));
-	}
+		currentLocation.setIndex(stripSemicolon(tokens[1]));
 	else if (key == "upload" && tokens.size() > 1)
 		currentLocation.setUpload(stripSemicolon(tokens[1]));
 	else if (key == "autoindex" && tokens.size() > 1)
@@ -53,38 +86,50 @@ static void setLocationBlockVars(LocationConfig &currentLocation, const std::str
 	else if (key == "allow_methods" && tokens.size() > 1)
 	{
 		std::vector<std::string> methods(tokens.begin() + 1, tokens.end());
+		methods.back() = stripSemicolon(methods.back());
 		currentLocation.setMethods(methods);
 	}
+	else if (key == "cgi_path" && tokens.size() > 1)
+	{
+		std::vector<std::string> paths(tokens.begin() + 1, tokens.end());
+		paths.back() = stripSemicolon(paths.back());
+		currentLocation.setCGIPath(paths);
+	}
+	else if (key == "cgi_ext" && tokens.size() > 1)
+	{
+		std::vector<std::string> extensions(tokens.begin() + 1, tokens.end());
+		extensions.back() = stripSemicolon(extensions.back());
+		currentLocation.setCGIExt(extensions);
+	}
 }
-
+//Sets server specific variables to current server
 static void setServerBlockVars(ServerConfig &currentServer, const std::string &key, const std::vector<std::string> &tokens)
 {
 	if (key== "listen" && tokens.size() > 1)
-		currentServer.setListen(std::atoi(tokens[1].c_str()));
+	{
+		std::vector<std::string> ports(tokens.begin() + 1, tokens.end());
+		for (std::vector<std::string>::iterator it = ports.begin(); it != ports.end(); ++it)
+		{
+			if (!isNumber(*it))
+				throw std::invalid_argument("Listen: " + *it + " is not a number");
+			currentServer.addListen(std::atoi(it->c_str()));
+		}
+	}
 	else if (key == "host" && tokens.size() > 1)
 		currentServer.setHost(stripSemicolon(tokens[1]));
 	else if (key == "server_name" && tokens.size() > 1)
 		currentServer.setServerName(stripSemicolon(tokens[1]));
 	else if (key == "error_page" && tokens.size() > 2)
-	{
-		int len = currentServer.getRoot().length();
-		std::string tmp = tokens[2].substr(len, tokens[2].length());
-		currentServer.addErrorPage(stripSemicolon(tmp));
-		std::cout << "Error page: " << tokens[2] << ", " << tmp << std::endl;
-	}
+		currentServer.addErrorPage(stripSemicolon(tokens[2]));
 	else if (key == "root" && tokens.size() > 1)
 		currentServer.setRoot(stripSemicolon(tokens[1]));
 	else if (key == "index" && tokens.size() > 1)
-	{
-		int len = currentServer.getRoot().length();
-		std::string tmp = tokens[1].substr(len, tokens[1].length());
-		currentServer.setIndex(stripSemicolon(tmp));
-	}
+		currentServer.setIndex(stripSemicolon(tokens[1]));
 	else if (key == "client_max_body_size" && tokens.size() > 1)
 	{
 		std::string len = tokens[1];
 		size_t size = 0;
-		if (len.find("mb") != std::string::npos)
+		if (len.find("mb") != std::string::npos || len.find("Mb") != std::string::npos || len.find("MB") != std::string::npos)
 			size = std::atoi(len.c_str()) * 1024 * 1024;
 		else
 			size = std::atoi(len.c_str());
@@ -92,7 +137,9 @@ static void setServerBlockVars(ServerConfig &currentServer, const std::string &k
 	}
 }
 
-
+///// MAIN PARSING FUNCTION
+//This is a loop that check a config file line by line, detecting when there's a server and location and setting each
+//value it finds to whichever corresponds to
 std::vector<ServerConfig> ConfigParser::parse(const std::string &filename)
 {
 	std::ifstream file(filename.c_str());
@@ -102,202 +149,78 @@ std::vector<ServerConfig> ConfigParser::parse(const std::string &filename)
 	std::string line;
 	bool inServer = false;
 	bool inLocation = false;
+	int lineNumber = 0;
 	ServerConfig currentServer;
 	LocationConfig currentLocation;
 	std::vector<ServerConfig> servers;
 
-	try
+
+	while (std::getline(file, line))
 	{
-		while (std::getline(file, line))
+		line = omitSpaces(line);
+		lineNumber++;
+		if (line.empty())
+			continue;
+		if (line.find("server") == 0 && line.find("{") != std::string::npos)
 		{
-			line = omitSpaces(line);
-			//std::cout << " : " << line << std::endl;
-			if (line.empty()) //add if a line is a comment? check for # or //
-				continue;
-
-			if (line.find("server") == 0 && line.find("{") != std::string::npos)
-			{
-				if (inServer)
-					throw (std::runtime_error("Nested server blocks"));
-				inServer = true;
-				currentServer = ServerConfig();
-				continue;
-			}
-
 			if (inServer)
+				throw (std::runtime_error("Nested server blocks. Line: " + lineNumber));
+			inServer = true;
+			currentServer = ServerConfig();
+			continue;
+		}
+		//Once inside a server, will look out for locations and call either setServerBlockVars() or
+		//setLocationBlockVars() depending if it's inside a location or not
+		if (inServer)
+		{
+			if (line.find("location") == 0 && line.find("{") != std::string::npos)
 			{
-				//check if inside a location
-				if (line.find("location") == 0 && line.find("{") != std::string::npos)
-				{
-					if (inLocation)
-						throw (std::runtime_error("Nested location blocks"));
-					inLocation = true;
-					std::vector<std::string> tokens = tokenize(line);
-					if (tokens.size() < 3)
-						throw (std::runtime_error("Invalid location block"));
-					currentLocation = LocationConfig();
-					currentLocation.setPath(tokens[1]);
-					if (line.find("}") != std::string::npos)
-					{
-						currentServer.addLocation(currentLocation);
-						inLocation = false;
-						continue;
-					}
-					continue;
-				}
-				if (inLocation && line == "}")
+				if (inLocation)
+						throw (std::runtime_error("Nested location blocks Line: " + lineNumber));
+				inLocation = true;
+				std::vector<std::string> tokens = tokenize(line);
+				if (tokens.size() < 3)
+					throw (std::runtime_error("Invalid location block Line: " + lineNumber));
+				currentLocation = LocationConfig();
+				currentLocation.setPath(tokens[1]);
+				if (line.find("}") != std::string::npos)
 				{
 					currentServer.addLocation(currentLocation);
 					inLocation = false;
 					continue;
 				}
-				// tokenize the line and vars to corresponding block
-				std::vector<std::string> tokens = tokenize(line);
-				if (tokens.empty())
-					continue;
-				std::string key = tokens[0];
-				if (inLocation)
-					setLocationBlockVars(currentLocation, key, tokens);
-				else
-					setServerBlockVars(currentServer, key, tokens);
-			}
-			//check the last line is }
-			if (inServer && line == "}")
-			{
-				if (inLocation)
-					throw (std::runtime_error("Location not closed"));
-				servers.push_back(currentServer);
-				inServer = false;
 				continue;
 			}
+			if (inLocation && line == "}")
+			{
+				currentServer.addLocation(currentLocation);
+				inLocation = false;
+				continue;
+			}
+			std::vector<std::string> tokens = tokenize(line);
+			if (tokens.empty())
+				continue;
+			std::string key = tokens[0];
+			if (inLocation)
+				setLocationBlockVars(currentLocation, key, tokens);
+			else
+				setServerBlockVars(currentServer, key, tokens);
 		}
-		currentServer.printServer();
-		checkServerValues(currentServer);
-		if (inServer)
-			throw (std::runtime_error("Unclosed server block"));
-		if (!inServer && servers.empty())
-			throw (std::runtime_error("Config file is empty"));
-	}
-	catch (const std::exception &e)
-	{
-		std::cerr << "Error: " << e.what() << std::endl;
-	}
-	return (servers);
-}
-
-///////////
-
-std::string ConfigParser::omitSpaces(const std::string str)
-{
-	size_t start = str.find_first_not_of(" \t\r\n");
-	size_t end = str.find_last_not_of("\t\r\n");
-
-	if (start == std::string::npos)
-		return ("");
-	else
-		return (str.substr(start, end - start + 1));
-}
-
-std::vector<std::string> ConfigParser::tokenize(const std::string &line)
-{
-	std::istringstream iss(line);
-	std::vector<std::string> tokens;
-	std::string token;
-	while (iss >> token)
-		tokens.push_back(token);
-	return (tokens);
-}
-
-////////////////
-
-static int isValidIPv4(const std::string &ip)
-{
-	int dots = 0;
-	int nums = 0;
-
-	for (size_t i = 0; i < ip.size(); i++)
-	{
-		if (!std::isdigit(ip[i]) && ip[i] != '.')
-			return (0);
-		int n = 0;
-		while (i < ip.size() && std::isdigit(ip[i]))
+		//Closes the server after finding last bracket
+		if (inServer && line == "}")
 		{
-			n = n * 10 + (ip[i] - '0');
-			i++;
+			if (inLocation)
+				throw (std::runtime_error("Location not closed Line: " + lineNumber));
+			checkServerValues(currentServer);
+			servers.push_back(currentServer);
+			inServer = false;
+			continue;
 		}
-		if (i < ip.size() && ip[i] == '.')
-			dots++;
-		if (!(n >= 0 && n <= 255))
-			return (0);
-		else
-			nums++;
 	}
-
-	if (dots != 3 || nums != 4)
-		return (0);
-	return (1);
-}
-
-static int findServer(std::string name)
-{
-	struct stat st;
-	std::string path = "./www/" + name;
-	if (lstat(path.c_str(), &st) == 0)
-	{
-		if (!S_ISDIR(st.st_mode))
-			return (0);
-	}
-	else
-		return (0);
-	return (1);
-}
-
-static int findPage(std::string name, std::string root)
-{	
-	if (name.length() < 5 || name.substr(name.length() - 5) != ".html")
-        return (0);
-
-	std::string fullurl = root + name;
-	struct stat st;
-	if (lstat(fullurl.c_str(), &st) == 0)
-	{
-		if (!S_ISREG(st.st_mode))
-			return (0);
-	}
-	else
-		return (0);
-	return (1);
-}
-
-void ConfigParser::checkServerValues(ServerConfig &server)
-{
-	std::cout << std::endl;
-	std::cout << "[ERROR CHECKS]" << std::endl;
-	if (!(server.getListen() >= 1 && server.getListen() <= 65535))
-		std::cout << "Listen in server: " << server.getServerName() << " is out of listening range" << std::endl;
-
-	if (!isValidIPv4(server.getHost()))
-		std::cout << "Host in server: " << server.getServerName() << " is not a valid IPv4 value" << std::endl;
-
-	if (!findServer(server.getServerName()))
-		std::cout << "Server: " << server.getServerName() << " does not exist or is innaccesible" << std::endl;
-
-	std::vector<std::string> errorPages = server.getErrorPage();
-	for (size_t i = 0; i < errorPages.size(); i++)
-	{
-		if (!errorPages[i].empty() && !findPage(errorPages[i], server.getRoot()))
-			std::cout << "Page: " << errorPages[i] << " does not exist in Server: " << server.getServerName() << std::endl;
-	}
-
-	if (server.getClientmaxSize() == 0)
-		std::cout << "Client max body size in server: " << server.getServerName() << " is zero" << std::endl;
-	if (server.getClientmaxSize() > 1073741824) // 1GB max
-		std::cout << "Client max body size in server: " << server.getServerName() << " exceeds maximum (1GB)" << std::endl;
-
-	struct stat st;
-	if (lstat(server.getRoot().c_str(), &st) != 0 || !S_ISDIR(st.st_mode))
-		std::cout << "Root directory: " << server.getRoot() << " does not exist or is not a directory" << std::endl;
-
-	if (!findPage(server.getIndex(), server.getRoot()))
-		std::cout << "Index page: " << server.getIndex() << " does not exist" << std::endl;
+	//These two check if the file is empty or missing brackets
+	if (inServer)
+		throw (std::runtime_error("Unclosed server block Line: " + lineNumber));
+	if (!inServer && servers.empty())
+		throw (std::runtime_error("Config file is empty"));
+	return (servers);
 }

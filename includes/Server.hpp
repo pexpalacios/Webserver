@@ -17,6 +17,7 @@
 #include <algorithm>		// std::find
 #include <sstream>			// std::stringstream
 #include <map>				// std::map
+#include <stdexcept>
 
 #include "parse/ConfigParser.hpp"
 #include "parse/LocationConfig.hpp"
@@ -59,7 +60,6 @@ private:
 	std::string 				indexFile;		// Archivo index (index.html)
 	std::map<int, std::string>	errorPages;		// Mapa de códigos de error y rutas a sus páginas
 	std::vector<LocationConfig>	locations;		// Configuraciones de ubicación (locations)
-
 };
 
 #endif

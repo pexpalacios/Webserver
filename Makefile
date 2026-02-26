@@ -16,8 +16,8 @@ SRCS := srcs/main.cpp \
 		srcs/http/RequestHandlerGET.cpp \
 		srcs/http/RequestHandlerPOST.cpp \
 		srcs/http/RequestHandlerDELETE.cpp
-
-OBJS := $(SRCS:.cpp=.o)
+		srcs/parse/ValueParser.cpp
+OBJS	:= $(SRCS:.cpp=.o)
 
 all: $(NAME)
 
