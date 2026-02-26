@@ -1,8 +1,6 @@
-//20260210 Terto includes
 #include "../includes/Server.hpp"
 
 
-//20260212 Terto: main
 int main(int ac, char **av)
 {
   	if (ac != 2)
@@ -20,7 +18,8 @@ int main(int ac, char **av)
 		Server 			server;
 		std::vector<int> ports = conf[0].getListen();
 		server.configureServer(conf[0].getHost(), ports[0], conf[0].getRoot(), conf[0].getIndex());
-		server.configureErrorPages(conf[0].getRoot(), conf[0].getErrorPage()[0], conf[0].getErrorPage()[1]);
+	  server.configureErrorPages(conf[0].getRoot(), conf[0].getErrorPage());
+	  server.configureLocations(conf[0].getLocations());
 		server.run();
 	} 
 	catch (const std::invalid_argument& e)
@@ -28,5 +27,6 @@ int main(int ac, char **av)
 		std::cerr << "Error in config parsing:\n" << e.what() << std::endl;
 		return (1);
 	}
+
 	return 0;
 }

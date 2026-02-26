@@ -10,6 +10,12 @@ SRCS := srcs/main.cpp \
 		srcs/parse/ConfigParser.cpp \
 		srcs/parse/LocationConfig.cpp \
 		srcs/parse/ServerConfig.cpp \
+		srcs/http/Request.cpp \
+		srcs/http/Response.cpp \
+		srcs/http/RequestHandler.cpp \
+		srcs/http/RequestHandlerGET.cpp \
+		srcs/http/RequestHandlerPOST.cpp \
+		srcs/http/RequestHandlerDELETE.cpp
 		srcs/parse/ValueParser.cpp
 OBJS	:= $(SRCS:.cpp=.o)
 
@@ -23,7 +29,6 @@ $(NAME): $(OBJS)
 %.o: %.cpp
 	@echo "Compiling $<..."
 	$(CXX) $(CXXFLAGS) -c $< -o $@
-
 
 up: all
 

@@ -1,0 +1,4 @@
+20260223 Regestionar con PEX el sistema de errores
+// main -> server.configureErrorPages() -> server.setErrorPage()
+
+

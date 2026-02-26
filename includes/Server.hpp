@@ -23,7 +23,9 @@
 #include "parse/LocationConfig.hpp"
 #include "parse/ServerConfig.hpp"
 
-// 20260216 Terto: Includes
+#include "http/Request.hpp"
+#include "http/Response.hpp"
+
 #include "Signal.hpp"
 
 
@@ -35,14 +37,20 @@ public:
 	~Server();
 
 	void	configureServer(const std::string& ip, int port, const std::string& root, const std::string& indexFile);
-	void	configureErrorPages(const std::string& root, std::string error_404, std::string error_500);
+	void	configureLocations(const std::vector<LocationConfig>& locations);
+	void	configureErrorPages(const std::string& root, const std::vector<std::string>& errorPaths);
 	void	handleNewConnection(int listenSock, std::vector<struct pollfd>& fds);
 	void	handleClientConnection(int clientSock, Server& server);
 	void	run();
 
+	const std::string&	getStaticRoot() const;
+	const std::string&	getIndexFile() const;
+	const std::map<int, std::string>& getErrorPages() const;
+	const std::vector<LocationConfig>& getLocations() const;
+
 private:
 	void						listenOn(const std::string& ip, int port);								
-	void						setStaticRoot(const std::string& root, const std::string& indexFile);	
+	void						setStaticRoot(const std::string& root, const std::string& indexFile);
 	void						setErrorPage(int code, const std::string& path);						
 	std::vector<struct pollfd>	buildPollFdArray();														
 	std::string					readFile(const std::string& path);										
@@ -51,8 +59,7 @@ private:
 	std::string					staticRoot;		// Carpeta base para archivos estáticos
 	std::string 				indexFile;		// Archivo index (index.html)
 	std::map<int, std::string>	errorPages;		// Mapa de códigos de error y rutas a sus páginas
-	std::vector<std::string>	executables;	// Extensiones ejecutables
-
+	std::vector<LocationConfig>	locations;		// Configuraciones de ubicación (locations)
 };
 
 #endif

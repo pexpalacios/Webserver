@@ -4,6 +4,18 @@
 Server::Server() {}
 Server::~Server() {}
 
+const std::string& Server::getStaticRoot() const
+{return staticRoot;}
+
+const std::string& Server::getIndexFile() const
+{return indexFile;}
+
+const std::map<int, std::string>& Server::getErrorPages() const
+{return errorPages;}
+
+const std::vector<LocationConfig>& Server::getLocations() const
+{return locations;}
+
 
 //20260212 Terto: configure server socket to listen on specific IP and port
 // main -> server.configureServer() -> server.listenOn()
@@ -59,39 +71,55 @@ void Server::setErrorPage(int code, const std::string& filePath)
 }
 
 
-
 //20260212 Terto: Configura IP, puerto, carpeta base e index
 // main -> server.configureServer() -> server.listenOn() + server.setStaticRoot()
 void Server::configureServer(const std::string& ip, int port, const std::string& root, const std::string& indexFile)
 {
 	listenOn(ip, port);
 	setStaticRoot(root, indexFile);
-
-	std::cout << " Server configured: " << ip << ":" << port << std::endl;
 	std::cout << " Root: " << root << " | Index: " << indexFile << std::endl;
 }
 
-//20260212 Terto: Asocia páginas de error personalizadas
-// main -> server.configureErrorPages() -> server.setErrorPage()
-void Server::configureErrorPages(const std::string& root, std::string error_404, std::string error_500)
+
+//20260225 Terto: Locations inside server configuration
+// main -> server.configureLocations()
+void Server::configureLocations(const std::vector<LocationConfig>& locations)
 {
-	std::string full404;
-	std::string full500;
-	if (!root.empty() && root[root.length() - 1] == '/')
-	{
-		full404 = root + error_404;
-		full500 = root + error_500;
-	}
-	else
-	{
-		full404 = root + "/" + error_404;
-		full500 = root + "/" + error_500;
-	}
-	setErrorPage(404, full404);
-	setErrorPage(500, full500);
-	std::cout << " Error pages configured." << std::endl;
+	this->locations = locations;
 }
 
 
+//20260223 Terto: Asocia páginas de error personalizadas
+// main -> server.configureErrorPages() -> server.setErrorPage()
+void Server::configureErrorPages(const std::string& root, const std::vector<std::string>& errorPaths)
+{
+	std::string cleanRoot = root;
 
+	if (!cleanRoot.empty() && cleanRoot[cleanRoot.size() - 1] != '/')
+		cleanRoot += '/';
 
+	size_t i = 0;
+
+	while (i < errorPaths.size())
+	{
+		std::string path = errorPaths[i];
+
+		if (!path.empty() && path[path.size() - 1] == ';')
+			path.erase(path.size() - 1);
+
+		if (!path.empty() && path[0] == '/')
+			path.erase(0, 1);
+
+		std::string fullPath = cleanRoot + path;
+
+		// De momento los siguientes errores se asignan en orden:
+		// posición 0 → 404
+		// posición 1 → 500
+		if (i == 0)
+			setErrorPage(404, fullPath);
+		else if (i == 1)
+			setErrorPage(500, fullPath);
+		++i;
+	}
+	std::cout << "Error pages configured." << std::endl;
+}
