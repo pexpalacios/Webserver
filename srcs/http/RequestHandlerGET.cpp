@@ -1,7 +1,7 @@
 #include "../../includes/http/RequestHandler.hpp"
 #include <fstream>
 
-//20260225 Terto: Implemented basic POST request handling, including file saving and response generation.
+//20260226 Terto: Implemented basic POST request handling, including file saving and response generation.
 // main -> handleRequest -> handleGet -> resolveGetPath
 std::string RequestHandler::resolveGetPath(const std::string& path) const
 {
@@ -10,43 +10,24 @@ std::string RequestHandler::resolveGetPath(const std::string& path) const
 	std::string index = _server.getIndexFile();
 
 	const LocationConfig* locPtr = findMatchingLocation(path);
-
-	// if there's a matching location, we need to adjust the root and index based on that location's config
 	if (locPtr)
 	{
-		// Local copy to avoid const issues
 		LocationConfig loc = *locPtr;
-
-		std::string locPath = loc.getPath();
-
 		if (!loc.getRoot().empty())
 			root = loc.getRoot();
-
-		if (requestPath.find(locPath) == 0)
-			requestPath = requestPath.substr(locPath.length());
-
-		if (requestPath.empty() || requestPath == "/")
-		{
-			if (!loc.getIndex().empty())
-				requestPath = loc.getIndex();
-			else
-				requestPath = index;
-		}
-	}
-	else
-	{
-		if (requestPath == "/")
-			requestPath = index;
 	}
 
-	if (requestPath.find(root) == 0)
-		return requestPath;
+	// lets index with "/"
+	if (requestPath == "/")
+		requestPath = "/" + index;
 
-	if (!root.empty() && root[root.size() - 1] != '/')
-		root += '/';
+	// normalize slashes
+	if (!root.empty() && root[root.size() - 1] == '/')
+		root.push_back('/');
 
-	if (!requestPath.empty() && requestPath[0] == '/')
-		requestPath.erase(0, 1);
+	// requestPath start with '/'
+	if (requestPath.empty() || requestPath[0] != '/')
+		requestPath = "/" + requestPath;
 
 	return root + requestPath;
 }

@@ -11,6 +11,9 @@ RequestHandler::RequestHandler(const Server& server)
 Response RequestHandler::handleBadRequest()
 {return buildErrorResponse(400);}
 
+Response RequestHandler::handleInternalServerError()
+{return buildErrorResponse(500);}
+
 
 //20260223 - Implemented basic GET request handling, including file reading and response generation.
 // main -> server.run() -> handleClientConnection() -> handleRequest -> handleGet/handlePost/handleDelete -> isPathSafe
@@ -45,31 +48,52 @@ bool RequestHandler::fileExists(const std::string& path) const
 }
 
 
-//20260223 - read the content of the file into a string
-// main -> handleRequest -> handleGet -> readFileContent
+//20260226 - Build error response with safe fallback
+// Used for all HTTP error codes (400, 403, 404, 500, etc.)
+// main -> server.run() -> handleClientConnection() -> handleRequest -> buildErrorResponse
+#include <sstream>  // 👈 importante
+
 Response RequestHandler::buildErrorResponse(int statusCode) const
 {
-	Response response;
-	response.setStatusCode(statusCode);
+    Response response;
+    response.setStatusCode(statusCode);
+    response.setHeader("Content-Type", "text/html");
 
-	std::map<int, std::string> errorPages = _server.getErrorPages();
+    std::map<int, std::string> errorPages = _server.getErrorPages();
+    std::string body;
 
-	if (errorPages.find(statusCode) != errorPages.end())
-	{
-		std::string filePath = errorPages.find(statusCode)->second;
-		std::string content = readFileContent(filePath);
+    // Convert int to string (C++98 compatible)
+    std::ostringstream oss;
+    oss << statusCode;
+    std::string codeStr = oss.str();
 
-		response.setBody(content);
-		response.setHeader("Content-Type", "text/html");
-	}
-	else
-	{
-		response.setBody("<h1>Error</h1>");
-		response.setHeader("Content-Type", "text/html");
-	}
+    if (errorPages.find(statusCode) != errorPages.end())
+    {
+        std::string filePath = errorPages.find(statusCode)->second;
 
-	return response;
+        try
+        {
+            body = readFileContent(filePath);
+        }
+        catch (...)
+        {
+            body = "<html><head><title>" + codeStr + " Error</title></head>"
+                   "<body><h1>" + codeStr + " - Internal Server Error</h1>"
+                   "<p>The server encountered an unexpected condition.</p>"
+                   "</body></html>";
+        }
+    }
+    else
+    {
+        body = "<html><head><title>" + codeStr + " Error</title></head>"
+               "<body><h1>Error " + codeStr + "</h1>"
+               "</body></html>";
+    }
+
+    response.setBody(body);
+    return response;
 }
+
 
 
 //20260225 find the best matching location for the requested path, based on longest prefix match
@@ -142,11 +166,16 @@ Response RequestHandler::handlePost(const Request& request)
 }
 
 
-//20260223 - Implemented basic GET request handling, including file reading and response generation.
+//20260226 - Implemented basic GET request handling, including file reading and response generation.
 // main -> server.run() -> handleClientConnection() -> handleRequest -> handleGet/handlePost/handleDelete
 Response RequestHandler::handleGet(const Request& request)
 {
 	std::string path = request.getPath();
+
+	// 20260226 - Manual 500 trigger for testing
+	if (path == "/trigger500")
+		return buildErrorResponse(500);
+
 	if (!isPathSafe(path))
 		return buildErrorResponse(403);
 
@@ -155,11 +184,11 @@ Response RequestHandler::handleGet(const Request& request)
 	if (filePath.find(root) != 0)
 		return buildErrorResponse(403);
 
-	// Debug method to print the requested path and the resolved file path for GET requests
-	DebugHandleGet(path, filePath);
-
 	if (!fileExists(filePath))
 		return buildErrorResponse(404);
+
+	// 20260225 Debug method
+	DebugHandleGet(path, filePath);
 
 	std::string content = readFileContent(filePath);
 	return buildFileResponse(content, filePath);

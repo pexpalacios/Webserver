@@ -1,30 +1,83 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>404 - Página no encontrada</title>
+<meta charset="UTF-8">
+<title>404 - Página no encontrada</title>
 
-    <link rel="stylesheet" href="/styles.css">
+<style>
+    body {
+        margin: 0;
+        height: 100vh;
+        background-color: black;
+        color: white;
+        font-family: Arial, Helvetica, sans-serif;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .content {
+        z-index: 1;
+        padding: 20px;
+        transform: translateY(-5vh);
+    }
+
+    h1 {
+        font-size: 72px;
+        margin: 0;
+    }
+
+    button {
+        margin-top: 20px;
+        padding: 10px 20px;
+        background-color: white;
+        color: black;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background-color: #cccccc;
+    }
+
+    .bottom-image {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        text-align: center;
+        z-index: 0;
+        overflow: hidden;
+    }
+
+    .bottom-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+</style>
 </head>
+
 <body>
 
-    <div class="main-div">
-        <div style="width: 100%; text-align: center;">
-            <h1 style="font-size: 72px;">404</h1>
-            <h2>Página no encontrada</h2>
+<div class="content">
+    <h1>404</h1>
+    <h2>Página que buscas se encuentra en otro castillo</h2>
+    <p>El recurso solicitado no existe en el servidor.</p>
 
-            <p>El recurso solicitado no existe en el servidor.</p>
+    <button onclick="location.href='/'">
+        Volver al inicio
+    </button>
+</div>
 
-            <div class="status-bar">
-                Error 404 - Not Found
-            </div>
-
-            <br>
-            <button onclick="location.href='/'">
-                Volver al inicio
-            </button>
-        </div>
-    </div>
+<div class="bottom-image">
+    <img src="/error/404.png" alt="Error image">
+</div>
 
 </body>
 </html>

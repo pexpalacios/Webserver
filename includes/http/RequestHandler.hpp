@@ -15,6 +15,7 @@ public:
 	RequestHandler(const Server& server);
 	Response	handleRequest(const Request& request);
 	Response	handleBadRequest();
+	Response	handleInternalServerError();
 
 private:
 	const Server& _server;

@@ -71,13 +71,12 @@ void Server::handleNewConnection(int listenSock, std::vector<struct pollfd>& fds
 }
 
 
-// 20260207 Terto: Handle a connected client socket
+// 20260226 Terto: Handle a connected client socket
 // main -> server.run() -> handleClientConnection()
 void Server::handleClientConnection(int clientSock, Server& server)
 {
 	char buffer[1024];
 	int bytesRead = recv(clientSock, buffer, sizeof(buffer) - 1, 0);
-
 	if (bytesRead <= 0)
 	{
 		std::cerr << "recv() failed or client disconnected. FD " << clientSock << std::endl;
@@ -89,7 +88,7 @@ void Server::handleClientConnection(int clientSock, Server& server)
 	std::string raw(buffer, bytesRead);
 	std::cout << "Request received from FD " << clientSock << ":\n" << raw << std::endl;
 
-	//20260223 Parse and error handling of request
+	// Handle request protection 400 → Bad Request
 	Request request;
 	if (!request.parse(raw))
 	{
@@ -104,11 +103,25 @@ void Server::handleClientConnection(int clientSock, Server& server)
 		return;
 	}
 
-	//20260223 Handle request
+	// Handle request protection 500 → Internal Server Error
 	RequestHandler handler(server);
-	Response responseObj = handler.handleRequest(request);
-	std::string response = responseObj.toString();
+	Response responseObj;
+	try
+	{
+		responseObj = handler.handleRequest(request);
+	}
+	catch (const std::exception& e)
+	{
+		std::cerr << "[500] Internal Server Error: " << e.what() << std::endl;
+		Response responseObj = handler.handleInternalServerError();
+	}
+	catch (...)
+	{
+		std::cerr << "[500] Unknown Internal Server Error" << std::endl;
+		Response responseObj = handler.handleInternalServerError();
+	}
 
+	std::string response = responseObj.toString();
 	send(clientSock, response.c_str(), response.size(), 0);
 	close(clientSock);
 }
