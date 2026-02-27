@@ -1,9 +1,8 @@
 #include "../includes/Server.hpp"
 
-
 int main(int ac, char **av)
 {
-  	if (ac != 2)
+	if (ac != 2)
 	{
 		std::cout << "Invalid number of arguments" << std::endl;
 		return (1);
@@ -18,8 +17,8 @@ int main(int ac, char **av)
 		Server 			server;
 		std::vector<int> ports = conf[0].getListen();
 		server.configureServer(conf[0].getHost(), ports[0], conf[0].getRoot(), conf[0].getIndex());
-	 	server.configureErrorPages(conf[0].getRoot(), conf[0].getErrorPage());
-	  	server.configureLocations(conf[0].getLocations());
+		server.configureErrorPages(conf[0].getRoot(), conf[0].getErrorPage());
+		server.configureLocations(conf[0].getLocations());
 		server.run();
 		// Close listen socket socket
 	} 

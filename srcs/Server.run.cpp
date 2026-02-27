@@ -113,12 +113,12 @@ void Server::handleClientConnection(int clientSock, Server& server)
 	catch (const std::exception& e)
 	{
 		std::cerr << "[500] Internal Server Error: " << e.what() << std::endl;
-		Response responseObj = handler.handleInternalServerError();
+		responseObj = handler.handleInternalServerError();
 	}
 	catch (...)
 	{
 		std::cerr << "[500] Unknown Internal Server Error" << std::endl;
-		Response responseObj = handler.handleInternalServerError();
+		responseObj = handler.handleInternalServerError();
 	}
 
 	std::string response = responseObj.toString();
@@ -131,7 +131,6 @@ void Server::handleClientConnection(int clientSock, Server& server)
 // main -> server.run()
 void Server::run() 
 {
-	// Agrega los sockets de escucha al array de pollfd
 	std::vector<struct pollfd> fds = buildPollFdArray();
 
 	// main loop with SIGINT (Ctrl+C) to stop the server

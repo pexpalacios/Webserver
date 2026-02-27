@@ -23,7 +23,6 @@ void Response::setBody(const std::string& b)
 {body = b;}
 
 
-// ======================= toString ==========================
 std::string Response::toString() const
 {
 	std::ostringstream response;
@@ -43,16 +42,15 @@ std::string Response::toString() const
 	return response.str();
 }
 
-
 std::string Response::getStatusMessage(int code) const
 {
-    if (code == 200) return "OK";
-    if (code == 201) return "Created";
-    if (code == 204) return "No Content";
-    if (code == 400) return "Bad Request";
-    if (code == 403) return "Forbidden";
-    if (code == 404) return "Not Found";
-    if (code == 405) return "Method Not Allowed";
-    if (code == 500) return "Internal Server Error";
-    return "Error";
+	if (code == 200) return "OK";
+	if (code == 201) return "Created";
+	if (code == 204) return "No Content";
+	if (code == 400) return "Bad Request";
+	if (code == 403) return "Forbidden";
+	if (code == 404) return "Not Found";
+	if (code == 405) return "Method Not Allowed";
+	if (code == 500) return "Internal Server Error";
+	return "Error";
 }

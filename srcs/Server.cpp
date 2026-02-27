@@ -89,17 +89,15 @@ void Server::configureLocations(const std::vector<LocationConfig>& locations)
 }
 
 
-//20260223 Terto: Asocia páginas de error personalizadas
+//20260227 Terto: Configure custom error pages dynamically
 // main -> server.configureErrorPages() -> server.setErrorPage()
 void Server::configureErrorPages(const std::string& root, const std::vector<std::string>& errorPaths)
 {
 	std::string cleanRoot = root;
-
 	if (!cleanRoot.empty() && cleanRoot[cleanRoot.size() - 1] != '/')
 		cleanRoot += '/';
 
 	size_t i = 0;
-
 	while (i < errorPaths.size())
 	{
 		std::string path = errorPaths[i];
@@ -107,19 +105,18 @@ void Server::configureErrorPages(const std::string& root, const std::vector<std:
 		if (!path.empty() && path[path.size() - 1] == ';')
 			path.erase(path.size() - 1);
 
+		size_t slashPos = path.find_last_of('/');
+		std::string filename = (slashPos != std::string::npos) ? path.substr(slashPos + 1) : path;
+		int code = std::atoi(filename.substr(0, 3).c_str());
+
 		if (!path.empty() && path[0] == '/')
 			path.erase(0, 1);
 
 		std::string fullPath = cleanRoot + path;
+		setErrorPage(code, fullPath);
 
-		// De momento los siguientes errores se asignan en orden:
-		// posición 0 → 404
-		// posición 1 → 500
-		if (i == 0)
-			setErrorPage(404, fullPath);
-		else if (i == 1)
-			setErrorPage(500, fullPath);
 		++i;
 	}
+
 	std::cout << "Error pages configured." << std::endl;
 }

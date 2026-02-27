@@ -68,6 +68,8 @@ std::string RequestHandler::getContentType(const std::string& path) const
 		return ("image/png");
 	if (path.find(".jpg") != std::string::npos || path.find(".jpeg") != std::string::npos)
 		return ("image/jpeg");
+	if (path.find(".svg") != std::string::npos)
+		return ("image/svg+xml");
 	if (path.find(".gif") != std::string::npos)
 		return ("image/gif");
 

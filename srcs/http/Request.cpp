@@ -5,6 +5,55 @@
 Request::Request() : valid(false) {}
 Request::~Request() {}
 
+// ===================== VALID =====================
+bool Request::isValid() const
+{return valid;}
+
+// ===================== SETTERS =====================
+void Request::setMethod(const std::string& m)
+{method = m;}
+
+void Request::setPath(const std::string& p)
+{path = p;}
+
+void Request::setVersion(const std::string& v)
+{version = v;}
+
+void Request::setHeader(const std::string& key, const std::string& value)
+{headers[key] = value;}
+
+void Request::setBody(const std::string& b)
+{body = b;}
+
+// ===================== GETTERS =====================
+const std::string& Request::getMethod() const
+{return method;}
+
+const std::string& Request::getPath() const
+{return path;}
+
+const std::string& Request::getVersion() const
+{return version;}
+
+const std::string& Request::getBody() const
+{return body;}
+
+bool Request::hasHeader(const std::string& key) const
+{return headers.find(key) != headers.end();}
+
+std::string Request::getHeader(const std::string& key) const
+{
+	std::map<std::string, std::string>::const_iterator it = headers.find(key);
+
+	if (it != headers.end())
+		return it->second;
+	return "";
+}
+
+const std::map<std::string, std::string>& Request::getHeaders() const
+{return headers;}
+
+
 //20260223 Cleanup of parse method
 // main -> server.run() -> handleClientConnection() -> Request.parse() -> Request.clear()
 void Request::clear()
@@ -16,6 +65,7 @@ void Request::clear()
 	body.clear();
 	valid = false;
 }
+
 
 //20260223 Refactor of parse method to handle edge cases and improve readability
 // main -> server.run() -> handleClientConnection() -> Request.parse()
@@ -78,50 +128,3 @@ bool Request::parse(const std::string& raw)
 	return true;
 }
 
-// ===================== VALID =====================
-bool Request::isValid() const
-{return valid;}
-
-// ===================== SETTERS =====================
-void Request::setMethod(const std::string& m)
-{method = m;}
-
-void Request::setPath(const std::string& p)
-{path = p;}
-
-void Request::setVersion(const std::string& v)
-{version = v;}
-
-void Request::setHeader(const std::string& key, const std::string& value)
-{headers[key] = value;}
-
-void Request::setBody(const std::string& b)
-{body = b;}
-
-// ===================== GETTERS =====================
-const std::string& Request::getMethod() const
-{return method;}
-
-const std::string& Request::getPath() const
-{return path;}
-
-const std::string& Request::getVersion() const
-{return version;}
-
-const std::string& Request::getBody() const
-{return body;}
-
-bool Request::hasHeader(const std::string& key) const
-{return headers.find(key) != headers.end();}
-
-std::string Request::getHeader(const std::string& key) const
-{
-	std::map<std::string, std::string>::const_iterator it = headers.find(key);
-
-	if (it != headers.end())
-		return it->second;
-	return "";
-}
-
-const std::map<std::string, std::string>& Request::getHeaders() const
-{return headers;}

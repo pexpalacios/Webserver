@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>405 - Método no permitido</title>
+
+<style>
+    body {
+        margin: 0;
+        height: 100vh;
+        background-color: black;
+        color: white;
+        font-family: Arial, Helvetica, sans-serif;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .content {
+        z-index: 1;
+        padding: 20px;
+        transform: translateY(-5vh);
+    }
+
+    h1 {
+        font-size: 72px;
+        margin: 0;
+    }
+
+    button {
+        margin-top: 20px;
+        padding: 10px 20px;
+        background-color: white;
+        color: black;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background-color: #cccccc;
+    }
+
+    .bottom-image {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        text-align: center;
+        z-index: 0;
+        overflow: hidden;
+    }
+
+    .bottom-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+</style>
+</head>
+
+<body>
+
+<div class="content">
+    <h1>405</h1>
+    <h2>¡Eh! no te pases de listo</h2>
+    <p>El método que intentaste usar no está permitido en este servidor.</p>
+
+    <button onclick="location.href='/'">
+        Volver al inicio
+    </button>
+</div>
+
+<div class="bottom-image">
+    <img src="/error/405.gif" alt="405 error image">
+</div>
+
+</body>
+</html>

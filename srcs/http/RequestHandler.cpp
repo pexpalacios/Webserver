@@ -4,7 +4,6 @@
 #include <sys/stat.h>
 #include <iostream>
 
-//20260223 - Implemented basic GET request handling, including file reading and response generation.
 RequestHandler::RequestHandler(const Server& server)
 : _server(server) {}
 
@@ -199,11 +198,12 @@ Response RequestHandler::handleGet(const Request& request)
 // main -> handleRequest -> methodNotAllowed
 Response RequestHandler::methodNotAllowed()
 {
+	//return buildErrorResponse(405);
 	Response response;
 	response.setStatusCode(405);
-	response.setHeader("Content-Type", "text/html");
-	response.setBody("<h1>405 Method Not Allowed</h1>");
-
+	response.setHeader("Content-Type", "text/plain; charset=utf-8");
+	response.setHeader("Allow", "GET, POST, DELETE");
+	response.setBody("405 Method Not Allowed\nThis endpoint does not accept that HTTP method.\n");
 	return response;
 }
 
