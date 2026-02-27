@@ -67,6 +67,32 @@ void Request::clear()
 }
 
 
+//20260227 URL-decode the path to handle encoded characters (e.g., %20 for space)
+// main -> server.run() -> handleClientConnection() -> Request.parse() -> urlDecode()
+static std::string urlDecode(const std::string& src)
+{
+    std::string result;
+    size_t i = 0;
+
+    while (i < src.length())
+    {
+        if (src[i] == '%' && i + 2 < src.length())
+        {
+            std::string hex = src.substr(i + 1, 2);
+            char decodedChar = static_cast<char>(std::strtol(hex.c_str(), NULL, 16));
+            result += decodedChar;
+            i += 3;
+        }
+        else
+        {
+            result += src[i];
+            ++i;
+        }
+    }
+    return result;
+}
+
+
 //20260223 Refactor of parse method to handle edge cases and improve readability
 // main -> server.run() -> handleClientConnection() -> Request.parse()
 bool Request::parse(const std::string& raw)
@@ -85,6 +111,7 @@ bool Request::parse(const std::string& raw)
 
 	if (!(requestLine >> method >> path >> version))
 		return false;
+	path = urlDecode(path);
 
 	// 20260223 Parse headers
 	while (std::getline(stream, line))

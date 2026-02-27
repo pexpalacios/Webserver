@@ -1,4 +1,5 @@
 #include "../../includes/http/RequestHandler.hpp"
+#include <sstream>
 #include <fstream>
 #include <unistd.h>
 #include <sys/stat.h>
@@ -34,65 +35,63 @@ bool RequestHandler::isPathSafe(const std::string& path) const
 }
 
 
-//20260223 - resolve the requested path to a file system path, not allowing directory traversal and ensuring it points to the www directory
+//20260227 - resolve the requested path to a file system path, not allowing directory traversal and ensuring it points to the www directory
 // main -> server.run() -> handleClientConnection() -> handleRequest -> handleGet/handlePost/handleDelete -> fileExists
 bool RequestHandler::fileExists(const std::string& path) const
 {
-	struct stat buffer;
-
-	if (stat(path.c_str(), &buffer) != 0)
+	struct stat st;
+	if (stat(path.c_str(), &st) != 0)
 		return false;
 
-	return S_ISREG(buffer.st_mode);
+	if (!S_ISREG(st.st_mode))
+		return false;
+
+	// Check read permissions (Pero no está probado)
+	if (access(path.c_str(), R_OK) != 0)
+		return false;
+
+	return true;
 }
 
-
-//20260226 - Build error response with safe fallback
-// Used for all HTTP error codes (400, 403, 404, 500, etc.)
+//20260226 - Build error response with safe fallback. Used for all HTTP error codes (400, 403, 404, 500, etc.)
 // main -> server.run() -> handleClientConnection() -> handleRequest -> buildErrorResponse
-#include <sstream>  // 👈 importante
-
 Response RequestHandler::buildErrorResponse(int statusCode) const
 {
-    Response response;
-    response.setStatusCode(statusCode);
-    response.setHeader("Content-Type", "text/html");
+	Response response;
+	response.setStatusCode(statusCode);
+	response.setHeader("Content-Type", "text/html");
 
-    std::map<int, std::string> errorPages = _server.getErrorPages();
-    std::string body;
+	std::map<int, std::string> errorPages = _server.getErrorPages();
+	std::string body;
 
-    // Convert int to string (C++98 compatible)
-    std::ostringstream oss;
-    oss << statusCode;
-    std::string codeStr = oss.str();
+	std::ostringstream oss;
+	oss << statusCode;
+	std::string codeStr = oss.str();
 
-    if (errorPages.find(statusCode) != errorPages.end())
-    {
-        std::string filePath = errorPages.find(statusCode)->second;
-
-        try
-        {
-            body = readFileContent(filePath);
-        }
-        catch (...)
-        {
-            body = "<html><head><title>" + codeStr + " Error</title></head>"
-                   "<body><h1>" + codeStr + " - Internal Server Error</h1>"
-                   "<p>The server encountered an unexpected condition.</p>"
-                   "</body></html>";
-        }
-    }
-    else
-    {
-        body = "<html><head><title>" + codeStr + " Error</title></head>"
-               "<body><h1>Error " + codeStr + "</h1>"
-               "</body></html>";
-    }
-
-    response.setBody(body);
-    return response;
+	if (errorPages.find(statusCode) != errorPages.end())
+	{
+		std::string filePath = errorPages.find(statusCode)->second;
+		try
+		{
+			body = readFileContent(filePath);
+		}
+		catch (...)
+		{
+			body = "<html><head><title>" + codeStr + " Error</title></head>"
+					"<body><h1>" + codeStr + " - Internal Server Error</h1>"
+					"<p>The server encountered an unexpected condition.</p>"
+					"</body></html>";
+		}
+	}
+	else
+	{
+		body = "<html><head><title>" + codeStr + " Error</title></head>"
+				"<body><h1>Error " + codeStr + "</h1>"
+				"</body></html>";
+	}
+	response.setBody(body);
+	return response;
 }
-
 
 
 //20260225 find the best matching location for the requested path, based on longest prefix match
@@ -175,6 +174,7 @@ Response RequestHandler::handleGet(const Request& request)
 	if (path == "/trigger500")
 		return buildErrorResponse(500);
 
+	// Protection 403 → Forbidden ----------------------------------
 	if (!isPathSafe(path))
 		return buildErrorResponse(403);
 
@@ -182,7 +182,9 @@ Response RequestHandler::handleGet(const Request& request)
 	std::string root = _server.getStaticRoot();
 	if (filePath.find(root) != 0)
 		return buildErrorResponse(403);
+	// -------------------------------------------------------------
 
+	// Protection 404 → Not Found
 	if (!fileExists(filePath))
 		return buildErrorResponse(404);
 
@@ -198,13 +200,15 @@ Response RequestHandler::handleGet(const Request& request)
 // main -> handleRequest -> methodNotAllowed
 Response RequestHandler::methodNotAllowed()
 {
-	//return buildErrorResponse(405);
+	return buildErrorResponse(405);
+	/*
 	Response response;
 	response.setStatusCode(405);
 	response.setHeader("Content-Type", "text/plain; charset=utf-8");
 	response.setHeader("Allow", "GET, POST, DELETE");
 	response.setBody("405 Method Not Allowed\nThis endpoint does not accept that HTTP method.\n");
 	return response;
+	*/
 }
 
 
@@ -219,5 +223,5 @@ Response RequestHandler::handleRequest(const Request& request)
 	else if (request.getMethod() == "DELETE")
 		return handleDelete(request);
 	else
-		return methodNotAllowed();
+		return methodNotAllowed(); // Protection 405 → Method Not Allowed
 }

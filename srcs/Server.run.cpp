@@ -45,7 +45,6 @@ std::vector<struct pollfd> Server::buildPollFdArray()
 
 //20260207 Terto: Accept a new connection and add to pollfd array
 // main -> server.run() -> handleNewConnection() -> accept() + push_back a fds
-// Accepts a new incoming connection and adds it to the pollfd array for monitoring
 void Server::handleNewConnection(int listenSock, std::vector<struct pollfd>& fds)
 {
 	struct sockaddr_in clientAddr;
@@ -88,7 +87,7 @@ void Server::handleClientConnection(int clientSock, Server& server)
 	std::string raw(buffer, bytesRead);
 	std::cout << "Request received from FD " << clientSock << ":\n" << raw << std::endl;
 
-	// Handle request protection 400 → Bad Request
+	// Protection 400 → Bad Request
 	Request request;
 	if (!request.parse(raw))
 	{
@@ -103,7 +102,7 @@ void Server::handleClientConnection(int clientSock, Server& server)
 		return;
 	}
 
-	// Handle request protection 500 → Internal Server Error
+	// Protection 500 → Internal Server Error
 	RequestHandler handler(server);
 	Response responseObj;
 	try
