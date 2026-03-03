@@ -17,9 +17,11 @@ public:
 	Response();
 	~Response();
 
-	void setStatusCode(int code);
-	void setHeader(const std::string& key, const std::string& value);
-	void setBody(const std::string& b);
+	void	setStatusCode(int code);
+	int		getStatusCode() const;
+
+	void	setHeader(const std::string& key, const std::string& value);
+	void	setBody(const std::string& b);
 
 	std::string toString() const;
 };

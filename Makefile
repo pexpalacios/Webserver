@@ -13,6 +13,7 @@ SRCS := srcs/main.cpp \
 		srcs/http/Request.cpp \
 		srcs/http/Response.cpp \
 		srcs/http/RequestHandler.cpp \
+		srcs/http/RequestHandlerError.cpp \
 		srcs/http/RequestHandlerGET.cpp \
 		srcs/http/RequestHandlerPOST.cpp \
 		srcs/http/RequestHandlerDELETE.cpp \

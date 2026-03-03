@@ -9,6 +9,10 @@ Response::Response()
 }
 Response::~Response() {}
 
+int Response::getStatusCode() const
+{return (statusCode);}
+
+
 // ======================= SETTERS ===========================
 void Response::setStatusCode(int code)
 {

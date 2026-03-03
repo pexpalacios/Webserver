@@ -18,7 +18,7 @@ public:
 	Response	handleInternalServerError();
 
 private:
-	const Server& _server;
+	const		Server& _server;
 
 	Response	handleGet(const Request& request);
 	Response	handlePost(const Request& request);
@@ -27,7 +27,7 @@ private:
 
 	// Helpers for all methods
 	bool		isPathSafe(const std::string& path) const;
-	bool		fileExists(const std::string& path) const;
+	int			checkFile(const std::string& path) const;
 	Response	buildErrorResponse(int statusCode) const;
 
 	// Location matching
@@ -39,8 +39,13 @@ private:
 	std::string	getContentType(const std::string& path) const;
 	Response	buildFileResponse(const std::string& content, const std::string& filePath) const;
 	void		DebugHandleGet(const std::string& path, const std::string& resolvedPath) const;
+	void		logGetRequest(const std::string& path) const;
 
 	// POST
+	Response	handleSetName(const Request& request);
+	Response	handleKill() const;
+	Response	handleFeed() const;
+	
 	std::string	resolvePostPath(const std::string& path) const;
 	bool		saveUploadedFile(const std::string& path, const std::string& body) const;
 	Response	buildCreatedResponse() const;

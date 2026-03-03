@@ -37,8 +37,9 @@ std::vector<struct pollfd> Server::buildPollFdArray()
 		pfd.revents = 0;
 		fds.push_back(pfd);
 		++i;
-	}
-	std::cout << "Waiting for connections..." << std::endl;
+	} 
+	std::cout << "Waiting for connections..." << std::endl << std::endl;
+	std::cout << "-----------------------------------------------------" << std::endl << std::endl;
 	return fds;
 }
 
@@ -120,6 +121,8 @@ void Server::handleClientConnection(int clientSock, Server& server)
 		responseObj = handler.handleInternalServerError();
 	}
 
+	std::cout << "Final status code: " << responseObj.getStatusCode() << std::endl << std::endl;
+	std::cout << "-----------------------------------------------------" << std::endl << std::endl;
 	std::string response = responseObj.toString();
 	send(clientSock, response.c_str(), response.size(), 0);
 	close(clientSock);
