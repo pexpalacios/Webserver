@@ -40,6 +40,26 @@ const LocationConfig* RequestHandler::findMatchingLocation(const std::string& pa
 }
 
 
+//20260303 - main request handling method that routes to specific handlers based on HTTP method
+// html -> handleGetName
+Response RequestHandler::GetName() const
+{
+	std::ifstream file("./database/name.txt");
+	if (!file.is_open())
+		return buildErrorResponse(404);
+
+	std::string name;
+	std::getline(file, name);
+	file.close();
+
+	Response res;
+	res.setStatusCode(200);
+	res.setHeader("Content-Type", "text/plain");
+	res.setBody(name);
+	return res;
+}
+
+
 //20260223 - switched to route requests based on HTTP method
 // main -> server.run() -> handleClientConnection() -> handleRequest -> handleGet/handlePost/handleDelete
 Response RequestHandler::handleDelete(const Request& request)
@@ -93,6 +113,9 @@ Response RequestHandler::handleGet(const Request& request)
 {
 	std::string path = request.getPath();
 
+	if (path == "/api/name")
+		return GetName();
+		
 	if (path == "/trigger500")
 		return buildErrorResponse(500);
 

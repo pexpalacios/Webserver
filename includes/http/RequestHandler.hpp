@@ -20,12 +20,14 @@ public:
 private:
 	const		Server& _server;
 
+
 	Response	handleGet(const Request& request);
 	Response	handlePost(const Request& request);
 	Response	handleDelete(const Request& request);
 	Response	methodNotAllowed();
 
 	// Helpers for all methods
+	Response	GetName() const;
 	bool		isPathSafe(const std::string& path) const;
 	int			checkFile(const std::string& path) const;
 	Response	buildErrorResponse(int statusCode) const;
@@ -45,7 +47,6 @@ private:
 	Response	handleSetName(const Request& request);
 	Response	handleKill() const;
 	Response	handleFeed() const;
-	
 	std::string	resolvePostPath(const std::string& path) const;
 	bool		saveUploadedFile(const std::string& path, const std::string& body) const;
 	Response	buildCreatedResponse() const;
