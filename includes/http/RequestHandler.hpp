@@ -20,11 +20,16 @@ public:
 private:
 	const		Server& _server;
 
-
 	Response	handleGet(const Request& request);
 	Response	handlePost(const Request& request);
 	Response	handleDelete(const Request& request);
 	Response	methodNotAllowed();
+
+	// API GET
+	Response	getName() const;
+	Response	getBackground() const;
+	Response	getClothes() const;
+	Response	getHope() const;
 
 	// Helpers for all methods
 	Response	GetName() const;
@@ -47,9 +52,9 @@ private:
 	Response	handleSetName(const Request& request);
 	Response	handleKill() const;
 	Response	handleFeed() const;
-	std::string	resolvePostPath(const std::string& path) const;
-	bool		saveUploadedFile(const std::string& path, const std::string& body) const;
-	Response	buildCreatedResponse() const;
+	Response	handleSetBackground(const Request& request) const;
+	Response	handleSetClothes(const Request& request) const;
+	Response	handleSetHope(const Request& request) const;
 
 	// DELETE
 	std::string	resolveDeletePath(const std::string& path) const;

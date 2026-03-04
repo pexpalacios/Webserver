@@ -80,7 +80,7 @@ Response RequestHandler::handleDelete(const Request& request)
 }
 
 
-//20260223 - Implemented basic POST request handling
+//20260304 - Implemented basic POST request handling
 // main -> server.run() -> handleClientConnection() -> handleRequest -> handleGet/handlePost/handleDelete
 Response RequestHandler::handlePost(const Request& request)
 {
@@ -88,6 +88,15 @@ Response RequestHandler::handlePost(const Request& request)
 
 	if (path == "/api/name")
 		return handleSetName(request);
+
+	if (path == "/api/background")
+		return handleSetBackground(request);
+
+	if (path == "/api/clothes")
+		return handleSetClothes(request);
+
+	if (path == "/api/hope")
+		return handleSetHope(request);
 
 	if (path == "/api/kill")
 		return handleKill();
@@ -113,9 +122,19 @@ Response RequestHandler::handleGet(const Request& request)
 {
 	std::string path = request.getPath();
 
+	// API endpoints
 	if (path == "/api/name")
-		return GetName();
-		
+		return getName();
+
+	if (path == "/api/background")
+		return getBackground();
+
+	if (path == "/api/clothes")
+		return getClothes();
+
+	if (path == "/api/hope")
+		return getHope();
+
 	if (path == "/trigger500")
 		return buildErrorResponse(500);
 
