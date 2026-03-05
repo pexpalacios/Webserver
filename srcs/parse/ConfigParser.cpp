@@ -149,7 +149,6 @@ std::vector<ServerConfig> ConfigParser::parse(const std::string &filename)
 	std::string line;
 	bool inServer = false;
 	bool inLocation = false;
-	int lineNumber = 0;
 	ServerConfig currentServer;
 	LocationConfig currentLocation;
 	std::vector<ServerConfig> servers;
@@ -158,13 +157,12 @@ std::vector<ServerConfig> ConfigParser::parse(const std::string &filename)
 	while (std::getline(file, line))
 	{
 		line = omitSpaces(line);
-		lineNumber++;
 		if (line.empty())
 			continue;
 		if (line.find("server") == 0 && line.find("{") != std::string::npos)
 		{
 			if (inServer)
-				throw (std::runtime_error("Nested server blocks. Line: " + lineNumber));
+				throw (std::runtime_error("Nested server blocks."));
 			inServer = true;
 			currentServer = ServerConfig();
 			continue;
@@ -176,11 +174,11 @@ std::vector<ServerConfig> ConfigParser::parse(const std::string &filename)
 			if (line.find("location") == 0 && line.find("{") != std::string::npos)
 			{
 				if (inLocation)
-						throw (std::runtime_error("Nested location blocks Line: " + lineNumber));
+						throw (std::runtime_error("Nested location blocks."));
 				inLocation = true;
 				std::vector<std::string> tokens = tokenize(line);
 				if (tokens.size() < 3)
-					throw (std::runtime_error("Invalid location block Line: " + lineNumber));
+					throw (std::runtime_error("Invalid location block."));
 				currentLocation = LocationConfig();
 				currentLocation.setPath(tokens[1]);
 				if (line.find("}") != std::string::npos)
@@ -210,7 +208,7 @@ std::vector<ServerConfig> ConfigParser::parse(const std::string &filename)
 		if (inServer && line == "}")
 		{
 			if (inLocation)
-				throw (std::runtime_error("Location not closed Line: " + lineNumber));
+				throw (std::runtime_error("Location not closed."));
 			checkServerValues(currentServer);
 			servers.push_back(currentServer);
 			inServer = false;
@@ -219,7 +217,7 @@ std::vector<ServerConfig> ConfigParser::parse(const std::string &filename)
 	}
 	//These two check if the file is empty or missing brackets
 	if (inServer)
-		throw (std::runtime_error("Unclosed server block Line: " + lineNumber));
+		throw (std::runtime_error("Unclosed server block."));
 	if (!inServer && servers.empty())
 		throw (std::runtime_error("Config file is empty"));
 	return (servers);
