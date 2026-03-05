@@ -1,100 +1,12 @@
 #include "../../includes/http/RequestHandler.hpp"
+#include <sstream>
 #include <fstream>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <iostream>
 
-//20260223 - Implemented basic GET request handling, including file reading and response generation.
 RequestHandler::RequestHandler(const Server& server)
 : _server(server) {}
-
-Response RequestHandler::handleBadRequest()
-{return buildErrorResponse(400);}
-
-Response RequestHandler::handleInternalServerError()
-{return buildErrorResponse(500);}
-
-
-//20260223 - Implemented basic GET request handling, including file reading and response generation.
-// main -> server.run() -> handleClientConnection() -> handleRequest -> handleGet/handlePost/handleDelete -> isPathSafe
-bool RequestHandler::isPathSafe(const std::string& path) const
-{
-	if (path.empty())
-		return false;
-
-	if (path[0] != '/')
-		return false;
-
-	if (path.find("..") != std::string::npos)
-		return false;
-
-	if (path.find("~") != std::string::npos)
-		return false;
-
-	return true;
-}
-
-
-//20260223 - resolve the requested path to a file system path, not allowing directory traversal and ensuring it points to the www directory
-// main -> server.run() -> handleClientConnection() -> handleRequest -> handleGet/handlePost/handleDelete -> fileExists
-bool RequestHandler::fileExists(const std::string& path) const
-{
-	struct stat buffer;
-
-	if (stat(path.c_str(), &buffer) != 0)
-		return false;
-
-	return S_ISREG(buffer.st_mode);
-}
-
-
-//20260226 - Build error response with safe fallback
-// Used for all HTTP error codes (400, 403, 404, 500, etc.)
-// main -> server.run() -> handleClientConnection() -> handleRequest -> buildErrorResponse
-#include <sstream>  // 👈 importante
-
-Response RequestHandler::buildErrorResponse(int statusCode) const
-{
-    Response response;
-    response.setStatusCode(statusCode);
-    response.setHeader("Content-Type", "text/html");
-
-    std::map<int, std::string> errorPages = _server.getErrorPages();
-    std::string body;
-
-    // Convert int to string (C++98 compatible)
-    std::ostringstream oss;
-    oss << statusCode;
-    std::string codeStr = oss.str();
-
-    if (errorPages.find(statusCode) != errorPages.end())
-    {
-        std::string filePath = errorPages.find(statusCode)->second;
-
-        try
-        {
-            body = readFileContent(filePath);
-        }
-        catch (...)
-        {
-            body = "<html><head><title>" + codeStr + " Error</title></head>"
-                   "<body><h1>" + codeStr + " - Internal Server Error</h1>"
-                   "<p>The server encountered an unexpected condition.</p>"
-                   "</body></html>";
-        }
-    }
-    else
-    {
-        body = "<html><head><title>" + codeStr + " Error</title></head>"
-               "<body><h1>Error " + codeStr + "</h1>"
-               "</body></html>";
-    }
-
-    response.setBody(body);
-    return response;
-}
-
-
 
 //20260225 find the best matching location for the requested path, based on longest prefix match
 // main -> handleRequest -> handleGet -> findMatchingLocation
@@ -128,6 +40,26 @@ const LocationConfig* RequestHandler::findMatchingLocation(const std::string& pa
 }
 
 
+//20260303 - main request handling method that routes to specific handlers based on HTTP method
+// html -> handleGetName
+Response RequestHandler::GetName() const
+{
+	std::ifstream file("./database/name.txt");
+	if (!file.is_open())
+		return buildErrorResponse(404);
+
+	std::string name;
+	std::getline(file, name);
+	file.close();
+
+	Response res;
+	res.setStatusCode(200);
+	res.setHeader("Content-Type", "text/plain");
+	res.setBody(name);
+	return res;
+}
+
+
 //20260223 - switched to route requests based on HTTP method
 // main -> server.run() -> handleClientConnection() -> handleRequest -> handleGet/handlePost/handleDelete
 Response RequestHandler::handleDelete(const Request& request)
@@ -137,8 +69,9 @@ Response RequestHandler::handleDelete(const Request& request)
 		return buildErrorResponse(403);
 
 	std::string filePath = resolveDeletePath(path);
-	if (!fileExists(filePath))
-		return buildErrorResponse(404);
+	int status = checkFile(filePath);
+	if (status != 200)
+		return buildErrorResponse(status);
 
 	if (!deleteFile(filePath))
 		return buildErrorResponse(500);
@@ -147,48 +80,78 @@ Response RequestHandler::handleDelete(const Request& request)
 }
 
 
-//20260223 - Implemented basic POST request handling
+//20260304 - Implemented basic POST request handling
 // main -> server.run() -> handleClientConnection() -> handleRequest -> handleGet/handlePost/handleDelete
 Response RequestHandler::handlePost(const Request& request)
 {
 	std::string path = request.getPath();
-	if (!isPathSafe(path))
-		return buildErrorResponse(403);
 
-	if (request.getBody().empty())
-		return buildErrorResponse(400);
+	if (path == "/api/name")
+		return handleSetName(request);
 
-	std::string filePath = resolvePostPath(path);
-	if (!saveUploadedFile(filePath, request.getBody()))
-		return buildErrorResponse(500);
+	if (path == "/api/background")
+		return handleSetBackground(request);
 
-	return buildCreatedResponse();
+	if (path == "/api/clothes")
+		return handleSetClothes(request);
+
+	if (path == "/api/hope")
+		return handleSetHope(request);
+
+	if (path == "/api/kill")
+		return handleKill();
+
+	if (path == "/api/feed")
+		return handleFeed();
+
+	return buildErrorResponse(404);
+}
+
+void RequestHandler::logGetRequest(const std::string& path) const
+{
+	static int getCounter = 0;  // ← vive solo aquí
+	getCounter++;
+
+	std::cout << "[GET #" << getCounter << "] " << path << std::endl;
 }
 
 
-//20260226 - Implemented basic GET request handling, including file reading and response generation.
+//20260303 - Implemented basic GET request handling, including file reading and response generation.
 // main -> server.run() -> handleClientConnection() -> handleRequest -> handleGet/handlePost/handleDelete
 Response RequestHandler::handleGet(const Request& request)
 {
 	std::string path = request.getPath();
 
-	// 20260226 - Manual 500 trigger for testing
+	// API endpoints
+	if (path == "/api/name")
+		return getName();
+
+	if (path == "/api/background")
+		return getBackground();
+
+	if (path == "/api/clothes")
+		return getClothes();
+
+	if (path == "/api/hope")
+		return getHope();
+
 	if (path == "/trigger500")
 		return buildErrorResponse(500);
 
 	if (!isPathSafe(path))
-		return buildErrorResponse(403);
+		return buildErrorResponse(403); // Forbidden
 
 	std::string filePath = resolveGetPath(path);
 	std::string root = _server.getStaticRoot();
 	if (filePath.find(root) != 0)
-		return buildErrorResponse(403);
+		return buildErrorResponse(403); // Forbidden
 
-	if (!fileExists(filePath))
-		return buildErrorResponse(404);
+	std::string resolvedPath = filePath;
+	logGetRequest(resolvedPath); // Log the resolved path for debugging
 
-	// 20260225 Debug method
-	DebugHandleGet(path, filePath);
+	int status = checkFile(filePath);
+	if (status != 200)
+		return buildErrorResponse(status);
 
 	std::string content = readFileContent(filePath);
 	return buildFileResponse(content, filePath);
@@ -199,12 +162,15 @@ Response RequestHandler::handleGet(const Request& request)
 // main -> handleRequest -> methodNotAllowed
 Response RequestHandler::methodNotAllowed()
 {
+	return buildErrorResponse(405);	// Method Not Allowed
+	/*
 	Response response;
 	response.setStatusCode(405);
-	response.setHeader("Content-Type", "text/html");
-	response.setBody("<h1>405 Method Not Allowed</h1>");
-
+	response.setHeader("Content-Type", "text/plain; charset=utf-8");
+	response.setHeader("Allow", "GET, POST, DELETE");
+	response.setBody("405 Method Not Allowed\nThis endpoint does not accept that HTTP method.\n");
 	return response;
+	*/
 }
 
 
@@ -219,5 +185,5 @@ Response RequestHandler::handleRequest(const Request& request)
 	else if (request.getMethod() == "DELETE")
 		return handleDelete(request);
 	else
-		return methodNotAllowed();
+		return methodNotAllowed(); // Protection 405 → Method Not Allowed
 }

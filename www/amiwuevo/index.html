@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 	<head>
 		<title class="title">AMIWUEVO</title>
 		<link rel="stylesheet" type="text/css" href="styles.css">
@@ -6,8 +7,13 @@
 	<body>
 		<!--main image, occupies most of the screen-->
 		<div class="main-div">
-			<div class="title"><p>amiwuevo name</p>
+			<div class="title">
+				<p id="display-name">Cargando...</p>
+
+				<input type="text" id="nameInput" placeholder="Enter name" maxlength="30">
+				<button onclick="saveName()">Guardar</button>
 			</div>
+
 			<div class="content">
 				<div class="content-left">
 					<div class="tamagotchi-container">
@@ -15,7 +21,7 @@
   						<img src="/images/egg_face.gif" class="egg-face" alt="Egg Face">
 					</div>
 				</div>
-			<!--buttons, one of top of each other, they are divs cause they need styles, at the outost right of the screen-->
+
 				<div class="button-div">
 					<button onclick="/cgi-bin/"><img src="/images/icons/bowl-food-solid.svg" alt="give food"></button> <!--onclick wil call a cgi-->
 					<button onclick="/cgi-bin/"><img src="/images/icons/shirt-solid.svg" alt="change outfit"></button>
@@ -23,40 +29,51 @@
 					<button onclick="/cgi-bin/"><img src="/images/icons/xmark-solid.svg" alt="kill amiwuevo"></button>
 				</div>
 			</div>
-			<!--this is teh hope bar, it will change based on interaction, so I'm no sure which kind of elemnet it is yet-->
+
 			<div class="status-bar"></div>
 		</div>
+
 		<script>
-document.addEventListener('DOMContentLoaded', function() 
-{
-	console.log("HI");
-	const decorBtn = document.querySelector('.change-bg-btn');
-	if (!decorBtn) 
-	{
-		console.log("Button not found!");
-		return;
-	}
-	console.log("Button found!");
-
-	decorBtn.addEventListener('click', function(e) 
-	{
-		e.preventDefault();
-		const contentDiv = document.querySelector('.content');
-		
-		let bgUrl = getComputedStyle(contentDiv).backgroundImage;
-		let match = bgUrl.match(/url\\((['\"]?)(.*?)\\1\\)/);
-		bgUrl = match ? match[2] : 'images/backgrounds/bg_01.png';
-		const currentBg = bgUrl || 'images/backgrounds/bg_01.png';
-
-		console.log("FUCK");
-
-		fetch(`/cgi-bin/change_bg.py?current=${encodeURIComponent(currentBg)}`)
-			.then(response => response.json())
-			.then(data => {
-				contentDiv.style.backgroundImage = `url('${data.next_bg}')`;
+		// Cargar nombre al iniciar
+		window.onload = function() {
+			fetch('/api/name')
+			.then(response => {
+				if (!response.ok) throw new Error();
+				return response.text();
+			})
+			.then(name => {
+				if (name)
+					document.getElementById("display-name").textContent = name;
+				else
+					document.getElementById("display-name").textContent = "amiwuevo name";
+			})
+			.catch(() => {
+				document.getElementById("display-name").textContent = "amiwuevo name";
 			});
-	});
-});
-</script>
+		};
+
+		function saveName() {
+			const name = document.getElementById("nameInput").value;
+
+			if (!name) {
+				alert("Introduce un nombre");
+				return;
+			}
+
+			fetch('/api/name', {
+				method: 'POST',
+				body: name
+			})
+			.then(response => {
+				if (response.ok) {
+					document.getElementById("display-name").textContent = name;
+					alert("Nombre guardado");
+				} else {
+					alert("Error al guardar");
+				}
+			})
+			.catch(() => alert("Error de red"));
+		}
+    </script>
 	</body>
 </html>

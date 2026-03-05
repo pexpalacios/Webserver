@@ -1,0 +1,27 @@
+//20260303
+// Fragmento que gestiona la primera llamada a la API para obtener el nombre guardado en el servidor y mostrarlo en la página web.
+
+<script>
+// 1) Función que pide el nombre al servidor y lo pinta en la web
+function loadName() {
+	fetch('/api/name')
+		.then(response => {
+			if (!response.ok) throw new Error();
+			return response.text();
+		})
+		.then(name => {
+			document.getElementById("display-name").textContent =
+				(name && name.trim().length > 0) ? name : "amiwuevo name";
+		})
+		.catch(() => {
+			document.getElementById("display-name").textContent = "amiwuevo name";
+		});
+}
+
+// 2) Llamada automática al cargar la página
+window.onload = function () {
+	loadName();
+};
+</script>
+
+

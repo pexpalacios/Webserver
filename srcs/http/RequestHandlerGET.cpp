@@ -76,6 +76,7 @@ std::string RequestHandler::getContentType(const std::string& path) const
 	return ("text/plain");
 }
 
+
 //20260223 - build a successful response with the file content and appropriate headers
 // main -> handleRequest -> handleGet -> buildFileResponse
 Response RequestHandler::buildFileResponse(const std::string& content, const std::string& filePath) const
@@ -87,7 +88,6 @@ Response RequestHandler::buildFileResponse(const std::string& content, const std
 
 	return (response);
 }
-
 
 
 //20260225 - Debug method to print the requested path and the resolved file path for GET requests

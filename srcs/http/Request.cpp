@@ -5,79 +5,6 @@
 Request::Request() : valid(false) {}
 Request::~Request() {}
 
-//20260223 Cleanup of parse method
-// main -> server.run() -> handleClientConnection() -> Request.parse() -> Request.clear()
-void Request::clear()
-{
-	method.clear();
-	path.clear();
-	version.clear();
-	headers.clear();
-	body.clear();
-	valid = false;
-}
-
-//20260223 Refactor of parse method to handle edge cases and improve readability
-// main -> server.run() -> handleClientConnection() -> Request.parse()
-bool Request::parse(const std::string& raw)
-{
-	clear();
-	std::istringstream stream(raw);
-	std::string line;
-
-	if (!std::getline(stream, line))
-		return false;
-
-	if (!line.empty() && line[line.size() - 1] == '\r')
-		line.erase(line.size() - 1);
-
-	std::istringstream requestLine(line);
-
-	if (!(requestLine >> method >> path >> version))
-		return false;
-
-	// 20260223 Parse headers
-	while (std::getline(stream, line))
-	{
-		if (line == "\r" || line == "")
-			break;
-
-		if (!line.empty() && line[line.size() - 1] == '\r')
-			line.erase(line.size() - 1);
-
-		size_t colonPos = line.find(':');
-		if (colonPos == std::string::npos)
-			return false;
-
-		std::string key = line.substr(0, colonPos);
-		std::string value = line.substr(colonPos + 1);
-
-		if (!value.empty() && value[0] == ' ')
-			value.erase(0, 1);
-
-		headers[key] = value;
-	}
-
-	// 20260223 Parse body if Content-Length is present
-	if (hasHeader("Content-Length"))
-	{
-		int length = std::atoi(getHeader("Content-Length").c_str());
-		if (length < 0)
-			return false;
-
-		std::string remaining;
-		std::getline(stream, remaining, '\0');
-
-		if ((int)remaining.size() < length)
-			return false;
-
-		body = remaining.substr(0, length);
-	}
-
-	valid = true;
-	return true;
-}
-
 // ===================== VALID =====================
 bool Request::isValid() const
 {return valid;}
@@ -125,3 +52,106 @@ std::string Request::getHeader(const std::string& key) const
 
 const std::map<std::string, std::string>& Request::getHeaders() const
 {return headers;}
+
+
+//20260223 Cleanup of parse method
+// main -> server.run() -> handleClientConnection() -> Request.parse() -> Request.clear()
+void Request::clear()
+{
+	method.clear();
+	path.clear();
+	version.clear();
+	headers.clear();
+	body.clear();
+	valid = false;
+}
+
+
+//20260227 URL-decode the path to handle encoded characters (e.g., %20 for space)
+// main -> server.run() -> handleClientConnection() -> Request.parse() -> urlDecode()
+static std::string urlDecode(const std::string& src)
+{
+    std::string result;
+    size_t i = 0;
+
+    while (i < src.length())
+    {
+        if (src[i] == '%' && i + 2 < src.length())
+        {
+            std::string hex = src.substr(i + 1, 2);
+            char decodedChar = static_cast<char>(std::strtol(hex.c_str(), NULL, 16));
+            result += decodedChar;
+            i += 3;
+        }
+        else
+        {
+            result += src[i];
+            ++i;
+        }
+    }
+    return result;
+}
+
+
+//20260223 Refactor of parse method to handle edge cases and improve readability
+// main -> server.run() -> handleClientConnection() -> Request.parse()
+bool Request::parse(const std::string& raw)
+{
+	clear();
+	std::istringstream stream(raw);
+	std::string line;
+
+	if (!std::getline(stream, line))
+		return false;
+
+	if (!line.empty() && line[line.size() - 1] == '\r')
+		line.erase(line.size() - 1);
+
+	std::istringstream requestLine(line);
+
+	if (!(requestLine >> method >> path >> version))
+		return false;
+	path = urlDecode(path);
+
+	// 20260223 Parse headers
+	while (std::getline(stream, line))
+	{
+		if (line == "\r" || line == "")
+			break;
+
+		if (!line.empty() && line[line.size() - 1] == '\r')
+			line.erase(line.size() - 1);
+
+		size_t colonPos = line.find(':');
+		if (colonPos == std::string::npos)
+			return false;
+
+		std::string key = line.substr(0, colonPos);
+		std::string value = line.substr(colonPos + 1);
+
+		if (!value.empty() && value[0] == ' ')
+			value.erase(0, 1);
+
+		headers[key] = value;
+	}
+
+	// 20260223 Parse body if Content-Length is present
+	if (hasHeader("Content-Length"))
+	{
+		int length = std::atoi(getHeader("Content-Length").c_str());
+		if (length < 0)
+			return false;
+
+		std::string remaining;
+		std::getline(stream, remaining, '\0');
+
+		if ((int)remaining.size() < length)
+			return false;
+
+		body = remaining.substr(0, length);
+	}
+
+	valid = true;
+	return true;
+}
+
