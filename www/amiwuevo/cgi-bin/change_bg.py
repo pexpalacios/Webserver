@@ -1,19 +1,34 @@
 #!/usr/bin/env python3
 import os
-import json
 
-# List of background images
-bg_images = ["images/bg_01.png", "images/bg_02.png", "images/bg_03.png"]
+print("Content-Type: text/plain\n")
 
-# Get current from query string or default to first
-import cgi
-form = cgi.FieldStorage()
-current = form.getvalue("current", bg_images[0])
+#Get all backgrounds into an array
+backgrounds = [
+    "images/backgrounds/bg_01.png",
+    "images/backgrounds/bg_02.png",
+    "images/backgrounds/bg_03.png"
+]
+
+#Path to the database file
+script_dir = os.path.dirname(os.path.abspath(__file__))
+db_path = os.path.join(script_dir, "../../../database/background.txt")
+
+#Read current background
 try:
-    idx = bg_images.index(current)
-    next_bg = bg_images[(idx + 1) % len(bg_images)]
-except ValueError:
-    next_bg = bg_images[0]
+    with open(db_path, "r") as f:
+        current = f.read().strip()
+except FileNotFoundError:
+    current = backgrounds[0]
 
-print("Content-Type: application/json\n")
-print(json.dumps({"next_bg": next_bg}))
+#Find next background and write it in file
+try:
+    idx = backgrounds.index(current)
+    next_bg = backgrounds[(idx + 1) % len(backgrounds)]
+except ValueError:
+    next_bg = backgrounds[0]
+
+with open(db_path, "w") as f:
+    f.write(next_bg)
+
+print(next_bg)

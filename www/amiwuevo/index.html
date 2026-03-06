@@ -13,7 +13,6 @@
 				<input type="text" id="nameInput" placeholder="Enter name" maxlength="30">
 				<button onclick="saveName()">Guardar</button>
 			</div>
-
 			<div class="content">
 				<div class="content-left">
 					<div class="tamagotchi-container">
@@ -35,7 +34,8 @@
 
 		<script>
 		// Cargar nombre al iniciar
-		window.onload = function() {
+		window.onload = function() 
+		{
 			fetch('/api/name')
 			.then(response => {
 				if (!response.ok) throw new Error();
@@ -50,9 +50,16 @@
 			.catch(() => {
 				document.getElementById("display-name").textContent = "amiwuevo name";
 			});
+
+			fetch('/cgi-bin/get_bg.py')
+			.then(response => response.text())
+			.then(bg => {
+				document.querySelector('.content').style.backgroundImage = `url('${bg}')`;
+			});
 		};
 
-		function saveName() {
+		function saveName() 
+		{
 			const name = document.getElementById("nameInput").value;
 
 			if (!name) {
@@ -74,6 +81,32 @@
 			})
 			.catch(() => alert("Error de red"));
 		}
+
+		//Change background button
+		document.addEventListener('DOMContentLoaded', function() 
+		{
+			const btn = document.querySelector('.change-bg-btn');
+			if (!btn) 
+				return;
+			btn.addEventListener('click', function(e) 
+			{
+				e.preventDefault();
+				//Execute chang_bg.py so it changes the database
+				fetch('/cgi-bin/change_bg.py')
+				.then(response => response.text())
+				.then(data => {
+					console.log('CGI output:', data);
+					//Execute get_bg.py so it changes the .css to the file in database
+					fetch('/cgi-bin/get_bg.py')
+  					.then(response => response.text())
+  					.then(bg => {
+    					const lines = bg.split('\n').map(line => line.trim()).filter(line => line);
+    					const imagePath = lines[lines.length - 1];
+    					document.querySelector('.content').style.backgroundImage = `url('${imagePath}')`;
+					});
+				});
+			});
+		});
     </script>
 	</body>
 </html>
