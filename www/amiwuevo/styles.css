@@ -1,11 +1,17 @@
 /* Global color variables */
 :root {
-	--color-base: #3498db;
+	--color-base: #dcb891;
 	--color-dark: #2c3e50;
 	--color-light: #ecf0f1;
-	--color-highlight: #e67e22;
+	--color-highlight: #be976d;
 	--color-background: #f5f6fa;
-	--color-border: #34495e;
+	--color-border: #34271d;
+
+	--color-green: #9de687;
+	--color-orange: #e6c187;
+	--color-pink: #e687d6;
+	--color-blue: #87b9e6;
+	--color-dark-green: #3c4a38;
 }
 
 
@@ -21,7 +27,19 @@ body {
 
 .title {
 	background: var(--color-light);
-	color: var(--color-dark);
+	color: var(--color-green);
+	font-size: 40px;
+	font-weight: bold;
+	font-family: monospace;
+	text-shadow:
+        -2px -2px 0 var(--color-dark-green),
+        2px -2px 0 var(--color-dark-green),
+        -2px 2px 0 var(--color-dark-green),
+        2px 2px 0 var(--color-dark-green),
+        -3px 0px 0 var(--color-dark-green),
+        3px 0px 0 var(--color-dark-green),
+        0px -3px 0 var(--color-dark-green),
+        0px 3px 0 var(--color-dark-green);
 }
 
 .main-div {
@@ -31,6 +49,7 @@ body {
 	border-radius: 18px;
 	box-shadow: 0 4px 24px rgba(44, 62, 80, 0.50);
 	height: 60vh;
+	min-height: 600px;
 	width: 40vw;
 	display: flex;
 	flex-direction: column;
@@ -41,7 +60,7 @@ body {
 
 .content {
 	display: flex;
-	background-image: url("images/background.png");
+	background-image: url("images/backgrounds/bg_01.png");
 	flex-direction: row;
 	background-size: cover;
 	height: 80%;
@@ -56,23 +75,26 @@ body {
 
 .tamagotchi-container {
 	position: relative;
-	width: 10vw;
+	width: auto;
+	min-width: 50%;
 	max-width: 360px;
-	aspect-ratio: 4 / 5;
-	margin: 0 auto;
-	background: url('images/girlypop.jpg') center/cover no-repeat;
-	mask-image: url('images/base.gif');
-	mask-size: cover;
+	height: 100%;
+	max-height: 480px;
+	background-color: #e8d9c3;
+	mask-image: url('images/egg_base.gif');
+	mask-size: contain;
+	mask-repeat: no-repeat;
+	mask-position: center;
+	align-items: center;
+	justify-content: center;
 }
 
 .egg-face {
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: 10vw;
-	max-width: 360px;
-	margin: 0 auto;
-	object-fit: cover;
+	position: relative;
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+	justify-self:center;
 }
 
 /************
@@ -89,30 +111,60 @@ body {
 	padding: 1em;
 }
 
+
 .button-div button, .button-div input[type="button"], .button-div input[type="submit"] {
 	width: 100%;
 	height: 20%;
+	min-height: 10%;
 	padding: 10px 0;
-	border: 2px solid var(--color-border);
+	border: 4px solid var(--color-dark-green);
 	border-radius: 8px;
-	background: var(--color-base);
-	font-weight: bold;
+	background: linear-gradient(180deg, var(--color-green) 0%, #8CCC84 100%);
+	background-origin: border-box;
+	box-shadow: 0px 0.5px 1.5px rgba(54, 122, 246, 0.25), inset 0px 0.8px 0px -0.25px rgba(255, 255, 255, 0.2);
 	cursor: pointer;
 	transition: background 0.2s, color 0.2s;
+	touch-action: manipulation;
 }
 
 .button-div button img {
-	height: 80%;
+	height: 70%;
+	min-height: 15px;
+	width: 80%;
+	fill: var(--color-pink);
+	filter: invert(24%) sepia(20%) saturate(512%) hue-rotate(61deg) brightness(99%) contrast(89%);
 }
 
+
+.button-div button:hover,
+.button-div button:active {
+  border-color: rgba(27, 53, 30, 0.9);
+  box-shadow: rgba(0, 0, 0, 0.5) 0 4px 12px;
+}
+
+.button-div button:hover {
+  transform: translateY(-1px);
+}
+
+.button-div button:active {
+	transform: translateY(0px);
+}
+
+/*
 .button-div button:hover, .button-div input[type="button"]:hover, .button-div input[type="submit"]:hover {
 	background: var(--color-highlight);
 	color: var(--color-dark);
 }
+*/
+
+.button-div:focus {
+  box-shadow: inset 0px 0.8px 0px -0.25px rgba(255, 255, 255, 0.2), 0px 0.5px 1.5px rgba(54, 122, 246, 0.25), 0px 0px 0px 3.5px rgba(58, 108, 217, 0.5);
+  outline: 0;
+}
 
 .status-bar {
 	height: 22px;
-	background: var(--color-base);
+	background: var(--color-orange);
 	color: #fff;
 	padding: 8px 16px;
 	border-radius: 12px;

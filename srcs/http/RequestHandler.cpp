@@ -1,3 +1,6 @@
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <fcntl.h>
 #include "../../includes/http/RequestHandler.hpp"
 #include <sstream>
 #include <fstream>
@@ -115,9 +118,44 @@ void RequestHandler::logGetRequest(const std::string& path) const
 	std::cout << "[GET #" << getCounter << "] " << path << std::endl;
 }
 
+//20260306: Pex
+//Auxiliary function created for executing CGIs, works like a pipex
+//May need more of this or change this one so it accpets more things than python
+std::string executeCGIScript(const std::string& scriptPath) 
+{
+    int pipefd[2];
+    if (pipe(pipefd) == -1) return "";
+
+    pid_t pid = fork();
+    if (pid == -1) return "";
+
+    if (pid == 0) 
+	{
+        // Child process
+        dup2(pipefd[1], STDOUT_FILENO); // Redirect stdout to pipe
+        close(pipefd[0]);
+        close(pipefd[1]);
+        execl("/usr/bin/python3", "python3", scriptPath.c_str(), (char*)NULL);
+        exit(1); // If execl fails
+    } 
+	else 
+	{
+        // Parent process
+        close(pipefd[1]);
+        char buffer[4096];
+        std::string output;
+        ssize_t count;
+        while ((count = read(pipefd[0], buffer, sizeof(buffer))) > 0)
+            output.append(buffer, count);
+        close(pipefd[0]);
+        waitpid(pid, NULL, 0);
+        return output;
+    }
+}
 
 //20260303 - Implemented basic GET request handling, including file reading and response generation.
 // main -> server.run() -> handleClientConnection() -> handleRequest -> handleGet/handlePost/handleDelete
+//20260306 - Added CGI reading
 Response RequestHandler::handleGet(const Request& request)
 {
 	std::string path = request.getPath();
@@ -153,6 +191,16 @@ Response RequestHandler::handleGet(const Request& request)
 	if (status != 200)
 		return buildErrorResponse(status);
 
+	//If the file is a CGI script, it is sent to executeCGIScript()
+	if (filePath.find("/cgi-bin/") != std::string::npos && filePath.size() > 3 && filePath.substr(filePath.size()-3) == ".py") 
+	{
+		std::string cgiOutput = executeCGIScript(filePath);
+		Response response;
+		response.setStatusCode(200);
+		response.setHeader("Content-Type", "text/html");
+		response.setBody(cgiOutput);
+		return response;
+	}
 	std::string content = readFileContent(filePath);
 	return buildFileResponse(content, filePath);
 }
