@@ -1,112 +1,207 @@
 <!DOCTYPE html>
 
-	<head>
-		<title class="title">AMIWUEVO</title>
-		<link rel="stylesheet" type="text/css" href="styles.css">
-	</head>
-	<body>
-		<!--main image, occupies most of the screen-->
-		<div class="main-div">
-			<div class="title">
-				<p id="display-name">Cargando...</p>
+<head>
+	<title class="title">AMIWUEVO</title>
+	<link rel="stylesheet" type="text/css" href="styles.css">
+</head>
 
-				<input type="text" id="nameInput" placeholder="Enter name" maxlength="30">
-				<button onclick="saveName()">Guardar</button>
-			</div>
-			<div class="content">
-				<div class="content-left">
-					<div class="tamagotchi-container">
-  						<div class="egg-base"></div>
-  						<img src="/images/egg_face.gif" class="egg-face" alt="Egg Face">
-					</div>
-				</div>
+<body>
 
-				<div class="button-div">
-					<button onclick="/cgi-bin/"><img src="/images/icons/bowl-food-solid.svg" alt="give food"></button> <!--onclick wil call a cgi-->
-					<button onclick="/cgi-bin/"><img src="/images/icons/shirt-solid.svg" alt="change outfit"></button>
-					<button class="change-bg-btn"><img src="/images/icons/image-solid.svg" alt="change decor"></button>
-					<button onclick="/cgi-bin/"><img src="/images/icons/xmark-solid.svg" alt="kill amiwuevo"></button>
-				</div>
-			</div>
+	<div class="main-div">
 
-			<div class="status-bar"></div>
+		<div class="title">
+			<p id="display-name">Cargando...</p>
+
+			<input type="text" id="nameInput" placeholder="Enter name" maxlength="30">
+			<button onclick="saveName()">Guardar</button>
+
+			<input type="file" id="fileInput" style="display:none" accept="image/png">
+			<button id="uploadBgBtn">BG</button>
 		</div>
 
-		<script>
-		// Cargar nombre al iniciar
-		window.onload = function() 
+		<div class="content">
+			<div class="content-left">
+				<div class="tamagotchi-container">
+					<div class="egg-base"></div>
+					<img src="/images/egg_face.gif" class="egg-face" alt="Egg Face">
+				</div>
+			</div>
+
+			<div class="button-div">
+				<button onclick="/cgi-bin/">
+					<img src="/images/icons/bowl-food-solid.svg" alt="give food">
+				</button>
+
+				<button onclick="/cgi-bin/">
+					<img src="/images/icons/shirt-solid.svg" alt="change outfit">
+				</button>
+
+				<button class="change-bg-btn">
+					<img src="/images/icons/image-solid.svg" alt="change decor">
+				</button>
+
+				<button onclick="/cgi-bin/">
+					<img src="/images/icons/xmark-solid.svg" alt="kill amiwuevo">
+				</button>
+			</div>
+		</div>
+
+		<div class="status-bar"></div>
+
+	</div>
+
+<script>
+
+// 20260307 LOAD INITIAL DATA
+
+window.onload = function()
+{
+	fetch('/api/name')
+	.then(response => {
+		if (!response.ok) throw new Error();
+		return response.text();
+	})
+	.then(name => {
+		if (name)
+			document.getElementById("display-name").textContent = name;
+		else
+			document.getElementById("display-name").textContent = "amiwuevo name";
+	})
+	.catch(() => {
+		document.getElementById("display-name").textContent = "amiwuevo name";
+	});
+
+	fetch('/cgi-bin/get_bg.py')
+	.then(response => response.text())
+	.then(bg => {
+		document.querySelector('.content').style.backgroundImage = `url('${bg}')`;
+	});
+};
+
+
+// 20260307 SAVE NAME
+
+function saveName()
+{
+	const name = document.getElementById("nameInput").value;
+
+	if (!name)
+	{
+		alert("Introduce un nombre");
+		return;
+	}
+
+	fetch('/api/name', {
+		method: 'POST',
+		body: name
+	})
+	.then(response => {
+		if (response.ok)
 		{
-			fetch('/api/name')
-			.then(response => {
-				if (!response.ok) throw new Error();
-				return response.text();
-			})
-			.then(name => {
-				if (name)
-					document.getElementById("display-name").textContent = name;
-				else
-					document.getElementById("display-name").textContent = "amiwuevo name";
-			})
-			.catch(() => {
-				document.getElementById("display-name").textContent = "amiwuevo name";
-			});
+			document.getElementById("display-name").textContent = name;
+			alert("Nombre guardado");
+		}
+		else
+			alert("Error al guardar");
+	})
+	.catch(() => alert("Error de red"));
+}
+
+
+// 20260307 CHANGE BACKGROUND (EXISTING CGI)
+
+document.addEventListener('DOMContentLoaded', function()
+{
+	const btn = document.querySelector('.change-bg-btn');
+
+	if (!btn)
+		return;
+
+	btn.addEventListener('click', function(e)
+	{
+		e.preventDefault();
+
+		fetch('/cgi-bin/change_bg.py')
+		.then(response => response.text())
+		.then(data => {
+
+			console.log('CGI output:', data);
 
 			fetch('/cgi-bin/get_bg.py')
 			.then(response => response.text())
 			.then(bg => {
-				document.querySelector('.content').style.backgroundImage = `url('${bg}')`;
-			});
-		};
 
-		function saveName() 
-		{
-			const name = document.getElementById("nameInput").value;
+				const lines = bg.split('\n')
+					.map(line => line.trim())
+					.filter(line => line);
 
-			if (!name) {
-				alert("Introduce un nombre");
-				return;
-			}
+				const imagePath = lines[lines.length - 1];
 
-			fetch('/api/name', {
-				method: 'POST',
-				body: name
-			})
-			.then(response => {
-				if (response.ok) {
-					document.getElementById("display-name").textContent = name;
-					alert("Nombre guardado");
-				} else {
-					alert("Error al guardar");
-				}
-			})
-			.catch(() => alert("Error de red"));
-		}
-
-		//Change background button
-		document.addEventListener('DOMContentLoaded', function() 
-		{
-			const btn = document.querySelector('.change-bg-btn');
-			if (!btn) 
-				return;
-			btn.addEventListener('click', function(e) 
-			{
-				e.preventDefault();
-				//Execute chang_bg.py so it changes the database
-				fetch('/cgi-bin/change_bg.py')
-				.then(response => response.text())
-				.then(data => {
-					console.log('CGI output:', data);
-					//Execute get_bg.py so it changes the .css to the file in database
-					fetch('/cgi-bin/get_bg.py')
-  					.then(response => response.text())
-  					.then(bg => {
-    					const lines = bg.split('\n').map(line => line.trim()).filter(line => line);
-    					const imagePath = lines[lines.length - 1];
-    					document.querySelector('.content').style.backgroundImage = `url('${imagePath}')`;
-					});
-				});
+				document.querySelector('.content').style.backgroundImage =
+					`url('${imagePath}')`;
 			});
 		});
-    </script>
-	</body>
+	});
+});
+
+
+// 20260307 UPLOAD / DELETE BACKGROUND
+
+document.addEventListener('DOMContentLoaded', function()
+{
+	const btn = document.getElementById("uploadBgBtn");
+	const fileInput = document.getElementById("fileInput");
+
+	let uploaded = false;
+
+	btn.addEventListener("click", function()
+	{
+		if (!uploaded)
+		{
+			fileInput.click();
+		}
+		else
+		{
+			fetch("/upload/bg_00.png", {
+				method: "DELETE"
+			})
+			.then(res => {
+				if (res.ok)
+				{
+					console.log("Background deleted");
+					document.querySelector('.content').style.backgroundImage = "";
+					uploaded = false;
+				}
+			});
+		}
+	});
+
+	fileInput.addEventListener("change", function()
+	{
+		const file = fileInput.files[0];
+
+		if (!file)
+			return;
+
+		fetch("/upload/bg_00.png", {
+			method: "POST",
+			body: file
+		})
+		.then(res => {
+			if (res.ok)
+			{
+				console.log("Background uploaded");
+
+				document.querySelector('.content').style.backgroundImage =
+					"url('/upload/bg_00.png')";
+
+				uploaded = true;
+			}
+		});
+	});
+});
+
+</script>
+
+</body>
 </html>

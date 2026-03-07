@@ -75,7 +75,7 @@ void Server::handleNewConnection(int listenSock, std::vector<struct pollfd>& fds
 // main -> server.run() -> handleClientConnection()
 void Server::handleClientConnection(int clientSock, Server& server)
 {
-	char buffer[1024];
+	char buffer[20000];
 	int bytesRead = recv(clientSock, buffer, sizeof(buffer) - 1, 0);
 	if (bytesRead <= 0)
 	{

@@ -64,7 +64,7 @@ Response RequestHandler::GetName() const
 
 
 //20260223 - switched to route requests based on HTTP method
-// main -> server.run() -> handleClientConnection() -> handleRequest -> handleGet/handlePost/handleDelete
+// main -> server.run() -> handleClientConnection() -> handleRequest -> handleDelete
 Response RequestHandler::handleDelete(const Request& request)
 {
 	std::string path = request.getPath();
@@ -79,12 +79,14 @@ Response RequestHandler::handleDelete(const Request& request)
 	if (!deleteFile(filePath))
 		return buildErrorResponse(500);
 
+	std::cout << "[DELETE] resolved path: " << filePath << std::endl;
+
 	return buildNoContentResponse();
 }
 
 
-//20260304 - Implemented basic POST request handling
-// main -> server.run() -> handleClientConnection() -> handleRequest -> handleGet/handlePost/handleDelete
+//20260307 - Implemented basic POST request handling
+// main -> server.run() -> handleClientConnection() -> handleRequest -> handlePost
 Response RequestHandler::handlePost(const Request& request)
 {
 	std::string path = request.getPath();
@@ -106,6 +108,9 @@ Response RequestHandler::handlePost(const Request& request)
 
 	if (path == "/api/feed")
 		return handleFeed();
+	
+	if (path.find("/upload/") == 0)
+		return handleUpload(request);
 
 	return buildErrorResponse(404);
 }

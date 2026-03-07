@@ -55,6 +55,7 @@ private:
 	Response	handleSetBackground(const Request& request) const;
 	Response	handleSetClothes(const Request& request) const;
 	Response	handleSetHope(const Request& request) const;
+	Response	handleUpload(const Request& request) const;
 
 	// DELETE
 	std::string	resolveDeletePath(const std::string& path) const;

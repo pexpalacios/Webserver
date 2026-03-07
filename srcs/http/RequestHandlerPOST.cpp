@@ -3,7 +3,6 @@
 #include <ctime>
 #include <cstdlib>
 
-
 //20260223 - handle POST requests by saving the body content to a file and returning a response
 // main -> server.run() -> handleClientConnection() -> handleRequest -> handlePost -> handleFeed
 Response RequestHandler::handleFeed() const
@@ -157,5 +156,34 @@ Response RequestHandler::handleSetHope(const Request& request) const
 	Response res;
 	res.setStatusCode(200);
 	res.setBody("Hope updated\n");
+	return res;
+}
+
+
+//20260307 - Implemented basic POST request handling for file uploads.
+// main -> server.run() -> handleClientConnection() -> handleRequest -> handlePost -> handleUpload
+Response RequestHandler::handleUpload(const Request& request) const
+{
+	std::string path = request.getPath();
+	std::string body = request.getBody();
+
+	std::string filePath = "./www/amiwuevo" + path;
+
+	if (body.empty())
+		return buildErrorResponse(400); // No content to save
+
+	std::ofstream file(filePath.c_str(), std::ios::binary);
+	if (!file.is_open())
+		return buildErrorResponse(500); // Failed to open file for writing
+
+	file << body;
+	file.close();
+
+	std::cout << "[UPLOAD] file saved: " << filePath << std::endl;
+
+	Response res;
+	res.setStatusCode(201);
+	res.setBody("File uploaded\n");
+
 	return res;
 }

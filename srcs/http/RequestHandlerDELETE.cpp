@@ -5,7 +5,7 @@
 // main -> handleRequest -> handleDelete -> resolveDeletePath
 std::string RequestHandler::resolveDeletePath(const std::string& path) const
 {
-	std::string root = "./www";
+	std::string root = "./www/amiwuevo";
 	return root + path;
 }
 

@@ -93,12 +93,29 @@ static std::string urlDecode(const std::string& src)
 }
 
 
-//20260223 Refactor of parse method to handle edge cases and improve readability
+//20260307 Refactor of parse method to handle edge cases and improve readability
 // main -> server.run() -> handleClientConnection() -> Request.parse()
 bool Request::parse(const std::string& raw)
 {
 	clear();
-	std::istringstream stream(raw);
+
+	// --- NUEVO ---
+	// Buscamos el final de los headers HTTP (\r\n\r\n)
+	// Esto separa HEADERS del BODY
+	size_t headerEnd = raw.find("\r\n\r\n");
+	if (headerEnd == std::string::npos)
+		return false;
+
+	// --- NUEVO ---
+	// Extraemos solo la parte de los headers
+	std::string headerPart = raw.substr(0, headerEnd);
+
+	// --- NUEVO ---
+	// El body es todo lo que viene después de los headers
+	std::string bodyPart = raw.substr(headerEnd + 4);
+
+	// Ahora el stream solo contiene HEADERS (no binario)
+	std::istringstream stream(headerPart);
 	std::string line;
 
 	if (!std::getline(stream, line))
@@ -111,6 +128,7 @@ bool Request::parse(const std::string& raw)
 
 	if (!(requestLine >> method >> path >> version))
 		return false;
+
 	path = urlDecode(path);
 
 	// 20260223 Parse headers
@@ -142,16 +160,15 @@ bool Request::parse(const std::string& raw)
 		if (length < 0)
 			return false;
 
-		std::string remaining;
-		std::getline(stream, remaining, '\0');
-
-		if ((int)remaining.size() < length)
+		// --- MODIFICADO ---
+		// Usamos directamente bodyPart en lugar de leer del stream
+		// porque bodyPart puede contener datos binarios (PNG)
+		if ((int)bodyPart.size() < length)
 			return false;
 
-		body = remaining.substr(0, length);
+		body = bodyPart.substr(0, length);
 	}
 
 	valid = true;
 	return true;
 }
-
