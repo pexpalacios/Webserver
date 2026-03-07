@@ -1,6 +1,8 @@
 #include "../includes/Server.hpp"
 #include "../includes/Signal.hpp"
 #include "../includes/http/RequestHandler.hpp"
+#include <errno.h>
+#include <cstring>
 
 
 //20260210 Terto: read file content and return as string
@@ -75,17 +77,84 @@ void Server::handleNewConnection(int listenSock, std::vector<struct pollfd>& fds
 // main -> server.run() -> handleClientConnection()
 void Server::handleClientConnection(int clientSock, Server& server)
 {
-	char buffer[20000];
-	int bytesRead = recv(clientSock, buffer, sizeof(buffer) - 1, 0);
-	if (bytesRead <= 0)
+	char buffer[4096];
+	std::string raw; // ADDED: acumulador para guardar toda la request (headers + body)
+	int bytesRead;
+
+	size_t contentLength = 0;       // ADDED: tamaño del body esperado
+	bool headersParsed = false;     // ADDED: indica si ya encontramos el final de headers
+	size_t headerEnd = std::string::npos; // ADDED: posición de "\r\n\r\n"
+
+	// ADDED: loop recv() para soportar requests grandes o fragmentadas
+	while ((bytesRead = recv(clientSock, buffer, sizeof(buffer), 0)) > 0)
 	{
-		std::cerr << "recv() failed or client disconnected. FD " << clientSock << std::endl;
+		raw.append(buffer, bytesRead); // ADDED: acumular datos recibidos
+
+		// ADDED: buscar final de headers
+		if (!headersParsed)
+		{
+			headerEnd = raw.find("\r\n\r\n");
+
+			if (headerEnd != std::string::npos)
+			{
+				headersParsed = true;
+
+				// ADDED: buscar Content-Length dentro de los headers
+				size_t pos = raw.find("Content-Length:");
+				if (pos != std::string::npos)
+				{
+					size_t start = pos + 15;
+					while (raw[start] == ' ')
+						start++;
+
+					size_t end = raw.find("\r\n", start);
+
+					contentLength = std::atoi(raw.substr(start, end - start).c_str());
+				}
+
+				// ADDED: si no hay body podemos parar aquí
+				if (contentLength == 0)
+					break;
+			}
+		}
+
+		// ADDED: comprobar si ya tenemos el body completo
+		if (headersParsed)
+		{
+			size_t bodyStart = headerEnd + 4;
+
+			if (raw.size() >= bodyStart + contentLength)
+				break;
+		}
+	}
+
+	// ADDED: solo error real si recv < 0
+	if (bytesRead < 0)
+	{
+		if (bytesRead < 0)
+		{
+			// ADDED: si el socket es non-blocking esto es normal
+			if (errno == EAGAIN || errno == EWOULDBLOCK)
+				bytesRead = 0;
+			else
+			{
+				std::cerr << "recv() failed. FD " << clientSock
+							<< " errno=" << errno
+							<< " (" << strerror(errno) << ")" << std::endl;
+				close(clientSock);
+				return;
+			}
+		}
+	}
+
+	// ADDED: si recv == 0 significa que el cliente terminó de enviar
+	if (bytesRead == 0 && raw.empty())
+	{
+		std::cerr << "Client disconnected before sending data. FD " << clientSock << std::endl;
 		close(clientSock);
 		return;
 	}
 
-	buffer[bytesRead] = '\0';
-	std::string raw(buffer, bytesRead);
 	std::cout << "Request received from FD " << clientSock << ":\n" << raw << std::endl;
 
 	// Protection 400 → Bad Request
@@ -123,6 +192,7 @@ void Server::handleClientConnection(int clientSock, Server& server)
 
 	std::cout << "Final status code: " << responseObj.getStatusCode() << std::endl << std::endl;
 	std::cout << "-----------------------------------------------------" << std::endl << std::endl;
+
 	std::string response = responseObj.toString();
 	send(clientSock, response.c_str(), response.size(), 0);
 	close(clientSock);
