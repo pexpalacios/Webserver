@@ -68,11 +68,14 @@ std::string RequestHandler::getContentType(const std::string& path) const
 		return ("image/png");
 	if (path.find(".jpg") != std::string::npos || path.find(".jpeg") != std::string::npos)
 		return ("image/jpeg");
+	if (path.find(".svg") != std::string::npos)
+		return ("image/svg+xml");
 	if (path.find(".gif") != std::string::npos)
 		return ("image/gif");
 
 	return ("text/plain");
 }
+
 
 //20260223 - build a successful response with the file content and appropriate headers
 // main -> handleRequest -> handleGet -> buildFileResponse
@@ -85,7 +88,6 @@ Response RequestHandler::buildFileResponse(const std::string& content, const std
 
 	return (response);
 }
-
 
 
 //20260225 - Debug method to print the requested path and the resolved file path for GET requests

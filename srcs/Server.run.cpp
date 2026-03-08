@@ -37,15 +37,15 @@ std::vector<struct pollfd> Server::buildPollFdArray()
 		pfd.revents = 0;
 		fds.push_back(pfd);
 		++i;
-	}
-	std::cout << "Waiting for connections..." << std::endl;
+	} 
+	std::cout << "Waiting for connections..." << std::endl << std::endl;
+	std::cout << "-----------------------------------------------------" << std::endl << std::endl;
 	return fds;
 }
 
 
 //20260207 Terto: Accept a new connection and add to pollfd array
 // main -> server.run() -> handleNewConnection() -> accept() + push_back a fds
-// Accepts a new incoming connection and adds it to the pollfd array for monitoring
 void Server::handleNewConnection(int listenSock, std::vector<struct pollfd>& fds)
 {
 	struct sockaddr_in clientAddr;
@@ -88,7 +88,7 @@ void Server::handleClientConnection(int clientSock, Server& server)
 	std::string raw(buffer, bytesRead);
 	std::cout << "Request received from FD " << clientSock << ":\n" << raw << std::endl;
 
-	// Handle request protection 400 → Bad Request
+	// Protection 400 → Bad Request
 	Request request;
 	if (!request.parse(raw))
 	{
@@ -103,7 +103,7 @@ void Server::handleClientConnection(int clientSock, Server& server)
 		return;
 	}
 
-	// Handle request protection 500 → Internal Server Error
+	// Protection 500 → Internal Server Error
 	RequestHandler handler(server);
 	Response responseObj;
 	try
@@ -113,14 +113,16 @@ void Server::handleClientConnection(int clientSock, Server& server)
 	catch (const std::exception& e)
 	{
 		std::cerr << "[500] Internal Server Error: " << e.what() << std::endl;
-		Response responseObj = handler.handleInternalServerError();
+		responseObj = handler.handleInternalServerError();
 	}
 	catch (...)
 	{
 		std::cerr << "[500] Unknown Internal Server Error" << std::endl;
-		Response responseObj = handler.handleInternalServerError();
+		responseObj = handler.handleInternalServerError();
 	}
 
+	std::cout << "Final status code: " << responseObj.getStatusCode() << std::endl << std::endl;
+	std::cout << "-----------------------------------------------------" << std::endl << std::endl;
 	std::string response = responseObj.toString();
 	send(clientSock, response.c_str(), response.size(), 0);
 	close(clientSock);
@@ -131,7 +133,6 @@ void Server::handleClientConnection(int clientSock, Server& server)
 // main -> server.run()
 void Server::run() 
 {
-	// Agrega los sockets de escucha al array de pollfd
 	std::vector<struct pollfd> fds = buildPollFdArray();
 
 	// main loop with SIGINT (Ctrl+C) to stop the server

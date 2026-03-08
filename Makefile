@@ -13,10 +13,13 @@ SRCS := srcs/main.cpp \
 		srcs/http/Request.cpp \
 		srcs/http/Response.cpp \
 		srcs/http/RequestHandler.cpp \
+		srcs/http/RequestGets.cpp \
+		srcs/http/RequestHandlerError.cpp \
 		srcs/http/RequestHandlerGET.cpp \
 		srcs/http/RequestHandlerPOST.cpp \
 		srcs/http/RequestHandlerDELETE.cpp \
 		srcs/parse/ValueParser.cpp
+
 OBJS	:= $(SRCS:.cpp=.o)
 
 all: $(NAME)
