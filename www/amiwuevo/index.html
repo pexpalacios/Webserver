@@ -7,23 +7,21 @@
 	<body>
 		<!--main image, occupies most of the screen-->
 		<div class="main-div">
-			<div class="title">
-				<p id="display-name">Cargando...</p>
-
+			<dialog id="dialogNameInput">
+				<h2>Otorgale una identidad a tu AmiWevo</h2>
 				<input type="text" id="nameInput" placeholder="Enter name" maxlength="30">
 				<button onclick="saveName()">Guardar</button>
+			</dialog>
+			<script>
+				const dialog = document.getElementById("dialogNameInput")
+				dialog.showModal()
+			</script>
+
+			<div class="title">
+				<p id="display-name">Cargando...</p>
 			</div>
 
 			<div class="content">
-				<dialog open>
-					<div>
-						<p>This dialog is open!</p>
-					</div>
-					<menu>
-						<button id="cancel" type="reset">Cancel</button>
-						<button type="submit">Confirm</button>
-					</menu>
-				</dialog>
 				<div class="content-left">
 					<div class="tamagotchi-container">
   						<div class="egg-base"></div>
@@ -82,6 +80,7 @@
 				}
 			})
 			.catch(() => alert("Error de red"));
+			dialog.close()
 		}
     </script>
 	</body>
