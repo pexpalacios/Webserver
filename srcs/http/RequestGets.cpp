@@ -84,20 +84,32 @@ Response RequestHandler::getHope() const
 // main -> server.run() -> handleClientConnection() -> handleRequest -> handleGet -> getName
 Response RequestHandler::getDialog() const
 {
-	static int line_count = 0;
-	std::ifstream file("./database/text.txt");
-	if (!file.is_open())
-		return buildErrorResponse(404);
+	static size_t line_count = 0;
+	static std::vector<std::string> dialog;
 
-	std::string dialog;
-	std::getline(file, dialog);
-	file.close();
+	// In first read, loadas the dialog string vector;
+	if (dialog.empty()){
+		std::ifstream file("./database/text.txt");
+		if (!file.is_open())
+			return buildErrorResponse(404);
+		std::string buffer;
+		while (std::getline(file, buffer))
+			dialog.push_back(buffer);
+		file.close();
+	}
+	if (dialog.empty())
+		return buildErrorResponse(500);
 
+	// After loading the 
 	Response res;
 	res.setStatusCode(200);
 	res.setHeader("Content-Type", "text/plain");
-	res.setBody(dialog);
+	if (line_count < dialog.size())
+		res.setBody(dialog[line_count]);
+	else {
+		line_count = 0;
+		res.setBody(dialog[line_count]);
+	}
 	line_count++;
-	std::cout << line_count << std::endl;
 	return res;
 }
