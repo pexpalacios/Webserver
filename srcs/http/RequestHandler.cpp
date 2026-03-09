@@ -135,6 +135,9 @@ Response RequestHandler::handleGet(const Request& request)
 	if (path == "/api/hope")
 		return getHope();
 
+	if (path == "/api/dialogue")
+		return getDialog();
+
 	if (path == "/trigger500")
 		return buildErrorResponse(500);
 

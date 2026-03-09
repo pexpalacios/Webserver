@@ -79,3 +79,25 @@ Response RequestHandler::getHope() const
 	res.setBody(value);
 	return res;
 }
+
+//20260309 - ALEX: Implemented basic GET request handling for dialog
+// main -> server.run() -> handleClientConnection() -> handleRequest -> handleGet -> getName
+Response RequestHandler::getDialog() const
+{
+	static int line_count = 0;
+	std::ifstream file("./database/text.txt");
+	if (!file.is_open())
+		return buildErrorResponse(404);
+
+	std::string dialog;
+	std::getline(file, dialog);
+	file.close();
+
+	Response res;
+	res.setStatusCode(200);
+	res.setHeader("Content-Type", "text/plain");
+	res.setBody(dialog);
+	line_count++;
+	std::cout << line_count << std::endl;
+	return res;
+}

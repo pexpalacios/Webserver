@@ -40,7 +40,7 @@
 
 			<div class="status-bar"></div>
 			<div class="text">
-				"Hola, soy [AmiWevo]. Si cierras está página, moriré"
+				<p id="dialogue"></p>
 			</div>
 			<div class="button-div-bottom">
 					<button onclick= "readFile()"><img src="/images/icons/text.svg" alt="Talk to amiwevo"></button> <!--onclick wil call a cgi-->
@@ -91,8 +91,21 @@
 		}
 
 		function readFile() {
-
-		}
+			fetch('/api/dialogue')
+			.then(response => {
+				if (!response.ok) throw new Error();
+				return response.text();
+			})
+			.then(dialogue => {
+				if (dialogue)
+					document.getElementById("dialogue").textContent = dialogue;
+				else
+					document.getElementById("dialogue").textContent = "Lore Ipsum";
+			})
+			.catch(() => {
+				document.getElementById("dialogue").textContent = "Failed text";
+			});
+		};
     </script>
 	</body>
 </html>
