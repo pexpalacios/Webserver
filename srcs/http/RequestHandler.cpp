@@ -63,11 +63,15 @@ Response RequestHandler::GetName() const
 }
 
 
-//20260223 - switched to route requests based on HTTP method
+//20260309 - switched to route requests based on HTTP method
 // main -> server.run() -> handleClientConnection() -> handleRequest -> handleDelete
 Response RequestHandler::handleDelete(const Request& request)
 {
 	std::string path = request.getPath();
+
+	if (path == "/api/upload_background")
+		return handleDeleteUploadedBackground();
+
 	if (!isPathSafe(path))
 		return buildErrorResponse(403);
 
@@ -111,6 +115,9 @@ Response RequestHandler::handlePost(const Request& request)
 	
 	if (path.find("/upload/") == 0)
 		return handleUpload(request);
+	
+	if (path == "/api/upload_background")
+		return handleUploadBackground(request);
 
 	return buildErrorResponse(404);
 }
@@ -161,9 +168,15 @@ std::string executeCGIScript(const std::string& scriptPath)
 //20260303 - Implemented basic GET request handling, including file reading and response generation.
 // main -> server.run() -> handleClientConnection() -> handleRequest -> handleGet/handlePost/handleDelete
 //20260306 - Added CGI reading
+//20260309 - 
 Response RequestHandler::handleGet(const Request& request)
 {
 	std::string path = request.getPath();
+
+	// NEW: remove query string (?t=... etc)
+	size_t q = path.find('?');           // NEW
+	if (q != std::string::npos)          // NEW
+		path = path.substr(0, q);        // NEW
 
 	// API endpoints
 	if (path == "/api/name")
@@ -171,6 +184,9 @@ Response RequestHandler::handleGet(const Request& request)
 
 	if (path == "/api/background")
 		return getBackground();
+
+	if (path == "/api/upload_background")
+		return getUploadedBackground();
 
 	if (path == "/api/clothes")
 		return getClothes();

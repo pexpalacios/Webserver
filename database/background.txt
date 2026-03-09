@@ -1,1 +1,1 @@
-images/backgrounds/bg_02.png
+images/backgrounds/bg_03.png

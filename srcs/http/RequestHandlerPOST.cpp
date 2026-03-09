@@ -160,6 +160,44 @@ Response RequestHandler::handleSetHope(const Request& request) const
 }
 
 
+//20260309 - Handle POST request for uploading a new background image
+// main -> server.run() -> handleClientConnection() -> handleRequest -> handlePost -> handleUploadBackground
+Response RequestHandler::handleUploadBackground(const Request& request) const
+{
+	std::string body = request.getBody();
+
+	if (body.empty())
+		return buildErrorResponse(400);
+
+	// Generate next filename
+	std::string fileName = getNextBackgroundFileName();
+	std::string filePath = "./www/amiwuevo/upload/" + fileName;
+
+	// Save image
+	std::ofstream file(filePath.c_str(), std::ios::binary);
+	if (!file.is_open())
+		return buildErrorResponse(500);
+
+	file << body;
+	file.close();
+
+	std::cout << "[UPLOAD] Background image saved: " << filePath << std::endl;
+
+	// IMPORTANT: save path in bg.txt
+	std::ofstream db("./database/bg.txt");
+	if (!db.is_open())
+		return buildErrorResponse(500);
+
+	db << "/upload/" << fileName << std::endl;
+	db.close();
+
+	Response res;
+	res.setStatusCode(201);
+	res.setBody("Background uploaded\n");
+
+	return res;
+}
+
 //20260307 - Implemented basic POST request handling for file uploads.
 // main -> server.run() -> handleClientConnection() -> handleRequest -> handlePost -> handleUpload
 Response RequestHandler::handleUpload(const Request& request) const
