@@ -81,7 +81,7 @@ Response RequestHandler::getHope() const
 }
 
 //20260309 - ALEX: Implemented basic GET request handling for dialog
-// main -> server.run() -> handleClientConnection() -> handleRequest -> handleGet -> getName
+// main -> server.run() -> handleClientConnection() -> handleRequest -> handleGet -> getDialog
 Response RequestHandler::getDialog() const
 {
 	static size_t line_count = 0;
@@ -110,6 +110,7 @@ Response RequestHandler::getDialog() const
 		line_count = 0;
 		res.setBody(dialog[line_count]);
 	}
+	logGetRequest("database/text.txt");
 	line_count++;
 	return res;
 }
