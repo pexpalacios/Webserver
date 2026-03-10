@@ -42,22 +42,7 @@ body {
         0px 3px 0 var(--color-dark-green);
 }
 
-.text {
-	color: var(--color-green);
-	font-size: 20px;
-	padding-top: 10px;
-	font-weight: bold;
-	font-family: monospace;
-	text-shadow:
-        -2px -2px 0 var(--color-dark-green),
-        2px -2px 0 var(--color-dark-green),
-        -2px 2px 0 var(--color-dark-green),
-        2px 2px 0 var(--color-dark-green),
-        -3px 0px 0 var(--color-dark-green),
-        3px 0px 0 var(--color-dark-green),
-        0px -3px 0 var(--color-dark-green),
-        0px 3px 0 var(--color-dark-green);
-}
+
 
 .main-div {
 	background: var(--color-light);
@@ -66,8 +51,9 @@ body {
 	padding-bottom: 100px;
 	border-radius: 18px;
 	box-shadow: 0 4px 24px rgba(44, 62, 80, 0.50);
-	height: 60vh;
+	height: 80vh;
 	min-height: 600px;
+	min-width: 300px;
 	width: 40vw;
 	display: flex;
 	flex-direction: column;
@@ -195,7 +181,8 @@ body {
 .button-div-bottom button, .button-div input[type="button"], .button-div input[type="submit"] {
 	width: 50%;
 	height: 60%;
-	min-height: 10%;
+	min-height: 30px;
+	min-width: 30px;
 	padding: 5px 0px;
 	border: 4px solid var(--color-dark-green);
 	border-radius: 8px;
@@ -251,4 +238,28 @@ body {
 	margin-top: 24px;
 	font-size: 1.1em;
 	box-shadow: 0 2px 8px rgba(44, 62, 80, 0.08);
+}
+
+.text {
+	color: var(--color-green);
+	align-items: center;
+	justify-content: center;
+	background: #e7d3b3;
+	font-size: 20px;
+	height: clamp(120px, calc(400px - 20vw), 350px);
+	flex-shrink: 0;
+	margin-top: 24px;
+	padding: 5px 5px 5px 5px;
+	border-radius: 18px;
+	font-weight: bold;
+	font-family: monospace;
+	text-shadow:
+        -2px -2px 0 var(--color-dark-green),
+        2px -2px 0 var(--color-dark-green),
+        -2px 2px 0 var(--color-dark-green),
+        2px 2px 0 var(--color-dark-green),
+        -3px 0px 0 var(--color-dark-green),
+        3px 0px 0 var(--color-dark-green),
+        0px -3px 0 var(--color-dark-green),
+        0px 3px 0 var(--color-dark-green);
 }
