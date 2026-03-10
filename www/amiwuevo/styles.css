@@ -263,3 +263,7 @@ body {
         0px -3px 0 var(--color-dark-green),
         0px 3px 0 var(--color-dark-green);
 }
+
+.modal::backdrop {
+	backdrop-filter: blur(10px);
+}
