@@ -265,5 +265,7 @@ body {
 }
 
 .modal::backdrop {
-	backdrop-filter: blur(10px);
+	background-image: url("images/backgrounds/bg_03.png");
+	background-size: cover;
+	background-position: center;
 }
