@@ -53,7 +53,8 @@ body {
 	box-shadow: 0 4px 24px rgba(44, 62, 80, 0.50);
 	height: 80vh;
 	min-height: 600px;
-	min-width: 300px;
+	max-height: 720px;
+	min-width: 400px;
 	width: 40vw;
 	display: flex;
 	flex-direction: column;
@@ -244,9 +245,9 @@ body {
 	color: var(--color-green);
 	align-items: center;
 	justify-content: center;
-	background: #e7d3b3;
+	/* background: #e7d3b3; */
 	font-size: 20px;
-	height: clamp(120px, calc(400px - 20vw), 350px);
+	height: clamp(120px, calc(200px - 20vw), 350px);
 	flex-shrink: 0;
 	margin-top: 24px;
 	padding: 5px 5px 5px 5px;
