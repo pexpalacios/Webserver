@@ -15,9 +15,7 @@
 			<input type="text" id="nameInput" placeholder="Enter name" maxlength="30">
 			<button onclick="saveName()">Guardar</button>
 
-			<input type="file" id="fileInput" style="display:none" accept="image/png">
-			<button id="bgButton" class="change-bg-btn">BG</button>
-
+			<!-- Input oculto para subir background personalizado -->
 			<input type="file" id="bgFileInput" accept="image/png,image/jpeg,image/gif" style="display:none">
 		</div>
 
@@ -30,27 +28,35 @@
 			</div>
 
 			<div class="button-div">
+
+				<!-- Feed -->
 				<button onclick="/cgi-bin/">
 					<img src="/images/icons/bowl-food-solid.svg" alt="give food">
 				</button>
 
+				<!-- Clothes -->
 				<button onclick="/cgi-bin/">
 					<img src="/images/icons/shirt-solid.svg" alt="change outfit">
 				</button>
 
+				<!-- Background (subir o resetear) -->
 				<button class="decor-bg-btn">
-					<img src="/images/icons/image-solid.svg" alt="change decor">
+					<img src="/images/icons/image-solid.svg" alt="change background">
 				</button>
 
+				<!-- Kill -->
 				<button onclick="/cgi-bin/">
 					<img src="/images/icons/xmark-solid.svg" alt="kill amiwuevo">
 				</button>
+
 			</div>
 		</div>
 
 		<div class="status-bar"></div>
 
 	</div>
+
+</body>
 
 <script>
 
@@ -73,14 +79,8 @@ window.onload = function()
 		document.getElementById("display-name").textContent = "amiwuevo name";
 	});
 
-	// Load decor background (CGI system)
-	fetch('/cgi-bin/get_bg.py')
-	.then(response => response.text())
-	.then(bg => {
-		document.querySelector('.content').style.backgroundImage = `url('${bg}')`;
-	});
-
-	// Check if uploaded background exists
+	// Load background
+	loadBackground();
 	checkUploadedBackground();
 };
 
@@ -113,106 +113,51 @@ function saveName()
 }
 
 
-// 20260307 CHANGE BACKGROUND (EXISTING CGI)
+// 20260311 CHANGE BACKGROUND (CUSTOM UPLOAD)
 document.addEventListener('DOMContentLoaded', function()
 {
 	const btn = document.querySelector('.decor-bg-btn');
+	const fileInput = document.getElementById("bgFileInput");
+	const content = document.querySelector('.content');
 
-	if (!btn)
+	if (!btn || !fileInput || !content)
 		return;
 
-	btn.addEventListener('click', function(e)
-	{
-		e.preventDefault();
+	loadBackground();
 
-		fetch('/cgi-bin/change_bg.py')
-		.then(response => response.text())
-		.then(data => {
-
-			console.log('CGI output:', data);
-
-			fetch('/cgi-bin/get_bg.py')
-			.then(response => response.text())
-			.then(bg => {
-
-				const lines = bg.split('\n')
-					.map(line => line.trim())
-					.filter(line => line);
-
-				const imagePath = lines[lines.length - 1];
-
-				document.querySelector('.content').style.backgroundImage =
-					`url('${imagePath}')`;
-			});
-		});
-	});
-});
-
-
-// 20260309 Terto: UPLOAD / DELETE BACKGROUND
-document.addEventListener('DOMContentLoaded', function()
-{
-	const btn = document.getElementById("bgButton");
-	const fileInput = document.getElementById("fileInput");
-
-	function setUploadMode()
-	{
-		btn.textContent = "BG";
-	}
-
-	function setDeleteMode()
-	{
-		btn.textContent = "X";
-	}
-
-	// Delete uploaded background
 	btn.addEventListener("click", function()
 	{
-		if (btn.textContent === "BG") // CHANGED
-		{
-			fileInput.click();
-		}
-		else
-		{
-			fetch("/api/upload_background", {
-				method: "DELETE"
-			})
-			.then(res => {
+		fetch("/api/background")
+		.then(r => r.text())
+		.then(path => {
 
-				if (!res.ok)
-					return;
+			// si es fondo por defecto → subir imagen
+			if (path.includes("images/backgrounds/bg_01.png"))
+			{
+				fileInput.click();
+			}
+			// si hay imagen subida → borrar
+			else
+			{
+				fetch("/api/background", { method: "DELETE" })
+				.then(res => {
 
-				alert("Background eliminado correctamente");
+					if (!res.ok)
+						return;
 
-				setUploadMode();
-
-				// reload decor background
-				fetch('/cgi-bin/get_bg.py')
-				.then(r => r.text())
-				.then(bg => {
-
-					const lines = bg.split('\n')
-						.map(line => line.trim())
-						.filter(line => line);
-
-					const imagePath = lines[lines.length - 1];
-
-					document.querySelector('.content').style.backgroundImage =
-						`url('${imagePath}')`;
+					loadBackground();
 				});
-			});
-		}
+			}
+		});
 	});
 
-	// Upload new background
 	fileInput.addEventListener("change", function()
 	{
 		const file = fileInput.files[0];
-
 		if (!file)
 			return;
 
-		fetch("/api/upload_background", {
+		fetch("/api/background", {
 			method: "POST",
 			body: file
 		})
@@ -220,60 +165,30 @@ document.addEventListener('DOMContentLoaded', function()
 
 			if (!res.ok)
 			{
-				alert("Esa imagen no es válida");
+				alert("Imagen no válida");
 				return;
 			}
 
-			console.log("Background uploaded");
-
-			fetch("/api/upload_background")
-			.then(r => r.text())
-			.then(bg => {
-
-				document.querySelector('.content').style.backgroundImage =
-					"url('" + bg + "?t=" + Date.now() + "')";
-
-				setDeleteMode();
-			});
+			loadBackground();
 		});
 	});
 });
 
-
-// 20260309 Terto: Check if uploaded background exists
-function checkUploadedBackground()
+//20260311 CARGAR BACKGROUND (AL INICIO Y DESPUÉS DE SUBIR/ELIMINAR)
+function loadBackground()
 {
-	const btn = document.getElementById("bgButton");
+	const content = document.querySelector('.content');
 
-	if (!btn)
-		return;
-
-	fetch("/api/upload_background")
-	.then(r => {
-
-		if (r.status === 204)
-		{
-			setUploadMode(); // NEW → asegurar modo BG
-			return null;
-		}
-
-		return r.text();
-	})
+	fetch("/api/background")
+	.then(r => r.text())
 	.then(bg => {
 
 		if (!bg)
 			return;
 
-		document.querySelector('.content').style.backgroundImage =
-			"url('" + bg + "?t=" + Date.now() + "')";
-
-		setDeleteMode();
-	})
-	.catch(() => {
-		setUploadMode(); // recomendable si falla la request
+		content.style.backgroundImage = "url('" + bg + "')";
 	});
 }
-
 </script>
 </body>
 </html>

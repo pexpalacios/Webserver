@@ -58,8 +58,8 @@ private:
 
 	// POST Helpers at background upload
 	bool	fileExists(const std::string& path) const;
-	Response	handleUpload(const Request& request) const;
-	Response	handleUploadBackground(const Request& request) const;
+	//Response	handleUpload(const Request& request) const;
+	//Response	handleUploadBackground(const Request& request) const;
 	Response	getUploadedBackground() const;
 
 	std::string	getCurrentBackgroundFileName() const;

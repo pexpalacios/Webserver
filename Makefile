@@ -6,6 +6,7 @@ RM			:= rm -f
 SRCS := srcs/main.cpp \
 		srcs/Server.cpp \
 		srcs/Server.run.cpp \
+		srcs/Server.recv.cpp \
 		srcs/Signal.cpp \
 		srcs/parse/ConfigParser.cpp \
 		srcs/parse/LocationConfig.cpp \

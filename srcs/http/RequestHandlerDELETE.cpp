@@ -26,21 +26,27 @@ Response RequestHandler::buildNoContentResponse() const
 }
 
 
-//20260310 - Handle DELETE request for uploaded background
+//20260311 - Handle DELETE request for uploaded background
 // main -> server.run() -> handleClientConnection() -> handleRequest -> handleDelete -> handleDeleteUploadedBackground
 Response RequestHandler::handleDeleteUploadedBackground() const
 {
-	std::string bgPath = getCurrentBackgroundFileName();
+	std::string filePath = "./www/amiwuevo/upload/bg_uploaded_01.png";
 
-	if (bgPath.empty())
-		return buildErrorResponse(404);
+	// Intentar borrar la imagen subida (si existe)
+	std::remove(filePath.c_str());
 
-	std::string filePath = "./www/amiwuevo" + bgPath;
+	std::cout << "[DELETE] uploaded background removed (if existed): "
+			  << filePath << std::endl;
 
-	if (!deleteFile(filePath))
+	// Restaurar fondo por defecto
+	std::ofstream db("./database/background.txt");
+	if (!db.is_open())
 		return buildErrorResponse(500);
 
-	std::cout << "[DELETE] background removed: " << filePath << std::endl;
+	db << "images/backgrounds/bg_01.png" << std::endl;
+	db.close();
+
+	std::cout << "[UPDATE] background reset to default" << std::endl << std::endl;
 
 	return buildNoContentResponse();
 }

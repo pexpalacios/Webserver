@@ -1,6 +1,7 @@
 #include "../../includes/http/Request.hpp"
 #include <sstream>
 #include <cstdlib>
+#include <iostream>
 
 Request::Request() : valid(false) {}
 Request::~Request() {}
@@ -159,6 +160,9 @@ bool Request::parse(const std::string& raw)
 		int length = std::atoi(getHeader("Content-Length").c_str());
 		if (length < 0)
 			return false;
+
+		std::cout << "[BODY RECEIVED] " << bodyPart.size() << std::endl;
+		std::cout << "[CONTENT-LENGTH] " << length << std::endl;
 
 		// --- MODIFICADO ---
 		// Usamos directamente bodyPart en lugar de leer del stream

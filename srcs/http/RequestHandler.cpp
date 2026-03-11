@@ -63,13 +63,18 @@ Response RequestHandler::GetName() const
 }
 
 
-//20260309 - switched to route requests based on HTTP method
+//20260311 - switched to route requests based on HTTP method
 // main -> server.run() -> handleClientConnection() -> handleRequest -> handleDelete
 Response RequestHandler::handleDelete(const Request& request)
 {
 	std::string path = request.getPath();
 
-	if (path == "/api/upload_background")
+	// Remove query string if present
+	size_t q = path.find('?');
+	if (q != std::string::npos)
+		path = path.substr(0, q);
+
+	if (path == "/api/background")
 		return handleDeleteUploadedBackground();
 
 	if (!isPathSafe(path))
@@ -112,12 +117,13 @@ Response RequestHandler::handlePost(const Request& request)
 
 	if (path == "/api/feed")
 		return handleFeed();
-	
+	/*
 	if (path.find("/upload/") == 0)
 		return handleUpload(request);
 	
 	if (path == "/api/upload_background")
 		return handleUploadBackground(request);
+	*/
 
 	return buildErrorResponse(404);
 }
@@ -247,6 +253,8 @@ Response RequestHandler::methodNotAllowed()
 // main -> server.run() -> handleClientConnection() -> handleRequest
 Response RequestHandler::handleRequest(const Request& request)
 {
+	std::cout << "[METHOD RECEIVED] " << request.getMethod() << std::endl;
+	std::cout << "[PATH RECEIVED] " << request.getPath() << std::endl;
 	if (request.getMethod() == "GET")
 		return handleGet(request);
 	else if (request.getMethod() == "POST")

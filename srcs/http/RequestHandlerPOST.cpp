@@ -86,19 +86,30 @@ Response RequestHandler::handleSetBackground(const Request& request) const
 	if (body.empty())
 		return buildErrorResponse(400);
 
-	std::ofstream file("./database/background.txt");
+	std::string filePath = "./www/amiwuevo/upload/bg_uploaded_01.png";
+
+	// Save image
+	std::ofstream file(filePath.c_str(), std::ios::binary);
 	if (!file.is_open())
 		return buildErrorResponse(500);
 
-	file << body << std::endl;
+	file.write(body.c_str(), body.size());
 	file.close();
 
-	// Debug log
-	std::cout << "[UPDATE] Background set to: " << body << std::endl;
+	std::cout << "[UPLOAD] Background saved: " << filePath << std::endl;
+
+	// Update database
+	std::ofstream db("./database/background.txt");
+	if (!db.is_open())
+		return buildErrorResponse(500);
+
+	db << "/upload/bg_uploaded_01.png" << std::endl;
+	db.close();
 
 	Response res;
-	res.setStatusCode(200);
-	res.setBody("Background updated\n");
+	res.setStatusCode(201);
+	res.setBody("Background uploaded\n");
+
 	return res;
 }
 
@@ -160,6 +171,7 @@ Response RequestHandler::handleSetHope(const Request& request) const
 }
 
 
+/*
 //20260309 - Handle POST request for uploading a new background image
 // main -> server.run() -> handleClientConnection() -> handleRequest -> handlePost -> handleUploadBackground
 Response RequestHandler::handleUploadBackground(const Request& request) const
@@ -197,7 +209,9 @@ Response RequestHandler::handleUploadBackground(const Request& request) const
 
 	return res;
 }
+*/
 
+/*
 //20260307 - Implemented basic POST request handling for file uploads.
 // main -> server.run() -> handleClientConnection() -> handleRequest -> handlePost -> handleUpload
 Response RequestHandler::handleUpload(const Request& request) const
@@ -225,3 +239,4 @@ Response RequestHandler::handleUpload(const Request& request) const
 
 	return res;
 }
+*/

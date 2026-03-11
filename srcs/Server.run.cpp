@@ -72,7 +72,7 @@ void Server::handleNewConnection(int listenSock, std::vector<struct pollfd>& fds
 	fds.push_back(newPollFd);
 }
 
-
+/*
 // 20260226 Terto: Handle a connected client socket
 // main -> server.run() -> handleClientConnection()
 void Server::handleClientConnection(int clientSock, Server& server)
@@ -197,7 +197,7 @@ void Server::handleClientConnection(int clientSock, Server& server)
 	send(clientSock, response.c_str(), response.size(), 0);
 	close(clientSock);
 }
-
+*/
 
 //20260210 Terto: Inicia el bucle principal del servidor, usando poll() para manejar múltiples conexiones
 // main -> server.run()
