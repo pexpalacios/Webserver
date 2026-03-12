@@ -174,7 +174,6 @@ std::string executeCGIScript(const std::string& scriptPath)
 //20260303 - Implemented basic GET request handling, including file reading and response generation.
 // main -> server.run() -> handleClientConnection() -> handleRequest -> handleGet/handlePost/handleDelete
 //20260306 - Added CGI reading
-//20260309 - 
 Response RequestHandler::handleGet(const Request& request)
 {
 	std::string path = request.getPath();

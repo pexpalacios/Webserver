@@ -61,7 +61,7 @@ std::string Server::recvRequest(int clientSock)
 		else
 		{
 			if (errno == EAGAIN || errno == EWOULDBLOCK)
-				continue;   // ← CLAVE: seguir esperando datos
+				continue;
 
 			std::cerr << "recv() failed: " << strerror(errno) << std::endl;
 			return "";

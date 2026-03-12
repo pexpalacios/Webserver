@@ -20,6 +20,7 @@ public:
 private:
 	const		Server& _server;
 
+	// Method dispatchers
 	Response	handleGet(const Request& request);
 	Response	handlePost(const Request& request);
 	Response	handleDelete(const Request& request);

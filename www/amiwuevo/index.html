@@ -79,9 +79,7 @@ window.onload = function()
 		document.getElementById("display-name").textContent = "amiwuevo name";
 	});
 
-	// Load background
 	loadBackground();
-	checkUploadedBackground();
 };
 
 
@@ -186,7 +184,7 @@ function loadBackground()
 		if (!bg)
 			return;
 
-		content.style.backgroundImage = "url('" + bg + "')";
+		content.style.backgroundImage = "url('" + bg + "?v=" + Date.now() + "')";
 	});
 }
 </script>
