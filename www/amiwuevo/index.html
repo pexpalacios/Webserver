@@ -25,8 +25,7 @@
 			<div class="content">
 				<div class="content-left">
 					<div class="tamagotchi-container">
-						<div class="egg-base"></div>
-						<img src="/images/egg_face.gif" class="egg-face" alt="Egg Face">
+						<img src="/images/gifs/base_idle.gif" id="tamagotchi-image" class="egg-face" alt="Egg Face">
 					</div>
 				</div>
 
@@ -101,6 +100,11 @@
 					document.getElementById("dialogue").textContent = dialogue;
 				else
 					document.getElementById("dialogue").textContent = "Lore Ipsum";
+				document.getElementById("tamagotchi-image").src = 'images/gifs/base_talk.gif';
+				setTimeout(() =>
+				{
+					document.getElementById("tamagotchi-image").src = 'images/gifs/base_idle.gif';
+			}, 2000);
 			})
 			.catch(() => {
 				document.getElementById("dialogue").textContent = "Failed text";
