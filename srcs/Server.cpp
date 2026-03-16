@@ -18,35 +18,39 @@ const std::vector<LocationConfig>& Server::getLocations() const
 
 
 //20260212 Terto: configure server socket to listen on specific IP and port
+//20260311 Alex: modified to iterate through vector<int> ports
 // main -> server.configureServer() -> server.listenOn()
-void Server::listenOn(const std::string& ip, int port) 
+void Server::listenOn(const std::string& ip, std::vector<int> ports) 
 {
-	int sock = socket(AF_INET, SOCK_STREAM, 0);
-	if (sock == -1) {
-		std::cerr << "Error (0.1): creating socket" << std::endl;
-		exit(EXIT_FAILURE);
+	for (std::vector<int>::iterator it = ports.begin(); it != ports.end(); it++)
+	{
+		int sock = socket(AF_INET, SOCK_STREAM, 0);
+		if (sock == -1) {
+			std::cerr << "Error (0.1): creating socket" << std::endl;
+			exit(EXIT_FAILURE);
+		}
+
+		if (fcntl(sock, F_SETFL, O_NONBLOCK) == -1)
+			throw std::runtime_error("Failed (0.2): set non-blocking");
+
+		int opt = 1;
+		if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
+			throw std::runtime_error("Failed (0.3): setsockopt");
+
+		sockaddr_in addr;
+		std::memset(&addr, 0, sizeof(addr));
+		addr.sin_family = AF_INET;
+		addr.sin_port = htons(*it);
+		addr.sin_addr.s_addr = inet_addr(ip.c_str());
+
+		if (bind(sock, (struct sockaddr*)&addr, sizeof(addr)) == -1)
+			throw std::runtime_error("Failed (0.4): bind");
+		if (listen(sock, 100) == -1)
+			throw std::runtime_error("Failed (0.5): listen");
+
+		listenSockets.push_back(sock);
+		std::cout << "Listening on " << ip << ":" << *it << std::endl;
 	}
-
-	if (fcntl(sock, F_SETFL, O_NONBLOCK) == -1)
-		throw std::runtime_error("Failed (0.2): set non-blocking");
-
-	int opt = 1;
-	if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
-		throw std::runtime_error("Failed (0.3): setsockopt");
-
-	sockaddr_in addr;
-	std::memset(&addr, 0, sizeof(addr));
-	addr.sin_family = AF_INET;
-	addr.sin_port = htons(port);
-	addr.sin_addr.s_addr = inet_addr(ip.c_str());
-
-	if (bind(sock, (struct sockaddr*)&addr, sizeof(addr)) == -1)
-		throw std::runtime_error("Failed (0.4): bind");
-	if (listen(sock, 100) == -1)
-		throw std::runtime_error("Failed (0.5): listen");
-
-	listenSockets.push_back(sock);
-	std::cout << "Listening on " << ip << ":" << port << std::endl;
 }
 
 
@@ -73,9 +77,9 @@ void Server::setErrorPage(int code, const std::string& filePath)
 
 //20260212 Terto: Configura IP, puerto, carpeta base e index
 // main -> server.configureServer() -> server.listenOn() + server.setStaticRoot()
-void Server::configureServer(const std::string& ip, int port, const std::string& root, const std::string& indexFile)
+void Server::configureServer(const std::string& ip, std::vector<int> ports, const std::string& root, const std::string& indexFile)
 {
-	listenOn(ip, port);
+	listenOn(ip, ports);
 	setStaticRoot(root, indexFile);
 	std::cout << " Root: " << root << " | Index: " << indexFile << std::endl;
 }
@@ -119,4 +123,13 @@ void Server::configureErrorPages(const std::string& root, const std::vector<std:
 	}
 
 	std::cout << "Error pages configured." << std::endl;
+}
+
+//20260311 Alex: close listenSockets vector<int>
+void Server::closeSockets()
+{
+	for (std::vector<int>::iterator it = listenSockets.begin(); it != listenSockets.end(); it++)
+	{
+		close(*it);
+	}
 }
