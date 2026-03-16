@@ -42,15 +42,15 @@ class LocationConfig
 		void setCGIExt(const std::vector<std::string>);
 
 	//Getters
-		std::string getPath();
+		std::string getPath() const;
 		std::string getRoot();
 		std::string getIndex();
 		std::string getUpload();
 		bool getAutoindex();
 		bool getProtected();
 		std::vector<std::string> getMethods();
-		std::vector<std::string> getCGIPath();
-		std::vector<std::string> getCGIExt();
+		std::vector<std::string> getCGIPath() const;
+		std::vector<std::string> getCGIExt() const;
 
 	//Print / debug
 	void printLocation();

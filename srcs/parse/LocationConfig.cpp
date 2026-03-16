@@ -3,7 +3,8 @@
 /// CONSTRUCTORS AND DESTRUCTORS
 LocationConfig::LocationConfig()
 	: _path(""), _root(""), _index(""), _upload(""), _autoindex(false), _protected(false)
-{}
+{
+}
 
 LocationConfig::LocationConfig(const LocationConfig &copy)
 {
@@ -21,12 +22,15 @@ LocationConfig &LocationConfig::operator=(const LocationConfig &copy)
 		_upload = copy._upload;
 		_autoindex = copy._autoindex;
 		_protected = copy._protected;
+		_cgi_path = copy._cgi_path;
+		_cgi_ext = copy._cgi_ext;
 	}
 	return *this;
 }
 
 LocationConfig::~LocationConfig()
-{}
+{
+}
 
 //////////
 void LocationConfig::setPath(const std::string str)
@@ -91,7 +95,7 @@ void LocationConfig::setProtected(bool b)
 
 ///////////
 
-std::string LocationConfig::getPath()
+std::string LocationConfig::getPath() const
 {
 	return (_path);
 }
@@ -126,12 +130,12 @@ std::vector<std::string> LocationConfig::getMethods()
 	return (_allow_methods);
 }
 
-std::vector<std::string> LocationConfig::getCGIPath()
+std::vector<std::string> LocationConfig::getCGIPath() const
 {
 	return (_cgi_path);
 }
 
-std::vector<std::string> LocationConfig::getCGIExt()
+std::vector<std::string> LocationConfig::getCGIExt() const
 {
 	return (_cgi_ext);
 }

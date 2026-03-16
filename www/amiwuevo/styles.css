@@ -65,7 +65,7 @@ body {
 
 .content {
 	display: flex;
-	background-image: url("images/backgrounds/bg_03.png");
+	background-image: url("images/backgrounds/bg_01.png");
 	flex-direction: row;
 	background-size: cover;
 	height: 80%;
@@ -85,11 +85,6 @@ body {
 	max-width: 360px;
 	height: 100%;
 	max-height: 480px;
-	/* background-color: #e8d9c3; */
-	/* mask-image: url('images/egg_base.gif');
-	mask-size: contain;
-	mask-repeat: no-repeat;
-	mask-position: center; */
 	align-items: center;
 	justify-content: center;
 }
@@ -154,13 +149,6 @@ body {
 	transform: translateY(0px);
 }
 
-/*
-.button-div button:hover, .button-div input[type="button"]:hover, .button-div input[type="submit"]:hover {
-	background: var(--color-highlight);
-	color: var(--color-dark);
-}
-*/
-
 .button-div:focus {
   box-shadow: inset 0px 0.8px 0px -0.25px rgba(255, 255, 255, 0.2), 0px 0.5px 1.5px rgba(54, 122, 246, 0.25), 0px 0px 0px 3.5px rgba(58, 108, 217, 0.5);
   outline: 0;
@@ -217,13 +205,6 @@ body {
 .button-div-bottom button:active {
 	transform: translateY(0px);
 }
-
-/*
-.button-div button:hover, .button-div input[type="button"]:hover, .button-div input[type="submit"]:hover {
-	background: var(--color-highlight);
-	color: var(--color-dark);
-}
-*/
 
 .button-div-bottom:focus {
   box-shadow: inset 0px 0.8px 0px -0.25px rgba(255, 255, 255, 0.2), 0px 0.5px 1.5px rgba(54, 122, 246, 0.25), 0px 0px 0px 3.5px rgba(58, 108, 217, 0.5);
