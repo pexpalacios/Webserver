@@ -3,22 +3,29 @@
 	<head>
 		<title class="title">AMIWUEVO</title>
 		<link rel="stylesheet" type="text/css" href="styles.css">
+		<meta charset="utf-8">
 	</head>
 	<body>
 		<!--main image, occupies most of the screen-->
 		<div class="main-div">
-			<div class="title">
-				<p id="display-name">Cargando...</p>
-
+			<dialog class="modal" id="dialogNameInput">
+				<h2>Otorgale una identidad a tu AmiWevo</h2>
 				<input type="text" id="nameInput" placeholder="Enter name" maxlength="30">
 				<button onclick="saveName()">Guardar</button>
+			</dialog>
+			<script>
+				const dialog = document.getElementById("dialogNameInput")
+				dialog.showModal()
+			</script>
+
+			<div class="title">
+				<p id="display-name">Cargando...</p>
 			</div>
 
 			<div class="content">
 				<div class="content-left">
 					<div class="tamagotchi-container">
-  						<div class="egg-base"></div>
-  						<img src="/images/egg_face.gif" class="egg-face" alt="Egg Face">
+						<img src="/images/gifs/base_idle.gif" id="tamagotchi-image" class="egg-face" alt="Egg Face">
 					</div>
 				</div>
 
@@ -31,6 +38,12 @@
 			</div>
 
 			<div class="status-bar"></div>
+			<div class="text">
+				<p id="dialogue">"Hola. Si cierras esta pestaña, moriré"</p>
+			</div>
+			<div class="button-div-bottom">
+					<button onclick= "readFile()"><img src="/images/icons/text.svg" alt="Talk to amiwevo"></button> <!--onclick wil call a cgi-->
+			</div>
 		</div>
 
 		<script>
@@ -73,7 +86,30 @@
 				}
 			})
 			.catch(() => alert("Error de red"));
+			dialog.close()
 		}
+
+		function readFile() {
+			fetch('/api/dialogue')
+			.then(response => {
+				if (!response.ok) throw new Error();
+				return response.text();
+			})
+			.then(dialogue => {
+				if (dialogue)
+					document.getElementById("dialogue").textContent = dialogue;
+				else
+					document.getElementById("dialogue").textContent = "Lore Ipsum";
+				document.getElementById("tamagotchi-image").src = 'images/gifs/base_talk.gif';
+				setTimeout(() =>
+				{
+					document.getElementById("tamagotchi-image").src = 'images/gifs/base_idle.gif';
+			}, 2000);
+			})
+			.catch(() => {
+				document.getElementById("dialogue").textContent = "Failed text";
+			});
+		};
     </script>
 	</body>
 </html>
