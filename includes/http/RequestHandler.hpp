@@ -20,6 +20,7 @@ public:
 private:
 	const		Server& _server;
 
+	// Method dispatchers
 	Response	handleGet(const Request& request);
 	Response	handlePost(const Request& request);
 	Response	handleDelete(const Request& request);
@@ -57,10 +58,20 @@ private:
 	Response	handleSetClothes(const Request& request) const;
 	Response	handleSetHope(const Request& request) const;
 
+	// POST Helpers at background upload
+	bool	fileExists(const std::string& path) const;
+	//Response	handleUpload(const Request& request) const;
+	//Response	handleUploadBackground(const Request& request) const;
+	Response	getUploadedBackground() const;
+
+	std::string	getCurrentBackgroundFileName() const;
+	std::string	getNextBackgroundFileName() const;
+
 	// DELETE
 	std::string	resolveDeletePath(const std::string& path) const;
 	bool		deleteFile(const std::string& path) const;
 	Response	buildNoContentResponse() const;
+	Response	handleDeleteUploadedBackground() const;
 };
 
 

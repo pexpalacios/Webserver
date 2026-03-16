@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 	<head>
 		<title class="title">AMIWUEVO</title>
 		<link rel="stylesheet" type="text/css" href="styles.css">
@@ -73,14 +72,16 @@
 			});
 		};
 
-		function saveName() 
-		{
-			const name = document.getElementById("nameInput").value;
+// 20260307 SAVE NAME
+function saveName()
+{
+	const name = document.getElementById("nameInput").value;
 
-			if (!name) {
-				alert("Introduce un nombre");
-				return;
-			}
+	if (!name)
+	{
+		alert("Introduce un nombre");
+		return;
+	}
 
 			fetch('/api/name', {
 				method: 'POST',
@@ -98,9 +99,68 @@
 			dialog.close()
 		}
 
-		//Change background button
-		document.addEventListener('DOMContentLoaded', function() 
-		{
+// 20260311 CHANGE BACKGROUND (CUSTOM UPLOAD)
+document.addEventListener('DOMContentLoaded', function()
+{
+	const btn = document.querySelector('.decor-bg-btn');
+	const fileInput = document.getElementById("bgFileInput");
+	const content = document.querySelector('.content');
+
+	if (!btn || !fileInput || !content)
+		return;
+
+	loadBackground();
+
+	btn.addEventListener("click", function()
+	{
+		fetch("/api/background")
+		.then(r => r.text())
+		.then(path => {
+
+			// si es fondo por defecto → subir imagen
+			if (path.includes("images/backgrounds/bg_01.png"))
+			{
+				fileInput.click();
+			}
+			// si hay imagen subida → borrar
+			else
+			{
+				fetch("/api/background", { method: "DELETE" })
+				.then(res => {
+
+					if (!res.ok)
+						return;
+
+					loadBackground();
+         });
+			}
+		  });
+    });
+
+	fileInput.addEventListener("change", function()
+	{
+		const file = fileInput.files[0];
+		if (!file)
+			return;
+
+		fetch("/api/background", {
+			method: "POST",
+			body: file
+		})
+		.then(res => {
+
+			if (!res.ok)
+			{
+				alert("Imagen no válida");
+				return;
+			}
+
+			loadBackground();
+		});
+	});
+});
+
+ document.addEventListener('DOMContentLoaded', function()
 			const btn = document.querySelector('.change-fit-btn');
 			if (!btn) 
 				return;
@@ -119,9 +179,25 @@
     					const outfit = imgPath[imgPath.length - 1];
     					document.querySelector('.egg').src = `images/gifs/${outfit}_idle.gif`;
 					});
-				});
-			});
+        });
+			}
 		});
+
+//20260311 CARGAR BACKGROUND (AL INICIO Y DESPUÉS DE SUBIR/ELIMINAR)
+function loadBackground()
+{
+	const content = document.querySelector('.content');
+
+	fetch("/api/background")
+	.then(r => r.text())
+	.then(bg => {
+
+		if (!bg)
+			return;
+
+		content.style.backgroundImage = "url('" + bg + "?v=" + Date.now() + "')";
+	});
+}
 
 		//Trigger eating animation with button
 		document.addEventListener('DOMContentLoaded', function()

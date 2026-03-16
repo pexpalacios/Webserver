@@ -1,1 +1,1 @@
-/images/background/beach.png
+images/backgrounds/bg_01.png

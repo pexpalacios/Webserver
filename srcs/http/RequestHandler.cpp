@@ -60,11 +60,20 @@ Response RequestHandler::GetName() const
 	return res;
 }
 
-// 20260223 - switched to route requests based on HTTP method
-//  main -> server.run() -> handleClientConnection() -> handleRequest -> handleGet/handlePost/handleDelete
-Response RequestHandler::handleDelete(const Request &request)
+//20260311 - switched to route requests based on HTTP method
+// main -> server.run() -> handleClientConnection() -> handleRequest -> handleDelete
+Response RequestHandler::handleDelete(const Request& request)
 {
 	std::string path = request.getPath();
+
+	// Remove query string if present
+	size_t q = path.find('?');
+	if (q != std::string::npos)
+		path = path.substr(0, q);
+
+	if (path == "/api/background")
+		return handleDeleteUploadedBackground();
+
 	if (!isPathSafe(path))
 		return buildErrorResponse(403);
 
@@ -76,12 +85,14 @@ Response RequestHandler::handleDelete(const Request &request)
 	if (!deleteFile(filePath))
 		return buildErrorResponse(500);
 
+	std::cout << "[DELETE] resolved path: " << filePath << std::endl;
+
 	return buildNoContentResponse();
 }
 
-// 20260304 - Implemented basic POST request handling
-//  main -> server.run() -> handleClientConnection() -> handleRequest -> handleGet/handlePost/handleDelete
-Response RequestHandler::handlePost(const Request &request)
+//20260307 - Implemented basic POST request handling
+// main -> server.run() -> handleClientConnection() -> handleRequest -> handlePost
+Response RequestHandler::handlePost(const Request& request)
 {
 	std::string path = request.getPath();
 
@@ -102,6 +113,13 @@ Response RequestHandler::handlePost(const Request &request)
 
 	if (path == "/api/feed")
 		return handleFeed();
+	/*
+	if (path.find("/upload/") == 0)
+		return handleUpload(request);
+	
+	if (path == "/api/upload_background")
+		return handleUploadBackground(request);
+	*/
 
 	return buildErrorResponse(404);
 }
@@ -164,12 +182,20 @@ Response RequestHandler::handleGet(const Request &request)
 {
 	std::string path = request.getPath();
 
+	// NEW: remove query string (?t=... etc)
+	size_t q = path.find('?');           // NEW
+	if (q != std::string::npos)          // NEW
+		path = path.substr(0, q);        // NEW
+
 	// API endpoints
 	if (path == "/api/name")
 		return getName();
 
 	if (path == "/api/background")
 		return getBackground();
+
+	if (path == "/api/upload_background")
+		return getUploadedBackground();
 
 	if (path == "/api/clothes")
 		return getClothes();
@@ -255,6 +281,8 @@ Response RequestHandler::methodNotAllowed()
 //  main -> server.run() -> handleClientConnection() -> handleRequest
 Response RequestHandler::handleRequest(const Request &request)
 {
+	std::cout << "[METHOD RECEIVED] " << request.getMethod() << std::endl;
+	std::cout << "[PATH RECEIVED] " << request.getPath() << std::endl;
 	if (request.getMethod() == "GET")
 		return handleGet(request);
 	else if (request.getMethod() == "POST")
