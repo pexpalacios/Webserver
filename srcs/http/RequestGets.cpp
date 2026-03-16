@@ -124,9 +124,6 @@ Response RequestHandler::getHope() const
 	return res;
 }
 
-
-
-
 //20260309 - Get current uploaded background filename from database/bg.txt
 // main -> server.run() -> handleClientConnection() -> handleRequest -> handleGet -> getCurrentBackgroundFileName
 std::string RequestHandler::getCurrentBackgroundFileName() const
@@ -142,7 +139,6 @@ std::string RequestHandler::getCurrentBackgroundFileName() const
 
 	return name;
 }
-
 
 //20260309 - Generate next background filename (bg_0001.png, bg_0002.png...)
 // main -> server.run() -> handleClientConnection() -> handleRequest -> handleGet -> getNextBackgroundFileName
@@ -187,4 +183,39 @@ std::string RequestHandler::getNextBackgroundFileName() const
 	name << number << ".png";
 
 	return name.str();
+}
+
+//20260309 - ALEX: Implemented basic GET request handling for dialog
+// main -> server.run() -> handleClientConnection() -> handleRequest -> handleGet -> getDialog
+Response RequestHandler::getDialog() const
+{
+	static size_t line_count = 0;
+	static std::vector<std::string> dialog;
+
+	// In first read, loadas the dialog string vector;
+	if (dialog.empty()){
+		std::ifstream file("./database/text.txt");
+		if (!file.is_open())
+			return buildErrorResponse(404);
+		std::string buffer;
+		while (std::getline(file, buffer))
+			dialog.push_back(buffer);
+		file.close();
+	}
+	if (dialog.empty())
+		return buildErrorResponse(500);
+
+	// After loading the 
+	Response res;
+	res.setStatusCode(200);
+	res.setHeader("Content-Type", "text/plain");
+	if (line_count < dialog.size())
+		res.setBody(dialog[line_count]);
+	else {
+		line_count = 0;
+		res.setBody(dialog[line_count]);
+	}
+	logGetRequest("database/text.txt");
+	line_count++;
+	return res;
 }

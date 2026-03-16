@@ -8,16 +8,16 @@
 #include <sys/stat.h>
 #include <iostream>
 
-RequestHandler::RequestHandler(const Server& server)
-: _server(server) {}
+RequestHandler::RequestHandler(const Server &server)
+	: _server(server) {}
 
-//20260225 find the best matching location for the requested path, based on longest prefix match
-// main -> handleRequest -> handleGet -> findMatchingLocation
-const LocationConfig* RequestHandler::findMatchingLocation(const std::string& path) const
+// 20260225 find the best matching location for the requested path, based on longest prefix match
+//  main -> handleRequest -> handleGet -> findMatchingLocation
+const LocationConfig *RequestHandler::findMatchingLocation(const std::string &path) const
 {
-	const std::vector<LocationConfig>& locations = _server.getLocations();
+	const std::vector<LocationConfig> &locations = _server.getLocations();
 
-	const LocationConfig* matched = NULL;
+	const LocationConfig *matched = NULL;
 	size_t longestMatch = 0;
 	size_t i = 0;
 
@@ -38,13 +38,11 @@ const LocationConfig* RequestHandler::findMatchingLocation(const std::string& pa
 
 		++i;
 	}
-
 	return (matched);
 }
 
-
-//20260303 - main request handling method that routes to specific handlers based on HTTP method
-// html -> handleGetName
+// 20260303 - main request handling method that routes to specific handlers based on HTTP method
+//  html -> handleGetName
 Response RequestHandler::GetName() const
 {
 	std::ifstream file("./database/name.txt");
@@ -61,7 +59,6 @@ Response RequestHandler::GetName() const
 	res.setBody(name);
 	return res;
 }
-
 
 //20260311 - switched to route requests based on HTTP method
 // main -> server.run() -> handleClientConnection() -> handleRequest -> handleDelete
@@ -92,7 +89,6 @@ Response RequestHandler::handleDelete(const Request& request)
 
 	return buildNoContentResponse();
 }
-
 
 //20260307 - Implemented basic POST request handling
 // main -> server.run() -> handleClientConnection() -> handleRequest -> handlePost
@@ -128,53 +124,61 @@ Response RequestHandler::handlePost(const Request& request)
 	return buildErrorResponse(404);
 }
 
-void RequestHandler::logGetRequest(const std::string& path) const
+void RequestHandler::logGetRequest(const std::string &path) const
 {
-	static int getCounter = 0;  // ← vive solo aquí
+	static int getCounter = 0; // ← vive solo aquí
 	getCounter++;
 
 	std::cout << "[GET #" << getCounter << "] " << path << std::endl;
 }
 
-//20260306: Pex
-//Auxiliary function created for executing CGIs, works like a pipex
-//May need more of this or change this one so it accpets more things than python
-std::string executeCGIScript(const std::string& scriptPath) 
+// 20260306: Pex
+// Auxiliary function created for executing CGIs, works like a pipex
+// May need more of this or change this one so it accepts more things than python
+std::string executeCGIScript(const std::string &scriptPath, std::string key)
 {
-    int pipefd[2];
-    if (pipe(pipefd) == -1) return "";
+	int pipefd[2];
+	if (pipe(pipefd) == -1)
+		return "";
 
-    pid_t pid = fork();
-    if (pid == -1) return "";
+	pid_t pid = fork();
+	if (pid == -1)
+		return "";
 
-    if (pid == 0) 
+	if (pid == 0)
 	{
-        // Child process
-        dup2(pipefd[1], STDOUT_FILENO); // Redirect stdout to pipe
-        close(pipefd[0]);
-        close(pipefd[1]);
-        execl("/usr/bin/python3", "python3", scriptPath.c_str(), (char*)NULL);
-        exit(1); // If execl fails
-    } 
-	else 
+		// Child process
+		dup2(pipefd[1], STDOUT_FILENO); // Redirect stdout to pipe
+		close(pipefd[0]);
+		close(pipefd[1]);
+		if (key == "python")
+			execl("/usr/bin/python3", "python3", scriptPath.c_str(), (char *)NULL);
+		else if (key == "php")
+			execl("/usr/bin/php", "php", scriptPath.c_str(), (char *)NULL);
+		else if (key == "bash")
+			execl("/usr/bin/bash", "bash", scriptPath.c_str(), (char *)NULL);
+		std::cout << "No exec worked correctly" << std::endl;
+		exit(1); // If execl fails
+	}
+	else
 	{
-        // Parent process
-        close(pipefd[1]);
-        char buffer[4096];
-        std::string output;
-        ssize_t count;
-        while ((count = read(pipefd[0], buffer, sizeof(buffer))) > 0)
-            output.append(buffer, count);
-        close(pipefd[0]);
-        waitpid(pid, NULL, 0);
-        return output;
-    }
+		// Parent process
+		close(pipefd[1]);
+		char buffer[4096];
+		std::string output;
+		ssize_t count;
+		while ((count = read(pipefd[0], buffer, sizeof(buffer))) > 0)
+			output.append(buffer, count);
+		close(pipefd[0]);
+		waitpid(pid, NULL, 0);
+		return output;
+	}
 }
 
-//20260303 - Implemented basic GET request handling, including file reading and response generation.
-// main -> server.run() -> handleClientConnection() -> handleRequest -> handleGet/handlePost/handleDelete
-//20260306 - Added CGI reading
-Response RequestHandler::handleGet(const Request& request)
+// 20260303 - Implemented basic GET request handling, including file reading and response generation.
+//  main -> server.run() -> handleClientConnection() -> handleRequest -> handleGet/handlePost/handleDelete
+// 20260306 - Added CGI reading
+Response RequestHandler::handleGet(const Request &request)
 {
 	std::string path = request.getPath();
 
@@ -199,6 +203,9 @@ Response RequestHandler::handleGet(const Request& request)
 	if (path == "/api/hope")
 		return getHope();
 
+	if (path == "/api/dialogue")
+		return getDialog();
+
 	if (path == "/trigger500")
 		return buildErrorResponse(500);
 
@@ -217,10 +224,34 @@ Response RequestHandler::handleGet(const Request& request)
 	if (status != 200)
 		return buildErrorResponse(status);
 
-	//If the file is a CGI script, it is sent to executeCGIScript()
-	if (filePath.find("/cgi-bin/") != std::string::npos && filePath.size() > 3 && filePath.substr(filePath.size()-3) == ".py") 
+	// If the file is a CGI script, it is sent to executeCGIScript()
+	const LocationConfig *CGIlocation = this->findMatchingLocation(path);
+	if (filePath.find("/cgi-bin/") != std::string::npos && CGIlocation != NULL)
 	{
-		std::string cgiOutput = executeCGIScript(filePath);
+		std::vector<std::string> allowedExts = CGIlocation->getCGIExt();
+		std::string ext;
+		if (filePath.size() > 3 && filePath.substr(filePath.size() - 3) == ".py")
+			ext = ".py";
+		else if (filePath.size() > 3 && filePath.substr(filePath.size() - 4) == ".php")
+			ext = ".php";
+		else if (filePath.size() > 3 && filePath.substr(filePath.size() - 3) == ".sh")
+			ext = ".sh";
+
+		// If the extension is not valid returns an error
+		if (std::find(allowedExts.begin(), allowedExts.end(), ext) == allowedExts.end())
+		{
+			std::cout << "Extension not allowed" << std::endl;
+			return (buildErrorResponse(403));
+		}
+
+		std::string cgiOutput;
+		if (filePath.size() > 3 && filePath.substr(filePath.size() - 3) == ".py")
+			cgiOutput = executeCGIScript(filePath, "python");
+		else if (filePath.size() > 3 && filePath.substr(filePath.size() - 4) == ".php")
+			cgiOutput = executeCGIScript(filePath, "php");
+		else if (filePath.size() > 3 && filePath.substr(filePath.size() - 3) == ".sh")
+			cgiOutput = executeCGIScript(filePath, "bash");
+
 		Response response;
 		response.setStatusCode(200);
 		response.setHeader("Content-Type", "text/html");
@@ -231,26 +262,24 @@ Response RequestHandler::handleGet(const Request& request)
 	return buildFileResponse(content, filePath);
 }
 
-
 // 20260223 - Basic method for not allowed response
 // main -> handleRequest -> methodNotAllowed
 Response RequestHandler::methodNotAllowed()
 {
-	return buildErrorResponse(405);	// Method Not Allowed
-	/*
-	Response response;
-	response.setStatusCode(405);
-	response.setHeader("Content-Type", "text/plain; charset=utf-8");
-	response.setHeader("Allow", "GET, POST, DELETE");
-	response.setBody("405 Method Not Allowed\nThis endpoint does not accept that HTTP method.\n");
-	return response;
-	*/
+	return buildErrorResponse(405); // Method Not Allowed
+									/*
+									Response response;
+									response.setStatusCode(405);
+									response.setHeader("Content-Type", "text/plain; charset=utf-8");
+									response.setHeader("Allow", "GET, POST, DELETE");
+									response.setBody("405 Method Not Allowed\nThis endpoint does not accept that HTTP method.\n");
+									return response;
+									*/
 }
 
-
-//20260223 - switched to route requests based on HTTP method
-// main -> server.run() -> handleClientConnection() -> handleRequest
-Response RequestHandler::handleRequest(const Request& request)
+// 20260223 - switched to route requests based on HTTP method
+//  main -> server.run() -> handleClientConnection() -> handleRequest
+Response RequestHandler::handleRequest(const Request &request)
 {
 	std::cout << "[METHOD RECEIVED] " << request.getMethod() << std::endl;
 	std::cout << "[PATH RECEIVED] " << request.getPath() << std::endl;

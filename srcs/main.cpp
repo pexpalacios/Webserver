@@ -14,13 +14,14 @@ int main(int ac, char **av)
 		ConfigParser parser;
 		std::vector<ServerConfig> conf = parser.parse(av[1]);
 
+
 		Server 			server;
 		std::vector<int> ports = conf[0].getListen();
-		server.configureServer(conf[0].getHost(), ports[0], conf[0].getRoot(), conf[0].getIndex());
+		server.configureServer(conf[0].getHost(), ports, conf[0].getRoot(), conf[0].getIndex());
 		server.configureErrorPages(conf[0].getRoot(), conf[0].getErrorPage());
 		server.configureLocations(conf[0].getLocations());
 		server.run();
-		// Close listen socket socket
+		server.closeSockets();
 	} 
 	catch (const std::invalid_argument& e)
 	{

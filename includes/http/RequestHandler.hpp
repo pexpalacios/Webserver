@@ -31,6 +31,7 @@ private:
 	Response	getBackground() const;
 	Response	getClothes() const;
 	Response	getHope() const;
+	Response	getDialog() const;
 
 	// Helpers for all methods
 	Response	GetName() const;
