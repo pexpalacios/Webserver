@@ -1,8 +1,7 @@
 #ifndef REQUEST_HPP
 #define REQUEST_HPP
 
-#include <string>
-#include <map>
+#include "../library.hpp"
 
 class Request
 {

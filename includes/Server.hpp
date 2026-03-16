@@ -1,24 +1,7 @@
 #ifndef SERVER_HPP
 	#define SERVER_HPP
 
-#include <iostream>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <cstring>
-#include <cstdlib>
-#include <string>
-#include <vector>
-#include <fstream>			// std::ifstream
-#include <poll.h>			// poll() y struct pollfd
-#include <csignal>			// signal handling
-#include <algorithm>		// std::find
-#include <sstream>			// std::stringstream
-#include <map>				// std::map
-#include <stdexcept>
-
+#include "library.hpp"
 #include "parse/ConfigParser.hpp"
 #include "parse/LocationConfig.hpp"
 #include "parse/ServerConfig.hpp"

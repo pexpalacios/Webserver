@@ -1,9 +1,7 @@
 #ifndef SERVERCONFIG
 #define SERVERCONFIG
 
-#include <iostream>
-#include <vector>
-#include <sys/stat.h>
+#include "../library.hpp"
 #include "LocationConfig.hpp"
 
 //This class stores every value a server block can have

@@ -1,10 +1,10 @@
 #ifndef REQUEST_HANDLER_HPP
 #define REQUEST_HANDLER_HPP
 
+#include "../library.hpp"
 #include "../Server.hpp"
 #include "Request.hpp"
 #include "Response.hpp"
-#include <string>
 
 // Forward declaration to avoid circular dependency
 class Server;

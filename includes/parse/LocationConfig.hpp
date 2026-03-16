@@ -1,8 +1,7 @@
 #ifndef LOCATIONCONFIG
 #define LOCATIONCONFIG
 
-#include <iostream>
-#include <vector>
+#include "../library.hpp"
 
 //This class stores every possible value a location block can have. It is never instantiatiated
 //by itself, it is always a part of a ServerConfig object

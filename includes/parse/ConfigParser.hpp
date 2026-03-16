@@ -1,14 +1,7 @@
 #ifndef CONFIGPARSER
 #define CONFIGPARSER
 
-#include <algorithm>
-#include <vector>
-#include <iostream>
-#include <string>
-#include <cstdlib>
-#include <fstream>
-#include <sstream>
-#include <exception>
+#include "../library.hpp"
 #include "ServerConfig.hpp"
 
 //This class parses a config file to store everything into a ServerConfig object.

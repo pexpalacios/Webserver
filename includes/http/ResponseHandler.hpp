@@ -2,7 +2,7 @@
 #define RESPONSE_HANDLER_HPP
 
 #include "Response.hpp"
-#include <string>
+#include "../library.hpp"
 
 class ResponseHandler
 {
