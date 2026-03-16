@@ -161,12 +161,13 @@ void ConfigParser::checkLocationValues(LocationConfig &location, const std::stri
 		if (*it != "GET" && *it != "POST" && *it != "DELETE")
 			throw std::invalid_argument("Methods on location: " + location.getPath() + " is invalid (must be 'GET', 'POST', 'DELETE')");
 
-	std::vector<std::string> cgipath = location.getCGIPath();
-	for (std::vector<std::string>::iterator it = cgipath.begin(); it != cgipath.end(); ++it)
-		if (!it->empty())
-			if (lstat(it->c_str(), &st) != 0 || !S_ISDIR(st.st_mode))
-				throw std::invalid_argument("CGIPath on location: " + location.getPath() + " doesn't exist or is innaccesible");
+	// std::vector<std::string> cgipath = location.getCGIPath();
+	// for (std::vector<std::string>::iterator it = cgipath.begin(); it != cgipath.end(); ++it)
+	// 	if (!it->empty())
+	// 		if (lstat(it->c_str(), &st) != 0 || !S_ISREG(st.st_mode) || !(st.st_mode & S_IXUSR))
+	// 			throw std::invalid_argument("CGIPath on location: " + location.getPath() + " doesn't exist or is innaccesible");
 
+	std::cout << location.getPath() << std::endl;
 	std::vector<std::string> cgiexts = location.getCGIExt();
 	for (std::vector<std::string>::iterator it = cgiexts.begin(); it != cgiexts.end(); ++it)
 		if (!it->empty())
