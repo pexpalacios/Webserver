@@ -1,4 +1,5 @@
 #include "../../includes/http/RequestHandler.hpp"
+extern char **environ;
 
 RequestHandler::RequestHandler(const Server &server)
 	: _server(server) {}
@@ -52,9 +53,9 @@ Response RequestHandler::GetName() const
 	return res;
 }
 
-//20260311 - switched to route requests based on HTTP method
-// main -> server.run() -> handleClientConnection() -> handleRequest -> handleDelete
-Response RequestHandler::handleDelete(const Request& request)
+// 20260311 - switched to route requests based on HTTP method
+//  main -> server.run() -> handleClientConnection() -> handleRequest -> handleDelete
+Response RequestHandler::handleDelete(const Request &request)
 {
 	std::string path = request.getPath();
 
@@ -82,9 +83,9 @@ Response RequestHandler::handleDelete(const Request& request)
 	return buildNoContentResponse();
 }
 
-//20260307 - Implemented basic POST request handling
-// main -> server.run() -> handleClientConnection() -> handleRequest -> handlePost
-Response RequestHandler::handlePost(const Request& request)
+// 20260307 - Implemented basic POST request handling
+//  main -> server.run() -> handleClientConnection() -> handleRequest -> handlePost
+Response RequestHandler::handlePost(const Request &request)
 {
 	std::string path = request.getPath();
 
@@ -108,7 +109,7 @@ Response RequestHandler::handlePost(const Request& request)
 	/*
 	if (path.find("/upload/") == 0)
 		return handleUpload(request);
-	
+
 	if (path == "/api/upload_background")
 		return handleUploadBackground(request);
 	*/
@@ -131,11 +132,11 @@ std::string executeCGIScript(const std::string &scriptPath, std::string key)
 {
 	int pipefd[2];
 	if (pipe(pipefd) == -1)
-		return "";
+		return ("");
 
 	pid_t pid = fork();
 	if (pid == -1)
-		return "";
+		return ("");
 
 	if (pid == 0)
 	{
@@ -144,12 +145,21 @@ std::string executeCGIScript(const std::string &scriptPath, std::string key)
 		close(pipefd[0]);
 		close(pipefd[1]);
 		if (key == "python")
-			execl("/usr/bin/python3", "python3", scriptPath.c_str(), (char *)NULL);
+		{
+			char *argv[] = {(char *)"python3", (char *)scriptPath.c_str(), NULL};
+			execve("/usr/bin/python3", argv, environ);
+		}
 		else if (key == "php")
-			execl("/usr/bin/php", "php", scriptPath.c_str(), (char *)NULL);
+		{
+			char *argv[] = {(char *)"php", (char *)scriptPath.c_str(), NULL};
+			execve("/usr/bin/php", argv, environ);
+		}
 		else if (key == "bash")
-			execl("/usr/bin/bash", "bash", scriptPath.c_str(), (char *)NULL);
-		std::cout << "No exec worked correctly" << std::endl;
+		{
+			char *argv[] = {(char *)"bash", (char *)scriptPath.c_str(), NULL};
+			execve("/usr/bin/bash", argv, environ);
+		}
+		return ("");
 		exit(1); // If execl fails
 	}
 	else
@@ -175,9 +185,9 @@ Response RequestHandler::handleGet(const Request &request)
 	std::string path = request.getPath();
 
 	// NEW: remove query string (?t=... etc)
-	size_t q = path.find('?');           // NEW
-	if (q != std::string::npos)          // NEW
-		path = path.substr(0, q);        // NEW
+	size_t q = path.find('?');	  // NEW
+	if (q != std::string::npos)	  // NEW
+		path = path.substr(0, q); // NEW
 
 	// API endpoints
 	if (path == "/api/name")
@@ -243,6 +253,9 @@ Response RequestHandler::handleGet(const Request &request)
 			cgiOutput = executeCGIScript(filePath, "php");
 		else if (filePath.size() > 3 && filePath.substr(filePath.size() - 3) == ".sh")
 			cgiOutput = executeCGIScript(filePath, "bash");
+		
+		if (cgiOutput == "")
+			return buildErrorResponse(500);
 
 		Response response;
 		response.setStatusCode(200);
