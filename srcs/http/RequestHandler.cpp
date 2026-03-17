@@ -1,12 +1,4 @@
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <fcntl.h>
 #include "../../includes/http/RequestHandler.hpp"
-#include <sstream>
-#include <fstream>
-#include <unistd.h>
-#include <sys/stat.h>
-#include <iostream>
 
 RequestHandler::RequestHandler(const Server &server)
 	: _server(server) {}

@@ -1,6 +1,5 @@
 #include "../../includes/Server.hpp"
 #include "../../includes/http/Response.hpp"
-#include <sstream>
 
 Response::Response()
 {

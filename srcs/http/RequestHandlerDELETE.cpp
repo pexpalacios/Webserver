@@ -1,5 +1,4 @@
 #include "../../includes/http/RequestHandler.hpp"
-#include <unistd.h>
 
 //20260223 - resolve the actual file path for DELETE requests, similar to GET but can be customized if needed
 // main -> server.run() -> handleClientConnection() -> handleRequest -> handleDelete -> resolveDeletePath

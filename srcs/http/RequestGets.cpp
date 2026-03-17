@@ -1,6 +1,4 @@
 #include "../../includes/http/RequestHandler.hpp"
-#include <fstream>
-#include <sys/stat.h>
 
 //20260304 - Implemented basic GET request handling, including file reading and response generation.
 // main -> server.run() -> handleClientConnection() -> handleRequest -> handleGet -> getName

@@ -1,5 +1,4 @@
 #include "../../includes/http/RequestHandler.hpp"
-#include <fstream>
 
 //20260226 Terto: Implemented basic POST request handling, including file saving and response generation.
 // main -> handleRequest -> handleGet -> resolveGetPath

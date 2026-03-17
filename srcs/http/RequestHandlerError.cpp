@@ -1,9 +1,4 @@
 #include "../../includes/http/RequestHandler.hpp"
-#include <sstream>
-#include <fstream>
-#include <unistd.h>
-#include <sys/stat.h>
-#include <iostream>
 
 Response RequestHandler::handleBadRequest()
 {return buildErrorResponse(400);}

@@ -1,7 +1,5 @@
 #include "../includes/Server.hpp"
 #include "../includes/http/RequestHandler.hpp"
-#include <errno.h>
-#include <cstring>
 
 //20260311 - Implemented request receiving and parsing logic, with error handling for invalid requests and internal server errors.
 // main -> server.run() -> handleClientConnection() -> recvRequest -> recv() + parse + handleRequest
