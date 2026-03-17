@@ -1,7 +1,4 @@
 #include "../../includes/http/Request.hpp"
-#include <sstream>
-#include <cstdlib>
-#include <iostream>
 
 Request::Request() : valid(false) {}
 Request::~Request() {}
