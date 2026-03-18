@@ -26,13 +26,15 @@ public:
 	void		handleClientConnection(int clientSock, Server& server);
 	std::string	recvRequest(int clientSock);
 	void		run();	
-  void    closeSockets();
+	void		closeSockets();
 
 
 	const std::string&	getStaticRoot() const;
 	const std::string&	getIndexFile() const;
 	const std::map<int, std::string>& getErrorPages() const;
 	const std::vector<LocationConfig>& getLocations() const;
+
+	void	printFinishedServerInfo();
 
 private:
 	void						listenOn(const std::string& ip, std::vector<int> ports);								

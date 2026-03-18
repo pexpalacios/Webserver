@@ -133,3 +133,20 @@ void Server::closeSockets()
 		close(*it);
 	}
 }
+
+void Server::printFinishedServerInfo()
+{
+	std::cout << std::endl << "--- Finished Server Info ---" << std::endl << std::endl;
+	std::cout << "--- Listen Sockets---" << std::endl;
+	for (std::vector<int>::iterator it = listenSockets.begin(); it != listenSockets.end(); it++)
+		std::cout << *it << std::endl;
+	std::cout << "--- Static Root ---" << staticRoot << std::endl;
+	std::cout << "--- Index File ---" << indexFile << std::endl;
+	std::cout << "--- Error Pages ---" << indexFile << std::endl;
+	for (std::map<int, std::string>::iterator it = errorPages.begin(); it != errorPages.end(); it++)
+		std::cout << it->first << it->second << std::endl;
+	std::cout << "--- Location ---" << indexFile << std::endl;
+	for (size_t i = 0; i != locations.size() ; i++)
+		locations[i].printLocation();
+	std::cout << "--- End of Server info ---" << std::endl << std::endl;
+}
