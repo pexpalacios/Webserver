@@ -168,16 +168,16 @@ std::string executeCGIScript(const std::string &scriptPath, std::string key)
 }
 
 // 20260303 - Implemented basic GET request handling, including file reading and response generation.
-//  main -> server.run() -> handleClientConnection() -> handleRequest -> handleGet/handlePost/handleDelete
+// 20260317 - Added autoindex support for GET requests to directories without index.html
+//  main -> server.run() -> handleClientConnection() -> handleRequest -> handleGet
 // 20260306 - Added CGI reading
 Response RequestHandler::handleGet(const Request &request)
 {
 	std::string path = request.getPath();
 
-	// NEW: remove query string (?t=... etc)
-	size_t q = path.find('?');           // NEW
-	if (q != std::string::npos)          // NEW
-		path = path.substr(0, q);        // NEW
+	size_t q = path.find('?');
+	if (q != std::string::npos)
+		path = path.substr(0, q);
 
 	// API endpoints
 	if (path == "/api/name")
@@ -202,15 +202,27 @@ Response RequestHandler::handleGet(const Request &request)
 		return buildErrorResponse(500);
 
 	if (!isPathSafe(path))
-		return buildErrorResponse(403); // Forbidden
+		return buildErrorResponse(403);
 
 	std::string filePath = resolveGetPath(path);
 	std::string root = _server.getStaticRoot();
 	if (filePath.find(root) != 0)
-		return buildErrorResponse(403); // Forbidden
+		return buildErrorResponse(403);
 
 	std::string resolvedPath = filePath;
 	logGetRequest(resolvedPath); // Log the resolved path for debugging
+
+	// 20260317 Autoindex
+	if (isDirectory(filePath))
+	{
+		LocationConfig *location = const_cast<LocationConfig*>(this->findMatchingLocation(path));
+		if (hasIndexFile(filePath))
+			filePath += "/index.html";
+		else if (location && location->getAutoindex())
+			return buildAutoindexResponse(filePath, path);
+		else
+			return buildErrorResponse(403);
+	}
 
 	int status = checkFile(filePath);
 	if (status != 200)
@@ -254,20 +266,6 @@ Response RequestHandler::handleGet(const Request &request)
 	return buildFileResponse(content, filePath);
 }
 
-// 20260223 - Basic method for not allowed response
-// main -> handleRequest -> methodNotAllowed
-Response RequestHandler::methodNotAllowed()
-{
-	return buildErrorResponse(405); // Method Not Allowed
-									/*
-									Response response;
-									response.setStatusCode(405);
-									response.setHeader("Content-Type", "text/plain; charset=utf-8");
-									response.setHeader("Allow", "GET, POST, DELETE");
-									response.setBody("405 Method Not Allowed\nThis endpoint does not accept that HTTP method.\n");
-									return response;
-									*/
-}
 
 // 20260223 - switched to route requests based on HTTP method
 //  main -> server.run() -> handleClientConnection() -> handleRequest

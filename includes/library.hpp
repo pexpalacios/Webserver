@@ -14,6 +14,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <dirent.h>         // For directory listing (autoindex)
 
 #include <sys/socket.h>
 #include <sys/stat.h>
@@ -24,5 +25,6 @@
 #include <netinet/in.h>
 #include <poll.h>
 #include <unistd.h>
+
 
 #endif
