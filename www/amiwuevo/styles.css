@@ -22,7 +22,12 @@ body {
 	margin: 0;
 	padding: 0;
 	display: flex;
-	justify-content: center;
+	justify-content:right;
+	align-items:start;
+}
+
+.empty {
+	width: 30vw;
 }
 
 .title {
@@ -41,7 +46,6 @@ body {
         0px -3px 0 var(--color-dark-green),
         0px 3px 0 var(--color-dark-green);
 }
-
 
 
 .main-div {
@@ -98,7 +102,7 @@ body {
 }
 
 /************
-	BUTTONS
+SIDE BUTTONS
 *************/
 .button-div {
 	display: flex;
@@ -154,8 +158,9 @@ body {
   outline: 0;
 }
 
-/*Buttom div bottom*/
-
+/************
+DIALOGUE BUTTON
+*************/
 .button-div-bottom {
 	display: flex;
 	flex-direction: column;
@@ -211,6 +216,10 @@ body {
   outline: 0;
 }
 
+/************
+WEB BOTTOM
+*************/
+
 .status-bar {
 	height: 22px;
 	background: var(--color-orange);
@@ -222,6 +231,9 @@ body {
 	box-shadow: 0 2px 8px rgba(44, 62, 80, 0.08);
 }
 
+/************
+DIALOGUE
+*************/
 .text {
 	color: var(--color-green);
 	align-items: center;
@@ -250,4 +262,62 @@ body {
 	background-image: url("images/backgrounds/bg_03.png");
 	background-size: cover;
 	background-position: center;
+}
+
+
+/************
+USAGE BUTTONS
+*************/
+.usage-buttons {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	justify-content:space-around;
+	width: 30%;
+	max-height: 80%;
+	margin-right: auto;
+	gap: 16px;
+	padding: 1em;
+}
+
+.usage-buttons a, .usage-buttons input[type="button"], .usage-buttons input[type="submit"] {
+	width: 40%;
+	height: 40%;
+	padding: 10px 0;
+	border: 4px solid var(--color-dark-green);
+	border-radius: 8px;
+	background: linear-gradient(180deg, var(--color-green) 0%, #8CCC84 100%);
+	background-origin: border-box;
+	box-shadow: 0px 0.5px 1.5px rgba(54, 122, 246, 0.25), inset 0px 0.8px 0px -0.25px rgba(255, 255, 255, 0.2);
+	cursor: pointer;
+	transition: background 0.2s, color 0.2s;
+	touch-action: manipulation;
+}
+
+.usage-buttons a img {
+	height: 70%;
+	min-height: 15px;
+	width: 80%;
+	fill: var(--color-pink);
+	filter: invert(24%) sepia(20%) saturate(512%) hue-rotate(61deg) brightness(99%) contrast(89%);
+}
+
+
+.usage-buttons a:hover,
+.usage-buttons a:active {
+  border-color: rgba(27, 53, 30, 0.9);
+  box-shadow: rgba(0, 0, 0, 0.5) 0 4px 12px;
+}
+
+.usage-buttons a:hover {
+  transform: translateY(-1px);
+}
+
+.usage-buttons a:active {
+	transform: translateY(0px);
+}
+
+.usage-buttons:focus {
+  box-shadow: inset 0px 0.8px 0px -0.25px rgba(255, 255, 255, 0.2), 0px 0.5px 1.5px rgba(54, 122, 246, 0.25), 0px 0px 0px 3.5px rgba(58, 108, 217, 0.5);
+  outline: 0;
 }

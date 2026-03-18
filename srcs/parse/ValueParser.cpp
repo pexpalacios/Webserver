@@ -133,18 +133,28 @@ void ConfigParser::checkLocationValues(LocationConfig &location, const std::stri
 {
 	struct stat st;
 
+	if (!location.getRoot().empty())
+		if (lstat(location.getRoot().c_str(), &st) != 0 || !S_ISDIR(st.st_mode))
+			throw std::invalid_argument("Root on location: " + location.getPath() + " doesn't exist or is innaccesible");
 	if (!location.getPath().empty())
 	{
 		std::string fullPath = root + location.getPath();
 		if (lstat(fullPath.c_str(), &st) != 0 || !S_ISDIR(st.st_mode))
 			throw std::invalid_argument("Location path: " + location.getPath() + " doesn't exist or is innaccesible");
 	}
-	if (!location.getRoot().empty())
-		if (lstat(location.getRoot().c_str(), &st) != 0 || !S_ISDIR(st.st_mode))
-			throw std::invalid_argument("Root on location: " + location.getPath() + " doesn't exist or is innaccesible");
 	if (!location.getUpload().empty())
 		if (lstat(location.getUpload().c_str(), &st) != 0 || !S_ISDIR(st.st_mode))
 			throw std::invalid_argument("Upload on location: " + location.getPath() + " doesn't exist or is innaccesible");
+	// if (!location.getRedirection().empty())
+	// {
+	// 	std::string fullPath = root + location.getRedirection();
+	// 	if (lstat(fullPath.c_str(), &st) != 0 || !S_ISDIR(st.st_mode))
+	// 		throw std::invalid_argument("Location redirection: " + location.getRedirection() + " doesn't exist or is innaccesible");
+	// }
+
+	if (location.getRedirectionCode() != 0)
+		if (location.getRedirectionCode() != 301 && location.getRedirectionCode() != 302)
+			throw std::invalid_argument("Redirection code is not valid. Must be either 301 (external) or 302 (static)  //" + location.getPath());
 
 	location.setIndex(cleanPageUrl(location.getIndex(), root));
 	if (!location.getIndex().empty())
@@ -161,13 +171,16 @@ void ConfigParser::checkLocationValues(LocationConfig &location, const std::stri
 		if (*it != "GET" && *it != "POST" && *it != "DELETE")
 			throw std::invalid_argument("Methods on location: " + location.getPath() + " is invalid (must be 'GET', 'POST', 'DELETE')");
 
-	// std::vector<std::string> cgipath = location.getCGIPath();
-	// for (std::vector<std::string>::iterator it = cgipath.begin(); it != cgipath.end(); ++it)
-	// 	if (!it->empty())
-	// 		if (lstat(it->c_str(), &st) != 0 || !S_ISREG(st.st_mode) || !(st.st_mode & S_IXUSR))
-	// 			throw std::invalid_argument("CGIPath on location: " + location.getPath() + " doesn't exist or is innaccesible");
+	std::vector<std::string> cgipath = location.getCGIPath();
+	for (std::vector<std::string>::iterator it = cgipath.begin(); it != cgipath.end(); ++it)
+		if (!it->empty())
+		{
+			if ((*it)[0] != '/')
+				throw std::invalid_argument("CGIPath (" + *it + ")on location: " + location.getPath() + " is not an absolute route");
+			if (access(it->c_str(), X_OK) != 0)
+				throw std::invalid_argument("CGIPath on location: " + location.getPath() + " is innaccesible");
+		}				
 
-	std::cout << location.getPath() << std::endl;
 	std::vector<std::string> cgiexts = location.getCGIExt();
 	for (std::vector<std::string>::iterator it = cgiexts.begin(); it != cgiexts.end(); ++it)
 		if (!it->empty())

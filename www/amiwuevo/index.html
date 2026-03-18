@@ -7,16 +7,17 @@
 	<body>
 		<script src="script.js"></script>
 		<!--main image, occupies most of the screen-->
+		<div class="empty"></div>
 		<div class="main-div">
 			<dialog class="modal" id="dialogNameInput">
 				<h2>Otorgale una identidad a tu AmiWevo</h2>
 				<input type="text" id="nameInput" placeholder="Enter name" maxlength="30">
 				<button onclick="saveName()">Guardar</button>
 			</dialog>
-			<script>
+			<!-- <script>
 				const dialog = document.getElementById("dialogNameInput")
 				dialog.showModal()
-			</script>
+			</script> -->
 
 			<!-- Input oculto para subir background personalizado -->
 			<input type="file" id="bgFileInput" accept="image/png,image/jpeg,image/gif" style="display:none">
@@ -48,6 +49,12 @@
 			<div class="button-div-bottom">
 					<button onclick= "readFile()"><img src="/images/icons/text.svg" alt="Talk to amiwevo"></button> <!--onclick wil call a cgi-->
 			</div>
+		</div>
+		<div class="usage-buttons">
+			<a href="/redirect"><img src="" alt="internal redirect"></a>
+			<a href="/external"><img src="" alt="external redirect"></a>
+			<a><img src="" alt="error pages"></a>
+			<a><img src="" alt="images"></a>
 		</div>
 	</body>
 </html>

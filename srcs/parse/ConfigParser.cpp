@@ -101,7 +101,15 @@ static void setLocationBlockVars(LocationConfig &currentLocation, const std::str
 		extensions.back() = stripSemicolon(extensions.back());
 		currentLocation.setCGIExt(extensions);
 	}
+	else if (key == "return" && tokens.size() > 2)
+	{
+		if (!isNumber(tokens[1]))
+			throw std::invalid_argument("Redirection code is not a number");
+		currentLocation.setRedirectionCode(std::atoi(tokens[1].c_str()));
+		currentLocation.setRedirection(stripSemicolon(tokens[2]));
+	}
 }
+
 //Sets server specific variables to current server
 static void setServerBlockVars(ServerConfig &currentServer, const std::string &key, const std::vector<std::string> &tokens)
 {
