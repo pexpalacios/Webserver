@@ -39,7 +39,6 @@ int main(int ac, char **av)
 		// }
 		// GlobalServer global_server(server_array);
 		server.run();
-		server.closeSockets();
 	} 
 	catch (const std::invalid_argument& e)
 	{

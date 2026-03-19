@@ -2,7 +2,12 @@
 #include "../includes/Signal.hpp"
 
 Server::Server() {}
-Server::~Server() {}
+Server::~Server() {
+	for (std::vector<int>::iterator it = listenSockets.begin(); it != listenSockets.end(); it++)
+	{
+		close(*it);
+	};
+}
 
 const std::string& Server::getStaticRoot() const
 {return staticRoot;}
@@ -123,15 +128,6 @@ void Server::configureErrorPages(const std::string& root, const std::vector<std:
 	}
 
 	std::cout << "Error pages configured." << std::endl;
-}
-
-//20260311 Alex: close listenSockets vector<int>
-void Server::closeSockets()
-{
-	for (std::vector<int>::iterator it = listenSockets.begin(); it != listenSockets.end(); it++)
-	{
-		close(*it);
-	}
 }
 
 void Server::printFinishedServerInfo()

@@ -26,8 +26,6 @@ public:
 	void		handleClientConnection(int clientSock, Server& server);
 	std::string	recvRequest(int clientSock);
 	void		run();	
-	void		closeSockets();
-
 
 	const std::string&	getStaticRoot() const;
 	const std::string&	getIndexFile() const;
