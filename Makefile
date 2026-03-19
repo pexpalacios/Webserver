@@ -4,6 +4,7 @@ CXXFLAGS	:= -Wall -Wextra -Werror -std=c++98 -g
 RM			:= rm -f
 
 SRCS := srcs/main.cpp \
+		srcs/PollServer.cpp \
 		srcs/Server.cpp \
 		srcs/Server.run.cpp \
 		srcs/Server.recv.cpp \

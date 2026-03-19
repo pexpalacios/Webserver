@@ -31,6 +31,7 @@ public:
 	const std::string&	getIndexFile() const;
 	const std::map<int, std::string>& getErrorPages() const;
 	const std::vector<LocationConfig>& getLocations() const;
+	const std::vector<int>&	getListenSockets() const;
 
 	void	printFinishedServerInfo();
 

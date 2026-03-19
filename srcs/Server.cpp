@@ -2,12 +2,10 @@
 #include "../includes/Signal.hpp"
 
 Server::Server() {}
-Server::~Server() {
-	for (std::vector<int>::iterator it = listenSockets.begin(); it != listenSockets.end(); it++)
-	{
-		close(*it);
-	};
-}
+
+//20260319 Alex: moved close() from closeSockets() to ~Server()
+// This is actually wrong, remove
+Server::~Server() {}
 
 const std::string& Server::getStaticRoot() const
 {return staticRoot;}
@@ -20,6 +18,9 @@ const std::map<int, std::string>& Server::getErrorPages() const
 
 const std::vector<LocationConfig>& Server::getLocations() const
 {return locations;}
+
+const std::vector<int>& Server::getListenSockets() const
+{return listenSockets;}
 
 
 //20260212 Terto: configure server socket to listen on specific IP and port
@@ -136,12 +137,12 @@ void Server::printFinishedServerInfo()
 	std::cout << "--- Listen Sockets---" << std::endl;
 	for (std::vector<int>::iterator it = listenSockets.begin(); it != listenSockets.end(); it++)
 		std::cout << *it << std::endl;
-	std::cout << "--- Static Root ---" << staticRoot << std::endl;
-	std::cout << "--- Index File ---" << indexFile << std::endl;
-	std::cout << "--- Error Pages ---" << indexFile << std::endl;
+	std::cout << "--- Static Root ---" << std::endl << staticRoot << std::endl;
+	std::cout << "--- Index File ---" << std::endl << indexFile << std::endl;
+	std::cout << "--- Error Pages ---" << std::endl;
 	for (std::map<int, std::string>::iterator it = errorPages.begin(); it != errorPages.end(); it++)
 		std::cout << it->first << it->second << std::endl;
-	std::cout << "--- Location ---" << indexFile << std::endl;
+	std::cout << "--- Location ---" << std::endl;
 	for (size_t i = 0; i != locations.size() ; i++)
 		locations[i].printLocation();
 	std::cout << "--- End of Server info ---" << std::endl << std::endl;
