@@ -21,6 +21,7 @@ int main(int ac, char **av)
 		else 
 			conf = parser.parse("./config/default.conf");
 
+
 		// Check server .conf Files
 		std::cout << "===Server conf file===" << std::endl << std::endl;
 		for (size_t i = 0; i < conf.size(); i++){
@@ -28,6 +29,7 @@ int main(int ac, char **av)
 			conf[i].printServer();
 		}
 		std::cout << "===End conf file===" << std::endl << std::endl;
+
 
 		// Store Server class into an array
 		std::vector<Server> server_array;
@@ -41,6 +43,8 @@ int main(int ac, char **av)
 			server.printFinishedServerInfo();
 			server_array.push_back(server);
 		}
+
+		// Add server_array into PollServer and init poll() logic
 		PollServer pollServer(server_array);
 		pollServer.buildPollServerArray();
 		pollServer.run();
