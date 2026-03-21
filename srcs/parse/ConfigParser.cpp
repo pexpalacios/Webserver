@@ -145,7 +145,7 @@ void ConfigParser::setDefaultPorts(std::vector<ServerConfig> &servers)
 	{
 		std::vector<int> listen = it->getListen();
 		if (listen.empty())
-				it->addListen(80);
+			it->addListen(8000);
 		it++;
 	}
 }
@@ -262,7 +262,7 @@ std::vector<ServerConfig> ConfigParser::parse(const std::string &filename)
 		}
 	}
 	// Check for matching ip:port in ServerConfig vector
-	// setDefaultPorts(servers);
+	setDefaultPorts(servers);
 	checkIpPortPairs(servers);
 	//These two check if the file is empty or missing brackets
 	if (inServer)
