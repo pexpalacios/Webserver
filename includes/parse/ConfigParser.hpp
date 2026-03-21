@@ -25,6 +25,7 @@ class ConfigParser
 		std::string omitSpaces(const std::string &str);
 	private:
 		void checkIpPortPairs(std::vector<ServerConfig> &servers);
+		void setDefaultPorts(std::vector<ServerConfig> &server);
 };
 
 #endif
