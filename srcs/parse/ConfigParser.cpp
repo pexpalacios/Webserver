@@ -137,6 +137,40 @@ static void setServerBlockVars(ServerConfig &currentServer, const std::string &k
 	}
 }
 
+// 20260320 Alex: checks all vector<ServerConfig> and deletes repeats of ip:port
+void ConfigParser::checkIpPortPairs(std::vector<ServerConfig> &servers)
+{
+	std::set<std::pair<std::string, int> > seen_pairs;
+
+	std::vector<ServerConfig>::iterator it = servers.begin();
+	while (it != servers.end())
+	{
+		bool is_dup = false;
+		const std::string &host = it->getHost();
+		const std::vector<int> &ports = it->getListen();
+		
+		//Check every port this server listen on
+		for (size_t i = 0; i < ports.size(); ++i)
+		{
+			std::pair<std::string, int>  current_pair(host, ports[i]);
+			if (seen_pairs.find(current_pair) != seen_pairs.end())
+			{
+				std::cout  << "Conflict : " << host << ":" << ports[i] << std::endl;
+				is_dup = true;
+				break;
+			}
+		}
+		if (is_dup)
+			it = servers.erase(it);
+		else
+		{
+			for(size_t i = 0; i < ports.size(); ++i)
+				seen_pairs.insert(std::make_pair(host, ports[i]));
+			++it;
+		}
+	}
+}
+
 ///// MAIN PARSING FUNCTION
 //This is a loop that check a config file line by line, detecting when there's a server and location and setting each
 //value it finds to whichever corresponds to
@@ -152,7 +186,6 @@ std::vector<ServerConfig> ConfigParser::parse(const std::string &filename)
 	ServerConfig currentServer;
 	LocationConfig currentLocation;
 	std::vector<ServerConfig> servers;
-
 
 	while (std::getline(file, line))
 	{
@@ -215,6 +248,8 @@ std::vector<ServerConfig> ConfigParser::parse(const std::string &filename)
 			continue;
 		}
 	}
+	// Check for matching ip:port in ServerConfig vector
+	checkIpPortPairs(servers);
 	//These two check if the file is empty or missing brackets
 	if (inServer)
 		throw (std::runtime_error("Unclosed server block."));

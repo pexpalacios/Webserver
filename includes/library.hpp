@@ -11,6 +11,7 @@
 #include <algorithm>		// std::find
 #include <sstream>			// std::stringstream
 #include <map>				// std::map
+#include <set>
 #include <utility>
 #include <stdexcept>
 #include <exception>
