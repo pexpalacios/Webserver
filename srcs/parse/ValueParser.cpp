@@ -108,10 +108,10 @@ void ConfigParser::checkServerValues(ServerConfig &server)
 	}
 	server.setErrorPage(errorPages);
 
-	std::cout << "Mb: " << server.getClientmaxSize() << std::endl;
-	if (server.getClientmaxSize() == 0)
+	std::cout << "Mb: " << server.getClientMaxSize() << std::endl;
+	if (server.getClientMaxSize() == 0)
 		throw std::invalid_argument("Client max body size in server: " + server.getServerName() + " is zero");
-	if (server.getClientmaxSize() > 1073741824) // 1GB max
+	if (server.getClientMaxSize() > 1073741824) // 1GB max
 		throw std::invalid_argument("Client max body size in server: " + server.getServerName() + " exceeds maximum (1GB)");
 
 	struct stat st;
