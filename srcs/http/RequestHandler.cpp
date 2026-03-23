@@ -105,13 +105,9 @@ Response RequestHandler::handlePost(const Request& request)
 
 	if (path == "/api/feed")
 		return handleFeed();
-	/*
-	if (path.find("/upload/") == 0)
-		return handleUpload(request);
-	
-	if (path == "/api/upload_background")
-		return handleUploadBackground(request);
-	*/
+
+	if (path == "/api/alive")
+		return handleSetAlive();
 
 	return buildErrorResponse(404);
 }
@@ -197,6 +193,9 @@ Response RequestHandler::handleGet(const Request &request)
 
 	if (path == "/api/dialogue")
 		return getDialog();
+
+	if (path == "/api/alive")
+		return getAlive();
 
 	if (path == "/trigger500")
 		return buildErrorResponse(500);
