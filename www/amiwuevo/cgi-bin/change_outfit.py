@@ -32,7 +32,7 @@ except ValueError:
 
 try:
 	with open(db_path, "w") as f:
-    	f.write(next_fit)
+		f.write(next_fit)
 except PermissionError:
 	next_fit = outfits[0]
 
