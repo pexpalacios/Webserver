@@ -137,19 +137,6 @@ static void setServerBlockVars(ServerConfig &currentServer, const std::string &k
 	}
 }
 
-// 20260321 Alex: checks all vector<ServerConfig> and deletes repeats of ip:port
-void ConfigParser::setDefaultPorts(std::vector<ServerConfig> &servers)
-{
-	std::vector<ServerConfig>::iterator it = servers.begin();
-	while (it != servers.end())
-	{
-		std::vector<int> listen = it->getListen();
-		if (listen.empty())
-			it->addListen(8000);
-		it++;
-	}
-}
-
 // 20260320 Alex: checks all vector<ServerConfig> and deletes repeats of ip:port
 void ConfigParser::checkIpPortPairs(std::vector<ServerConfig> &servers)
 {
@@ -262,7 +249,6 @@ std::vector<ServerConfig> ConfigParser::parse(const std::string &filename)
 		}
 	}
 	// Check for matching ip:port in ServerConfig vector
-	setDefaultPorts(servers);
 	checkIpPortPairs(servers);
 	//These two check if the file is empty or missing brackets
 	if (inServer)

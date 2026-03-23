@@ -24,7 +24,6 @@ public:
 	// Methods
 	void buildPollServerArray();
 	void run();
-	//void setDefaultServer();
 
 private:
 	std::map<int, Server*> _pollServer; // Store a vector pair of socketFD and Server
