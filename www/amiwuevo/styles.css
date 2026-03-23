@@ -69,7 +69,7 @@ body {
 
 .content {
 	display: flex;
-	background-image: url("images/backgrounds/bg_01.png");
+	background-image: url("images/backgrounds/background.jpg");
 	flex-direction: row;
 	background-size: cover;
 	height: 80%;
