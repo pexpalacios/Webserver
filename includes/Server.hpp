@@ -41,6 +41,7 @@ private:
 	void						setErrorPage(int code, const std::string& path);						
 	std::vector<struct pollfd>	buildPollFdArray();														
 	std::string					readFile(const std::string& path);										
+	bool						loadAddrinfo(const std::string &ip, int port, struct addrinfo **servinfo);
 
 	std::vector<int>			listenSockets;	// Sockets en los que el servidor está escuchando
 	std::string					staticRoot;		// Carpeta base para archivos estáticos

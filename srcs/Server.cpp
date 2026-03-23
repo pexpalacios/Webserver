@@ -22,6 +22,25 @@ const std::vector<LocationConfig>& Server::getLocations() const
 const std::vector<int>& Server::getListenSockets() const
 {return listenSockets;}
 
+// 20260322 Alex: load struct addrinfo
+bool Server::loadAddrinfo(const std::string& ip, int port, struct addrinfo **servinfo)
+{
+		int status;
+		std::ostringstream port_number;
+		port_number << port;
+		struct addrinfo hints = {};
+
+		hints.ai_family = AF_UNSPEC;
+		hints.ai_socktype = SOCK_STREAM;
+		hints.ai_flags = AI_PASSIVE;
+
+		if ((status = getaddrinfo(ip.c_str(), port_number.str(). c_str(), &hints, servinfo)) != 0)
+		{
+			std::cerr << "Error (0.0): getaddrinfo()" << gai_strerror(status) << std::endl;
+			return (false);
+		}
+	return (true);
+}
 
 //20260212 Terto: configure server socket to listen on specific IP and port
 //20260311 Alex: modified to iterate through vector<int> ports
@@ -32,21 +51,9 @@ void Server::listenOn(const std::string& ip, std::vector<int> ports)
 	for (std::vector<int>::iterator it = ports.begin(); it != ports.end(); it++)
 	{
 		// Let's init that addrinfo struct
-		int status;
-		std::ostringstream port_number;
-		port_number << *it;
-		struct addrinfo hints = {};
-		struct addrinfo *servinfo;
-
-		hints.ai_family = AF_UNSPEC;
-		hints.ai_socktype = SOCK_STREAM;
-		hints.ai_flags = AI_PASSIVE;
-
-		if ((status = getaddrinfo(ip.c_str(), port_number.str(). c_str(), &hints, &servinfo)) != 0)
-		{
-			std::cerr << "Error (0.0): getaddrinfo()" << gai_strerror(status) << std::endl;
+		struct addrinfo *servinfo = NULL;
+		if (!loadAddrinfo(ip, *it, &servinfo))
 			continue;
-		}
 
 		// Same logic as old, only using addrinfo servinfo!
 		int sock = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);
@@ -127,7 +134,7 @@ void Server::configureServer(const std::string& ip, std::vector<int> ports, cons
 
 	catch (const std::runtime_error& e)
 	{
-		throw std::invalid_argument("Failed to configure server");
+		throw std::runtime_error("Failed to configure server");
 	}
 }
 
@@ -172,6 +179,7 @@ void Server::configureErrorPages(const std::string& root, const std::vector<std:
 	std::cout << "Error pages configured." << std::endl;
 }
 
+// 20260319 Alex: simple debugging
 void Server::printFinishedServerInfo()
 {
 	std::cout << std::endl << "--- Finished Server Info ---" << std::endl << std::endl;
@@ -188,3 +196,5 @@ void Server::printFinishedServerInfo()
 		locations[i].printLocation();
 	std::cout << "--- End of Server info ---" << std::endl << std::endl;
 }
+
+
