@@ -199,40 +199,40 @@ void Server::handleClientConnection(int clientSock, Server& server)
 }
 */
 
-//20260210 Terto: Inicia el bucle principal del servidor, usando poll() para manejar múltiples conexiones
-// main -> server.run()
-void Server::run() 
-{
-	std::vector<struct pollfd> fds = buildPollFdArray();
+// //20260210 Terto: Inicia el bucle principal del servidor, usando poll() para manejar múltiples conexiones
+// // main -> server.run()
+// void Server::run() 
+// {
+// 	std::vector<struct pollfd> fds = buildPollFdArray();
 
-	// main loop with SIGINT (Ctrl+C) to stop the server
-	while (SignalHandler::running == 1)
-	{
-		int ret = poll(&fds[0], fds.size(), -1);
-		if (ret < 0) 
-		{
-			if (SignalHandler::running == 1)
-				std::cerr << "Error (0.1): poll() failed." << std::endl;
-			break;
-		}
+// 	// main loop with SIGINT (Ctrl+C) to stop the server
+// 	while (SignalHandler::running == 1)
+// 	{
+// 		int ret = poll(&fds[0], fds.size(), -1);
+// 		if (ret < 0) 
+// 		{
+// 			if (SignalHandler::running == 1)
+// 				std::cerr << "Error (0.1): poll() failed." << std::endl;
+// 			break;
+// 		}
 
-		// Check for events on each socket
-		size_t j = 0;
-		while (j < fds.size()) {
-			if (fds[j].revents & POLLIN) 
-			{
-				if (std::find(listenSockets.begin(), listenSockets.end(), fds[j].fd) != listenSockets.end()) 
-				{
-					handleNewConnection(fds[j].fd, fds);
-				} 
-				else 
-				{
-					handleClientConnection(fds[j].fd, *this);
-					fds.erase(fds.begin() + j);
-					continue;
-				}
-			}
-			++j;
-		}
-	}
-}
+// 		// Check for events on each socket
+// 		size_t j = 0;
+// 		while (j < fds.size()) {
+// 			if (fds[j].revents & POLLIN) 
+// 			{
+// 				if (std::find(listenSockets.begin(), listenSockets.end(), fds[j].fd) != listenSockets.end()) 
+// 				{
+// 					handleNewConnection(fds[j].fd, fds);
+// 				} 
+// 				else 
+// 				{
+// 					handleClientConnection(fds[j].fd, *this);
+// 					fds.erase(fds.begin() + j);
+// 					continue;
+// 				}
+// 			}
+// 			++j;
+// 		}
+// 	}
+// }

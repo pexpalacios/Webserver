@@ -10,7 +10,6 @@ int main(int ac, char **av)
 	}
 
 	SignalHandler::registerSignal();
-
 	try
 	{
 		// Parse conf. file
