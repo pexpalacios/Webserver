@@ -187,6 +187,8 @@ void ConfigParser::checkIpPortPairs(std::vector<ServerConfig> &servers)
 				seen_pairs.insert(std::make_pair(host, ports[i]));
 			++it;
 		}
+	}
+}
 
 void putInDefaultValues(ServerConfig &defaultServer, ServerConfig &currentServer)
 {
