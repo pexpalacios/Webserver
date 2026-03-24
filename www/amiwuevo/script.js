@@ -17,7 +17,12 @@ window.onload = function()
 		document.getElementById("display-name").textContent = "amiwuevo name";
 	});
 
-	fetch('/cgi-bin/get_outfit.py').then(response => response.text()).then(bg => 
+	fetch('/cgi-bin/get_outfit.py').then(response => 
+	{
+		if (!response.ok)
+			throw new Error("CGI Error");
+		return (response.text());
+	}).then(bg => 
 	{
 		const imgPath = bg.split('\n').map(line => line.trim()).filter(line => line);
 		const outfit = imgPath[imgPath.length - 1];
@@ -137,7 +142,12 @@ document.addEventListener('DOMContentLoaded', function()
 	{
 		e.preventDefault();
 		//Execute chang_outfit.py so it changes the database
-		fetch('/cgi-bin/change_outfit.py').then(response => response.text()).then(data => 
+		fetch('/cgi-bin/change_outfit.py').then(response => 	
+		{
+			if (!response.ok)
+				throw new Error("CGI Error");
+			return (response.text());
+		}).then(data => 
 		{
 			console.log('CGI change_outfit.py output:', data);
 			//Execute get_outfit.py so it changes the .css to the file in database
@@ -180,7 +190,12 @@ document.addEventListener('DOMContentLoaded', function()
 	btn.addEventListener('click', function(e)
 	{
 		e.preventDefault();
-		fetch('/cgi-bin/get_outfit.py').then(response => response.text()).then(outfit =>
+		fetch('/cgi-bin/get_outfit.py').then(response => 
+		{
+			if (!response.ok)
+				throw new Error("CGI Error");
+			return (response.text());
+		}).then(outfit =>
 		{
 			outfit = outfit.trim();
 			console.log('CGI change_outfit.py output:', outfit);
@@ -212,10 +227,12 @@ function readFile() {
 			document.getElementById("dialogue").textContent = dialogue;
 		else
 			document.getElementById("dialogue").textContent = "Lore Ipsum";
-
-		fetch('/cgi-bin/get_outfit.py')
-		.then(response => response.text())
-		.then(outfit =>
+		fetch('/cgi-bin/get_outfit.py').then(response => 
+		{
+			if (!response.ok)
+				throw new Error("CGI Error");
+			return (response.text());
+		}).then(outfit =>
 		{
 			outfit = outfit.trim();
 			const container = document.querySelector('.egg');

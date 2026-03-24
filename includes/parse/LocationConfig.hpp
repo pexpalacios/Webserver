@@ -9,6 +9,8 @@
 class LocationConfig
 {
 	private:
+		int	_redirCode;
+		std::string _redirection;
 		std::string _path;
 		std::string _root;
 		std::string _index;
@@ -27,6 +29,8 @@ class LocationConfig
 		~LocationConfig();
 
 	//Setters
+		void setRedirectionCode(const int);
+		void setRedirection(const std::string&);
 		void setPath(const std::string);
 		void setRoot(const std::string);
 		void setIndex(const std::string);
@@ -41,6 +45,8 @@ class LocationConfig
 		void setCGIExt(const std::vector<std::string>);
 
 	//Getters
+		int getRedirectionCode() const;
+		const std::string &getRedirection() const;
 		std::string getPath() const;
 		std::string getRoot();
 		std::string getIndex();

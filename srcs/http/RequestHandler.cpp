@@ -1,4 +1,5 @@
 #include "../../includes/http/RequestHandler.hpp"
+extern char **environ;
 
 RequestHandler::RequestHandler(const Server &server)
 	: _server(server) {}
@@ -52,9 +53,9 @@ Response RequestHandler::GetName() const
 	return res;
 }
 
-//20260311 - switched to route requests based on HTTP method
-// main -> server.run() -> handleClientConnection() -> handleRequest -> handleDelete
-Response RequestHandler::handleDelete(const Request& request)
+// 20260311 - switched to route requests based on HTTP method
+//  main -> server.run() -> handleClientConnection() -> handleRequest -> handleDelete
+Response RequestHandler::handleDelete(const Request &request)
 {
 	std::string path = request.getPath();
 
@@ -82,9 +83,9 @@ Response RequestHandler::handleDelete(const Request& request)
 	return buildNoContentResponse();
 }
 
-//20260307 - Implemented basic POST request handling
-// main -> server.run() -> handleClientConnection() -> handleRequest -> handlePost
-Response RequestHandler::handlePost(const Request& request)
+// 20260307 - Implemented basic POST request handling
+//  main -> server.run() -> handleClientConnection() -> handleRequest -> handlePost
+Response RequestHandler::handlePost(const Request &request)
 {
 	std::string path = request.getPath();
 
@@ -127,11 +128,11 @@ std::string executeCGIScript(const std::string &scriptPath, std::string key)
 {
 	int pipefd[2];
 	if (pipe(pipefd) == -1)
-		return "";
+		return ("");
 
 	pid_t pid = fork();
 	if (pid == -1)
-		return "";
+		return ("");
 
 	if (pid == 0)
 	{
@@ -140,13 +141,22 @@ std::string executeCGIScript(const std::string &scriptPath, std::string key)
 		close(pipefd[0]);
 		close(pipefd[1]);
 		if (key == "python")
-			execl("/usr/bin/python3", "python3", scriptPath.c_str(), (char *)NULL);
+		{
+			char *argv[] = {(char *)"python3", (char *)scriptPath.c_str(), NULL};
+			execve("/usr/bin/python3", argv, environ);
+		}
 		else if (key == "php")
-			execl("/usr/bin/php", "php", scriptPath.c_str(), (char *)NULL);
+		{
+			char *argv[] = {(char *)"php", (char *)scriptPath.c_str(), NULL};
+			execve("/usr/bin/php", argv, environ);
+		}
 		else if (key == "bash")
-			execl("/usr/bin/bash", "bash", scriptPath.c_str(), (char *)NULL);
-		std::cout << "No exec worked correctly" << std::endl;
-		exit(1); // If execl fails
+		{
+			char *argv[] = {(char *)"bash", (char *)scriptPath.c_str(), NULL};
+			execve("/usr/bin/bash", argv, environ);
+		}
+		return ("");
+		exit(1);
 	}
 	else
 	{
@@ -163,6 +173,42 @@ std::string executeCGIScript(const std::string &scriptPath, std::string key)
 	}
 }
 
+Response RequestHandler::handleCGI(std::string filePath, const LocationConfig *CGIlocation)
+{
+	std::vector<std::string> allowedExts = CGIlocation->getCGIExt();
+	std::string ext;
+	if (filePath.size() > 3 && filePath.substr(filePath.size() - 3) == ".py")
+		ext = ".py";
+	else if (filePath.size() > 3 && filePath.substr(filePath.size() - 4) == ".php")
+		ext = ".php";
+	else if (filePath.size() > 3 && filePath.substr(filePath.size() - 3) == ".sh")
+		ext = ".sh";
+
+	// If the extension is not valid returns an error
+	if (std::find(allowedExts.begin(), allowedExts.end(), ext) == allowedExts.end())
+	{
+		std::cout << "Extension not allowed" << std::endl;
+		return buildErrorResponse(403);
+	}
+
+	std::string CGIOutput;
+	if (filePath.size() > 3 && filePath.substr(filePath.size() - 3) == ".py")
+		CGIOutput = executeCGIScript(filePath, "python");
+	else if (filePath.size() > 3 && filePath.substr(filePath.size() - 4) == ".php")
+		CGIOutput = executeCGIScript(filePath, "php");
+	else if (filePath.size() > 3 && filePath.substr(filePath.size() - 3) == ".sh")
+		CGIOutput = executeCGIScript(filePath, "bash");
+
+	if (CGIOutput == "")
+		return buildErrorResponse(500);
+
+	Response response;
+	response.setStatusCode(200);
+	response.setHeader("Content-Type", "text/html");
+	response.setBody(CGIOutput);
+	return response;
+}
+
 // 20260303 - Implemented basic GET request handling, including file reading and response generation.
 // 20260317 - Added autoindex support for GET requests to directories without index.html
 //  main -> server.run() -> handleClientConnection() -> handleRequest -> handleGet
@@ -174,6 +220,26 @@ Response RequestHandler::handleGet(const Request &request)
 	size_t q = path.find('?');
 	if (q != std::string::npos)
 		path = path.substr(0, q);
+
+	//Redirection endpoints
+	if (path == "/redirect")
+	{
+		const LocationConfig *redirLocation = this->findMatchingLocation(path);
+		Response response;
+		response.setStatusCode(redirLocation->getRedirectionCode());
+		response.setHeader("Location", redirLocation->getRedirection());
+		response.setBody("Redirecting...");
+		return response;
+	}
+	if (path == "/external")
+	{
+		const LocationConfig *redirLocation = this->findMatchingLocation(path);
+		Response response;
+		response.setStatusCode(redirLocation->getRedirectionCode());
+		response.setHeader("Location", redirLocation->getRedirection());
+		response.setBody("Redirecting...");
+		return response;	
+	}
 
 	// API endpoints
 	if (path == "/api/name")
@@ -208,6 +274,14 @@ Response RequestHandler::handleGet(const Request &request)
 	if (filePath.find(root) != 0)
 		return buildErrorResponse(403);
 
+	// If the file is a CGI script, it is sent to executeCGIScript()
+	const LocationConfig *CGIlocation = this->findMatchingLocation(path);
+	if (filePath.find("/cgi-bin/") != std::string::npos && CGIlocation != NULL)
+	{
+		Response response = handleCGI(filePath, CGIlocation);
+		return response;
+	}
+
 	std::string resolvedPath = filePath;
 	logGetRequest(resolvedPath); // Log the resolved path for debugging
 
@@ -227,40 +301,6 @@ Response RequestHandler::handleGet(const Request &request)
 	if (status != 200)
 		return buildErrorResponse(status);
 
-	// If the file is a CGI script, it is sent to executeCGIScript()
-	const LocationConfig *CGIlocation = this->findMatchingLocation(path);
-	if (filePath.find("/cgi-bin/") != std::string::npos && CGIlocation != NULL)
-	{
-		std::vector<std::string> allowedExts = CGIlocation->getCGIExt();
-		std::string ext;
-		if (filePath.size() > 3 && filePath.substr(filePath.size() - 3) == ".py")
-			ext = ".py";
-		else if (filePath.size() > 3 && filePath.substr(filePath.size() - 4) == ".php")
-			ext = ".php";
-		else if (filePath.size() > 3 && filePath.substr(filePath.size() - 3) == ".sh")
-			ext = ".sh";
-
-		// If the extension is not valid returns an error
-		if (std::find(allowedExts.begin(), allowedExts.end(), ext) == allowedExts.end())
-		{
-			std::cout << "Extension not allowed" << std::endl;
-			return (buildErrorResponse(403));
-		}
-
-		std::string cgiOutput;
-		if (filePath.size() > 3 && filePath.substr(filePath.size() - 3) == ".py")
-			cgiOutput = executeCGIScript(filePath, "python");
-		else if (filePath.size() > 3 && filePath.substr(filePath.size() - 4) == ".php")
-			cgiOutput = executeCGIScript(filePath, "php");
-		else if (filePath.size() > 3 && filePath.substr(filePath.size() - 3) == ".sh")
-			cgiOutput = executeCGIScript(filePath, "bash");
-
-		Response response;
-		response.setStatusCode(200);
-		response.setHeader("Content-Type", "text/html");
-		response.setBody(cgiOutput);
-		return response;
-	}
 	std::string content = readFileContent(filePath);
 	return buildFileResponse(content, filePath);
 }
