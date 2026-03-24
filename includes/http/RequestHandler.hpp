@@ -49,6 +49,14 @@ private:
 	Response	buildFileResponse(const std::string& content, const std::string& filePath) const;
 	void		DebugHandleGet(const std::string& path, const std::string& resolvedPath) const;
 	void		logGetRequest(const std::string& path) const;
+	Response	getAlive();
+
+	// GET Autoindex
+	bool		hasIndexFile(const std::string& path) const;
+	bool		isDirectory(const std::string& path) const;
+	std::vector<std::string>	listDirectory(const std::string& path);
+	std::string	generateAutoindexHTML(const std::vector<std::string>& files, const std::string& uri);
+	Response	buildAutoindexResponse(const std::string& path, const std::string& uri);
 
 	// POST
 	Response	handleSetName(const Request& request);
@@ -57,12 +65,11 @@ private:
 	Response	handleSetBackground(const Request& request) const;
 	Response	handleSetClothes(const Request& request) const;
 	Response	handleSetHope(const Request& request) const;
+	Response	handleSetAlive() const;
 	Response	handleCGI(std::string filePath, const LocationConfig *CGIlocation);
 
 	// POST Helpers at background upload
 	bool	fileExists(const std::string& path) const;
-	//Response	handleUpload(const Request& request) const;
-	//Response	handleUploadBackground(const Request& request) const;
 	Response	getUploadedBackground() const;
 
 	std::string	getCurrentBackgroundFileName() const;

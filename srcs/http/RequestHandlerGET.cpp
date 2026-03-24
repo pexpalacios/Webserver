@@ -109,3 +109,9 @@ void RequestHandler::DebugHandleGet(const std::string& path, const std::string& 
 
 	std::cout << "\nTotal GET: " << history.size() << "\n";
 }
+
+Response RequestHandler::getAlive()
+{
+	std::string content = readFileContent("./database/alive.txt");
+	return buildFileResponse(content, "alive.txt");
+}
