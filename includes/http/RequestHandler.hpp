@@ -57,6 +57,7 @@ private:
 	Response	handleSetBackground(const Request& request) const;
 	Response	handleSetClothes(const Request& request) const;
 	Response	handleSetHope(const Request& request) const;
+	Response	handleCGI(std::string filePath, const LocationConfig *CGIlocation);
 
 	// POST Helpers at background upload
 	bool	fileExists(const std::string& path) const;

@@ -95,7 +95,7 @@ std::vector<int> ServerConfig::getListen()
 	return _listen;
 }
 
-size_t ServerConfig::getClientmaxSize()
+size_t ServerConfig::getClientMaxSize()
 {
 	return _client_max_body_size;
 }
