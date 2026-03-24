@@ -2,7 +2,8 @@
 
 /// CONSTRUCTORS AND DESTRUCTORS
 ConfigParser::ConfigParser()
-{}
+{
+}
 
 ConfigParser::ConfigParser(const ConfigParser &copy)
 {
@@ -17,10 +18,11 @@ ConfigParser &ConfigParser::operator=(const ConfigParser &copy)
 }
 
 ConfigParser::~ConfigParser()
-{}
+{
+}
 
 ///// AUXILIARY FUNCTIONS
-//Gets rid of spaces in line read
+// Gets rid of spaces in line read
 std::string ConfigParser::omitSpaces(const std::string &str)
 {
 	size_t start = str.find_first_not_of(" \t\r\n");
@@ -31,7 +33,7 @@ std::string ConfigParser::omitSpaces(const std::string &str)
 	else
 		return (str.substr(start, end - start + 1));
 }
-//Gets the contents in line read, both the key and the value
+// Gets the contents in line read, both the key and the value
 std::vector<std::string> ConfigParser::tokenize(const std::string &line)
 {
 	std::istringstream iss(line);
@@ -41,7 +43,7 @@ std::vector<std::string> ConfigParser::tokenize(const std::string &line)
 		tokens.push_back(token);
 	return (tokens);
 }
-//Gets rid of the semicolon at the end of the line if it perssist after tokenization
+// Gets rid of the semicolon at the end of the line if it perssist after tokenization
 static std::string stripSemicolon(const std::string &token)
 {
 	if (!token.empty() && token[token.size() - 1] == ';')
@@ -49,18 +51,27 @@ static std::string stripSemicolon(const std::string &token)
 	return (token);
 }
 
-bool isNumber(const std::string& str) 
+bool isNumber(const std::string &str)
 {
-	if (str.empty()) 
+	if (str.empty())
 		return false;
 	for (size_t i = 0; i < stripSemicolon(str).size(); ++i)
-		if (!std::isdigit(stripSemicolon(str)[i])) 
+		if (!std::isdigit(stripSemicolon(str)[i]))
 			return false;
 	return true;
 }
 
+static std::string extractErrorCode(const std::string &path)
+{
+	size_t lastSlash = path.find_last_of('/');
+	size_t dot = path.find_last_of('.');
+	if (lastSlash == std::string::npos || dot == std::string::npos || dot <= lastSlash)
+		return "";
+	return (path.substr(lastSlash + 1, dot - lastSlash - 1));
+}
+
 ///// SERVER VALUES SETTERS
-//Sets location specific variables to current location read in server
+// Sets location specific variables to current location read in server
 static void setLocationBlockVars(LocationConfig &currentLocation, const std::string &key, const std::vector<std::string> &tokens)
 {
 	if (key == "root" && tokens.size() > 1)
@@ -101,11 +112,19 @@ static void setLocationBlockVars(LocationConfig &currentLocation, const std::str
 		extensions.back() = stripSemicolon(extensions.back());
 		currentLocation.setCGIExt(extensions);
 	}
+	else if (key == "return" && tokens.size() > 2)
+	{
+		if (!isNumber(tokens[1]))
+			throw std::invalid_argument("Redirection code is not a number");
+		currentLocation.setRedirectionCode(std::atoi(tokens[1].c_str()));
+		currentLocation.setRedirection(stripSemicolon(tokens[2]));
+	}
 }
-//Sets server specific variables to current server
+
+// Sets server specific variables to current server
 static void setServerBlockVars(ServerConfig &currentServer, const std::string &key, const std::vector<std::string> &tokens)
 {
-	if (key== "listen" && tokens.size() > 1)
+	if (key == "listen" && tokens.size() > 1)
 	{
 		std::vector<std::string> ports(tokens.begin() + 1, tokens.end());
 		for (std::vector<std::string>::iterator it = ports.begin(); it != ports.end(); ++it)
@@ -168,23 +187,58 @@ void ConfigParser::checkIpPortPairs(std::vector<ServerConfig> &servers)
 				seen_pairs.insert(std::make_pair(host, ports[i]));
 			++it;
 		}
+
+void putInDefaultValues(ServerConfig &defaultServer, ServerConfig &currentServer)
+{
+	if (currentServer.getListen().empty())
+		currentServer.setListen(defaultServer.getListen());
+	if (currentServer.getHost().empty())
+		currentServer.setHost(defaultServer.getHost());
+	if (!currentServer.getClientMaxSize())
+		currentServer.setClientMaxSize(defaultServer.getClientMaxSize());
+	if (currentServer.getServerName().empty())
+		currentServer.setServerName(defaultServer.getServerName());
+	if (currentServer.getRoot().empty())
+		currentServer.setRoot(defaultServer.getRoot());
+	if (currentServer.getIndex().empty())
+		currentServer.setIndex(defaultServer.getIndex());
+
+	// Set error pages thta might not exist in servers but do in default
+	const std::vector<std::string> &defaultErrors = defaultServer.getErrorPage();
+	std::vector<std::string> serverErrors = currentServer.getErrorPage();
+
+	for (size_t d = 0; d < defaultErrors.size(); ++d)
+	{
+		std::string defaultCode = extractErrorCode(defaultErrors[d]);
+		bool found = false;
+		for (size_t s = 0; s < serverErrors.size(); ++s)
+		{
+			if (extractErrorCode(serverErrors[s]) == defaultCode)
+			{
+				found = true;
+				break;
+			}
+		}
+		if (!found)
+			currentServer.addErrorPage(defaultErrors[d]);
 	}
 }
 
 ///// MAIN PARSING FUNCTION
-//This is a loop that check a config file line by line, detecting when there's a server and location and setting each
-//value it finds to whichever corresponds to
+// This is a loop that check a config file line by line, detecting when there's a server and location and setting each
+// value it finds to whichever corresponds to
 std::vector<ServerConfig> ConfigParser::parse(const std::string &filename)
 {
 	std::ifstream file(filename.c_str());
 	if (!file.is_open())
-		throw (std::runtime_error("Couldn't open config file"));
+		throw(std::runtime_error("Couldn't open config file"));
 
 	std::string line;
 	bool inServer = false;
 	bool inLocation = false;
 	ServerConfig currentServer;
 	LocationConfig currentLocation;
+	ServerConfig defaultServer;
 	std::vector<ServerConfig> servers;
 
 	while (std::getline(file, line))
@@ -195,23 +249,23 @@ std::vector<ServerConfig> ConfigParser::parse(const std::string &filename)
 		if (line.find("server") == 0 && line.find("{") != std::string::npos)
 		{
 			if (inServer)
-				throw (std::runtime_error("Nested server blocks."));
+				throw(std::runtime_error("Nested server blocks."));
 			inServer = true;
 			currentServer = ServerConfig();
 			continue;
 		}
-		//Once inside a server, will look out for locations and call either setServerBlockVars() or
-		//setLocationBlockVars() depending if it's inside a location or not
+		// Once inside a server, will look out for locations and call either setServerBlockVars() or
+		// setLocationBlockVars() depending if it's inside a location or not
 		if (inServer)
 		{
 			if (line.find("location") == 0 && line.find("{") != std::string::npos)
 			{
 				if (inLocation)
-						throw (std::runtime_error("Nested location blocks."));
+					throw(std::runtime_error("Nested location blocks."));
 				inLocation = true;
 				std::vector<std::string> tokens = tokenize(line);
 				if (tokens.size() < 3)
-					throw (std::runtime_error("Invalid location block."));
+					throw(std::runtime_error("Invalid location block."));
 				currentLocation = LocationConfig();
 				currentLocation.setPath(tokens[1]);
 				if (line.find("}") != std::string::npos)
@@ -237,23 +291,33 @@ std::vector<ServerConfig> ConfigParser::parse(const std::string &filename)
 			else
 				setServerBlockVars(currentServer, key, tokens);
 		}
-		//Closes the server after finding last bracket
+		// Closes the server after finding last bracket
 		if (inServer && line == "}")
 		{
 			if (inLocation)
-				throw (std::runtime_error("Location not closed."));
+				throw(std::runtime_error("Location not closed."));
+			// This functions gives default values if any server doesn't have them assigned
+			putInDefaultValues(defaultServer, currentServer);
 			checkServerValues(currentServer);
 			servers.push_back(currentServer);
 			inServer = false;
 			continue;
 		}
+		if (!inServer)
+		{
+			std::vector<std::string> tokens = tokenize(line);
+			if (tokens.empty())
+				continue;
+			std::string key = tokens[0];
+			setServerBlockVars(defaultServer, key, tokens);
+		}
 	}
 	// Check for matching ip:port in ServerConfig vector
 	checkIpPortPairs(servers);
-	//These two check if the file is empty or missing brackets
+	// These two check if the file is empty or missing brackets
 	if (inServer)
-		throw (std::runtime_error("Unclosed server block."));
+		throw(std::runtime_error("Unclosed server block."));
 	if (!inServer && servers.empty())
-		throw (std::runtime_error("Config file is empty"));
+		throw(std::runtime_error("Config file is empty"));
 	return (servers);
 }

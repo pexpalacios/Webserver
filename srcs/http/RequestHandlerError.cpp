@@ -1,15 +1,19 @@
 #include "../../includes/http/RequestHandler.hpp"
-#include <sstream>
-#include <fstream>
-#include <unistd.h>
-#include <sys/stat.h>
-#include <iostream>
 
+// 20260303 - Build error response with 400 status code for bad requests
+// main -> server.run() -> handleClientConnection() -> handleRequest -> handleGet/handlePost/handleDelete -> handleBadRequest
 Response RequestHandler::handleBadRequest()
 {return buildErrorResponse(400);}
 
+// 20260303 - Internal server error response builder, used for 500 errors and as a fallback for other error responses
+// main -> server.run() -> handleClientConnection() -> handleRequest -> handleGet/handlePost/handleDelete -> handleInternalServerError
 Response RequestHandler::handleInternalServerError()
 {return buildErrorResponse(500);}
+
+// 20260223 - Basic method for not allowed response
+// main -> handleRequest -> methodNotAllowed
+Response RequestHandler::methodNotAllowed()
+{return buildErrorResponse(405);}
 
 //20260223 - Implemented basic GET request handling, including file reading and response generation.
 // main -> server.run() -> handleClientConnection() -> handleRequest -> handleGet/handlePost/handleDelete -> isPathSafe
@@ -38,16 +42,15 @@ int RequestHandler::checkFile(const std::string& path) const
 
 	if (stat(path.c_str(), &st) == -1)
 	{
-	// Debugging output for stat failure
 	std::cout << "stat failed for: " << path << std::endl;
 	std::cout << "errno value: " << errno << std::endl;
 
-		if (errno == ENOENT)
-			return (404); // Not Found
-		else if (errno == EACCES)
-			return (403); // Forbidden
+		if (errno == ENOENT) // No such file or directory
+			return (404);
+		else if (errno == EACCES) // Permission denied
+			return (403);
 		else
-			return (500); // Internal Server Error
+			return (500);
 	}
 
 	if (!S_ISREG(st.st_mode))

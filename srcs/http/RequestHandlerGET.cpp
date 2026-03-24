@@ -1,5 +1,4 @@
 #include "../../includes/http/RequestHandler.hpp"
-#include <fstream>
 
 //20260226 Terto: Implemented basic POST request handling, including file saving and response generation.
 // main -> handleRequest -> handleGet -> resolveGetPath
@@ -109,4 +108,10 @@ void RequestHandler::DebugHandleGet(const std::string& path, const std::string& 
 	}
 
 	std::cout << "\nTotal GET: " << history.size() << "\n";
+}
+
+Response RequestHandler::getAlive()
+{
+	std::string content = readFileContent("./database/alive.txt");
+	return buildFileResponse(content, "alive.txt");
 }

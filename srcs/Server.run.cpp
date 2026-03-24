@@ -1,9 +1,6 @@
 #include "../includes/Server.hpp"
 #include "../includes/Signal.hpp"
 #include "../includes/http/RequestHandler.hpp"
-#include <errno.h>
-#include <cstring>
-
 
 //20260210 Terto: read file content and return as string
 // main -> server.run() -> handleClientConnection() -> server.readFile()

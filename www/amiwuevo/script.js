@@ -17,7 +17,12 @@ window.onload = function()
 		document.getElementById("display-name").textContent = "amiwuevo name";
 	});
 
-	fetch('/cgi-bin/get_outfit.py').then(response => response.text()).then(bg => 
+	fetch('/cgi-bin/get_outfit.py').then(response => 
+	{
+		if (!response.ok)
+			throw new Error("CGI Error");
+		return (response.text());
+	}).then(bg => 
 	{
 		const imgPath = bg.split('\n').map(line => line.trim()).filter(line => line);
 		const outfit = imgPath[imgPath.length - 1];
@@ -26,6 +31,7 @@ window.onload = function()
 };
 
 // 20260307 SAVE NAME
+// 20260319 add music play on name save
 function saveName()
 {
 	const name = document.getElementById("nameInput").value;
@@ -44,15 +50,21 @@ function saveName()
 		if (response.ok) {
 			document.getElementById("display-name").textContent = name;
 			alert("Nombre guardado");
+
+			// 20260319 add music play on name save
+			const audio = document.getElementById("bg-music"); // Obtenemos el audio por su id
+			audio.play(); // Iniciamos reproducción (esto funciona porque viene de un click)
+
 		} else {
 			alert("Error al guardar");
 		}
 	})
 	.catch(() => alert("Error de red"));
+
 	dialog.close()
 }
 
-// 20260311 CHANGE BACKGROUND (CUSTOM UPLOAD)
+// 20260323 CHANGE BACKGROUND (CUSTOM UPLOAD)
 document.addEventListener('DOMContentLoaded', function()
 {
 	
@@ -69,8 +81,6 @@ document.addEventListener('DOMContentLoaded', function()
 	if (!btn || !fileInput || !content)
 		return;
 
-	
-
 	loadBackground();
 
 	btn.addEventListener("click", function()
@@ -80,12 +90,10 @@ document.addEventListener('DOMContentLoaded', function()
 		.then(r => r.text())
 		.then(path => {
 
-			// si es fondo por defecto → subir imagen
 			if (path.includes("images/backgrounds/bg_01.png"))
 			{
 				fileInput.click();
 			}
-			// si hay imagen subida → borrar
 			else
 			{
 				fetch("/api/background", { method: "DELETE" })
@@ -95,7 +103,7 @@ document.addEventListener('DOMContentLoaded', function()
 						return;
 
 					loadBackground();
-         		});
+				});
 			}
 		});
     });
@@ -115,10 +123,12 @@ document.addEventListener('DOMContentLoaded', function()
 			if (!res.ok)
 			{
 				alert("Imagen no válida");
+				fileInput.value = "";
 				return;
 			}
 
 			loadBackground();
+			fileInput.value = "";
 		});
 	});
 });
@@ -132,7 +142,12 @@ document.addEventListener('DOMContentLoaded', function()
 	{
 		e.preventDefault();
 		//Execute chang_outfit.py so it changes the database
-		fetch('/cgi-bin/change_outfit.py').then(response => response.text()).then(data => 
+		fetch('/cgi-bin/change_outfit.py').then(response => 	
+		{
+			if (!response.ok)
+				throw new Error("CGI Error");
+			return (response.text());
+		}).then(data => 
 		{
 			console.log('CGI change_outfit.py output:', data);
 			//Execute get_outfit.py so it changes the .css to the file in database
@@ -175,7 +190,12 @@ document.addEventListener('DOMContentLoaded', function()
 	btn.addEventListener('click', function(e)
 	{
 		e.preventDefault();
-		fetch('/cgi-bin/get_outfit.py').then(response => response.text()).then(outfit =>
+		fetch('/cgi-bin/get_outfit.py').then(response => 
+		{
+			if (!response.ok)
+				throw new Error("CGI Error");
+			return (response.text());
+		}).then(outfit =>
 		{
 			outfit = outfit.trim();
 			console.log('CGI change_outfit.py output:', outfit);
@@ -188,9 +208,15 @@ document.addEventListener('DOMContentLoaded', function()
 		});
 	});
 });
-    
+
 //Dialogue
 function readFile() {
+
+	// 20260319 add voice on dialogue trigger
+	const voice = document.getElementById("voice-sound"); // obtener el audio de voz
+	voice.currentTime = 0; // reiniciar audio para permitir múltiples clicks seguidos
+	voice.play(); // reproducir sonido de voz (interacción del usuario → permitido)
+
 	fetch('/api/dialogue')
 	.then(response => {
 		if (!response.ok) throw new Error();
@@ -201,11 +227,18 @@ function readFile() {
 			document.getElementById("dialogue").textContent = dialogue;
 		else
 			document.getElementById("dialogue").textContent = "Lore Ipsum";
-		fetch('/cgi-bin/get_outfit.py').then(response => response.text()).then(outfit =>
+		fetch('/cgi-bin/get_outfit.py').then(response => 
+		{
+			if (!response.ok)
+				throw new Error("CGI Error");
+			return (response.text());
+		}).then(outfit =>
 		{
 			outfit = outfit.trim();
 			const container = document.querySelector('.egg');
+
 			container.src = `images/gifs/${outfit}_talk.gif`;
+
 			setTimeout(() =>
 			{
 				container.src = `images/gifs/${outfit}_idle.gif`;
@@ -216,3 +249,95 @@ function readFile() {
 		document.getElementById("dialogue").textContent = "Failed text";
 	});
 };
+
+
+// 20260323 KILL AMIWUEVO (UPDATE ALIVE STATE)
+document.addEventListener('DOMContentLoaded', function()
+{
+	const killBtn = document.querySelector('.kill-btn');
+
+	if (!killBtn)
+	{
+		console.log("killBtn not found");
+		return;
+	}
+
+	killBtn.addEventListener("click", function()
+	{
+		console.log("kill button click");
+
+		isAlive().then(val => {
+
+			if (val === "1")
+				deathSound();
+
+			fetch('/api/alive', {
+				method: 'POST',
+				body: "0"
+			})
+			.then(res => {
+				if (!res.ok)
+					console.log("Error updating alive state");
+			})
+			.catch(() => console.log("Network error"));
+		});
+	});
+});
+
+
+// 20260323 add eat, flush and death sounds (only if alive)
+function isAlive()
+{
+	return fetch('/api/alive')
+		.then(res => res.text())
+		.then(val => val.trim());
+}
+
+function eatSound()
+{
+	isAlive().then(val => {
+
+		if (val === "0")
+			return;
+
+		const eat = document.getElementById("eat-sound");
+
+		if (eat)
+		{
+			eat.currentTime = 0;
+			eat.play();
+		}
+	});
+}
+
+function flushSound()
+{
+	isAlive().then(val => {
+
+		if (val === "0")
+			return;
+
+		const sound = document.getElementById("flush-sound");
+
+		if (sound)
+		{
+			sound.currentTime = 0;
+			sound.play();
+		}
+	});
+}
+
+function deathSound()
+{
+	const music = document.getElementById("bg-music");
+	const death = document.getElementById("death-sound");
+
+	if (music)
+		music.pause();
+
+	if (death)
+	{
+		death.currentTime = 0;
+		death.play();
+	}
+}

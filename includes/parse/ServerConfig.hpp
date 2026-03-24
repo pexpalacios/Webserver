@@ -39,7 +39,7 @@ class ServerConfig
 
 	//Getters
 		std::vector<int> getListen();
-		size_t getClientmaxSize();
+		size_t getClientMaxSize();
 		std::string getHost();
 		std::string getServerName();
 		std::vector<std::string> getErrorPage();

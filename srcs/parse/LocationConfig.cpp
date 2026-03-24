@@ -2,7 +2,7 @@
 
 /// CONSTRUCTORS AND DESTRUCTORS
 LocationConfig::LocationConfig()
-	: _path(""), _root(""), _index(""), _upload(""), _autoindex(false), _protected(false)
+	: _redirCode(0), _redirection(""), _path(""), _root(""), _index(""), _upload(""), _cgi_path(std::vector<std::string> ()), _cgi_ext(std::vector<std::string> ()), _autoindex(false), _protected(false)
 {
 }
 
@@ -24,6 +24,8 @@ LocationConfig &LocationConfig::operator=(const LocationConfig &copy)
 		_protected = copy._protected;
 		_cgi_path = copy._cgi_path;
 		_cgi_ext = copy._cgi_ext;
+		_redirCode = copy._redirCode;
+		_redirection = copy._redirection;
 	}
 	return *this;
 }
@@ -33,6 +35,18 @@ LocationConfig::~LocationConfig()
 }
 
 //////////
+
+void LocationConfig::setRedirectionCode(const int code)
+{
+	_redirCode = code;
+}
+
+
+void LocationConfig::setRedirection(const std::string &str)
+{
+	_redirection = str;
+}
+
 void LocationConfig::setPath(const std::string str)
 {
 	_path = str;
@@ -94,6 +108,16 @@ void LocationConfig::setProtected(bool b)
 }
 
 ///////////
+
+int LocationConfig::getRedirectionCode() const
+{
+	return (_redirCode);
+}
+
+const std::string &LocationConfig::getRedirection() const
+{
+	return (_redirection);
+}
 
 std::string LocationConfig::getPath() const
 {

@@ -49,7 +49,7 @@ int main(int ac, char **av)
 		pollServer.run();
 		
 	} 
-	catch (const std::invalid_argument& e)
+	catch (const std::exception& e)
 	{
 		std::cerr << "Error in config parsing:\n" << e.what() << std::endl;
 		return (1);
