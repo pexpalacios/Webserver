@@ -26,13 +26,14 @@ public:
 	void		handleClientConnection(int clientSock, Server& server);
 	std::string	recvRequest(int clientSock);
 	void		run();	
-  void    closeSockets();
-
 
 	const std::string&	getStaticRoot() const;
 	const std::string&	getIndexFile() const;
 	const std::map<int, std::string>& getErrorPages() const;
 	const std::vector<LocationConfig>& getLocations() const;
+	const std::vector<int>&	getListenSockets() const;
+
+	void	printFinishedServerInfo();
 
 private:
 	void						listenOn(const std::string& ip, std::vector<int> ports);								
@@ -40,6 +41,7 @@ private:
 	void						setErrorPage(int code, const std::string& path);						
 	std::vector<struct pollfd>	buildPollFdArray();														
 	std::string					readFile(const std::string& path);										
+	bool						loadAddrinfo(const std::string &ip, int port, struct addrinfo **servinfo);
 
 	std::vector<int>			listenSockets;	// Sockets en los que el servidor está escuchando
 	std::string					staticRoot;		// Carpeta base para archivos estáticos

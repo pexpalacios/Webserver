@@ -23,6 +23,8 @@ class ConfigParser
 		//AUXILIARY FUNCTIONS
 		std::vector<std::string> tokenize(const std::string &line);
 		std::string omitSpaces(const std::string &str);
+	private:
+		void checkIpPortPairs(std::vector<ServerConfig> &servers);
 };
 
 #endif

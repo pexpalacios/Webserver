@@ -2,6 +2,9 @@
 #include "../includes/Signal.hpp"
 
 Server::Server() {}
+
+//20260319 Alex: moved close() from closeSockets() to ~Server()
+// This is actually wrong, remove
 Server::~Server() {}
 
 const std::string& Server::getStaticRoot() const
@@ -16,40 +19,83 @@ const std::map<int, std::string>& Server::getErrorPages() const
 const std::vector<LocationConfig>& Server::getLocations() const
 {return locations;}
 
+const std::vector<int>& Server::getListenSockets() const
+{return listenSockets;}
+
+// 20260322 Alex: load struct addrinfo
+bool Server::loadAddrinfo(const std::string& ip, int port, struct addrinfo **servinfo)
+{
+		int status;
+		std::ostringstream port_number;
+		port_number << port;
+		struct addrinfo hints = {};
+
+		hints.ai_family = AF_UNSPEC;
+		hints.ai_socktype = SOCK_STREAM;
+		hints.ai_flags = AI_PASSIVE;
+
+		if ((status = getaddrinfo(ip.c_str(), port_number.str(). c_str(), &hints, servinfo)) != 0)
+		{
+			std::cerr << "Error (0.0): getaddrinfo()" << gai_strerror(status) << std::endl;
+			return (false);
+		}
+	return (true);
+}
 
 //20260212 Terto: configure server socket to listen on specific IP and port
 //20260311 Alex: modified to iterate through vector<int> ports
+//20260322 Alex: modified to use struct addrinfo. Clean up is pretty ugly if you ask me, i'll work on RAII for cleaner code
 // main -> server.configureServer() -> server.listenOn()
 void Server::listenOn(const std::string& ip, std::vector<int> ports) 
 {
 	for (std::vector<int>::iterator it = ports.begin(); it != ports.end(); it++)
 	{
-		int sock = socket(AF_INET, SOCK_STREAM, 0);
+		// Let's init that addrinfo struct
+		struct addrinfo *servinfo = NULL;
+		if (!loadAddrinfo(ip, *it, &servinfo))
+			continue;
+
+		// Same logic as old, only using addrinfo servinfo!
+		int sock = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);
+		// int sock = socket(AF_INET, SOCK_STREAM, 0);
 		if (sock == -1) {
+			freeaddrinfo(servinfo);
 			std::cerr << "Error (0.1): creating socket" << std::endl;
 			exit(EXIT_FAILURE);
 		}
 
 		if (fcntl(sock, F_SETFL, O_NONBLOCK) == -1)
+		{
+			freeaddrinfo(servinfo);
+			close(sock);
 			throw std::runtime_error("Failed (0.2): set non-blocking");
+		}
 
 		int opt = 1;
 		if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
+		{
+			freeaddrinfo(servinfo);
+			close(sock);
 			throw std::runtime_error("Failed (0.3): setsockopt");
+		}
 
-		sockaddr_in addr;
-		std::memset(&addr, 0, sizeof(addr));
-		addr.sin_family = AF_INET;
-		addr.sin_port = htons(*it);
-		addr.sin_addr.s_addr = inet_addr(ip.c_str());
-
-		if (bind(sock, (struct sockaddr*)&addr, sizeof(addr)) == -1)
+		if (bind(sock, servinfo->ai_addr, servinfo->ai_addrlen) == -1)
+		{
+			freeaddrinfo(servinfo);
+			close(sock);
 			throw std::runtime_error("Failed (0.4): bind");
+		}
+
 		if (listen(sock, 100) == -1)
+		{	
+			freeaddrinfo(servinfo);
+			close(sock);
 			throw std::runtime_error("Failed (0.5): listen");
+		}
 
 		listenSockets.push_back(sock);
 		std::cout << "Listening on " << ip << ":" << *it << std::endl;
+		freeaddrinfo(servinfo);
 	}
 }
 
@@ -79,9 +125,17 @@ void Server::setErrorPage(int code, const std::string& filePath)
 // main -> server.configureServer() -> server.listenOn() + server.setStaticRoot()
 void Server::configureServer(const std::string& ip, std::vector<int> ports, const std::string& root, const std::string& indexFile)
 {
+	try
+	{
 	listenOn(ip, ports);
 	setStaticRoot(root, indexFile);
 	std::cout << " Root: " << root << " | Index: " << indexFile << std::endl;
+	}
+
+	catch (const std::runtime_error& e)
+	{
+		throw std::runtime_error("Failed to configure server");
+	}
 }
 
 
@@ -125,11 +179,22 @@ void Server::configureErrorPages(const std::string& root, const std::vector<std:
 	std::cout << "Error pages configured." << std::endl;
 }
 
-//20260311 Alex: close listenSockets vector<int>
-void Server::closeSockets()
+// 20260319 Alex: simple debugging
+void Server::printFinishedServerInfo()
 {
+	std::cout << std::endl << "--- Finished Server Info ---" << std::endl << std::endl;
+	std::cout << "--- Listen Sockets---" << std::endl;
 	for (std::vector<int>::iterator it = listenSockets.begin(); it != listenSockets.end(); it++)
-	{
-		close(*it);
-	}
+		std::cout << *it << std::endl;
+	std::cout << "--- Static Root ---" << std::endl << staticRoot << std::endl;
+	std::cout << "--- Index File ---" << std::endl << indexFile << std::endl;
+	std::cout << "--- Error Pages ---" << std::endl;
+	for (std::map<int, std::string>::iterator it = errorPages.begin(); it != errorPages.end(); it++)
+		std::cout << it->first << it->second << std::endl;
+	std::cout << "--- Location ---" << std::endl;
+	for (size_t i = 0; i != locations.size() ; i++)
+		locations[i].printLocation();
+	std::cout << "--- End of Server info ---" << std::endl << std::endl;
 }
+
+
