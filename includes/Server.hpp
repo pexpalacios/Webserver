@@ -24,6 +24,7 @@ public:
 	void		configureErrorPages(const std::string& root, const std::vector<std::string>& errorPaths);
 	void		handleNewConnection(int listenSock, std::vector<struct pollfd>& fds);
 	void		handleClientConnection(int clientSock, Server& server);
+	bool		checkMaxSize(long long contentLength) const;
 	std::string	recvRequest(int clientSock);
 	void		run();	
 

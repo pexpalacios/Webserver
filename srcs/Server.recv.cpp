@@ -1,6 +1,20 @@
 #include "../includes/Server.hpp"
 #include "../includes/http/RequestHandler.hpp"
 
+
+//20260325 - Implemented request receiving and parsing logic, with error handling for invalid requests and internal server errors.
+// main -> server.run() -> handleClientConnection() -> checkMaxSize()
+bool Server::checkMaxSize(long long contentLength) const
+{
+	long long maxSize = 100000000; // 100 MB, adjust as needed
+
+	if (contentLength > maxSize)
+		return false;
+
+	return true;
+}
+
+
 //20260311 - Implemented request receiving and parsing logic, with error handling for invalid requests and internal server errors.
 // main -> server.run() -> handleClientConnection() -> recvRequest -> recv() + parse + handleRequest
 std::string Server::recvRequest(int clientSock)
@@ -36,7 +50,39 @@ std::string Server::recvRequest(int clientSock)
 							start++;
 
 						size_t end = raw.find("\r\n", start);
-						contentLength = std::atoi(raw.substr(start, end - start).c_str());
+						std::string lenStr = raw.substr(start, end - start);
+
+						long long contentLengthLL = 0;
+						std::istringstream iss(lenStr);
+
+						if (!(iss >> contentLengthLL) || contentLengthLL < 0)
+						{
+							std::cerr << "[ERROR] Invalid Content-Length" << std::endl;
+							return "";
+						}
+
+						std::cout << "[CONTENT-LENGTH] " << contentLengthLL << std::endl;
+
+						if (!checkMaxSize(contentLengthLL))
+						{
+							std::cout << "[ERROR] Payload Too Large (early)" << std::endl;
+
+							Response res;
+							res.setStatusCode(413);
+							res.setHeader("Content-Type", "text/html");
+							res.setBody("<html><body><h1>413 Payload Too Large</h1></body></html>");
+
+							std::string responseStr = res.toString();
+							send(clientSock, responseStr.c_str(), responseStr.size(), 0);
+
+							std::cout << "[RESPONSE STATUS] 413" << std::endl;
+							std::cout << "-----------------------------------------------------\n" << std::endl;
+
+							close(clientSock);
+							return "";
+						}
+
+						contentLength = static_cast<size_t>(contentLengthLL);
 					}
 
 					if (contentLength == 0)
