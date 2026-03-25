@@ -19,6 +19,7 @@ public:
 	Server();
 	~Server();
 
+	void		configureServerName(const std::string &server_name);
 	void		configureServer(const std::string& ip, std::vector<int> ports, const std::string& root, const std::string& indexFile);
 	void		configureLocations(const std::vector<LocationConfig>& locations);
 	void		configureErrorPages(const std::string& root, const std::vector<std::string>& errorPaths);
@@ -27,6 +28,9 @@ public:
 	std::string	recvRequest(int clientSock);
 	void		run();	
 
+	const std::string&	getServerName() const;
+	const std::string&	getIp() const;
+	const std::vector<int>&	getPorts() const;
 	const std::string&	getStaticRoot() const;
 	const std::string&	getIndexFile() const;
 	const std::map<int, std::string>& getErrorPages() const;
@@ -37,12 +41,17 @@ public:
 
 private:
 	void						listenOn(const std::string& ip, std::vector<int> ports);								
+	void						setIp(const std::string &ip);
+	void						setPorts(const std::vector<int> &ports);
 	void						setStaticRoot(const std::string& root, const std::string& indexFile);
 	void						setErrorPage(int code, const std::string& path);						
 	std::vector<struct pollfd>	buildPollFdArray();														
 	std::string					readFile(const std::string& path);										
 	bool						loadAddrinfo(const std::string &ip, int port, struct addrinfo **servinfo);
 
+	std::string					serverName;		// Name of the server for pollServer map<socket, Server>
+	std::string					ip;				// Ip addres
+	std::vector<int>			ports;			// Ports
 	std::vector<int>			listenSockets;	// Sockets en los que el servidor está escuchando
 	std::string					staticRoot;		// Carpeta base para archivos estáticos
 	std::string 				indexFile;		// Archivo index (index.html)

@@ -36,6 +36,7 @@ int main(int ac, char **av)
 		{
 			Server 			server;
 			std::vector<int> ports = conf[i].getListen();
+			server.configureServerName(conf[i].getServerName());
 			server.configureServer(conf[i].getHost(), ports, conf[i].getRoot(), conf[i].getIndex());
 			server.configureErrorPages(conf[i].getRoot(), conf[i].getErrorPage());
 			server.configureLocations(conf[i].getLocations());
@@ -45,8 +46,8 @@ int main(int ac, char **av)
 
 		// Add server_array into PollServer and init poll() logic
 		PollServer pollServer(server_array);
-		pollServer.buildPollServerArray();
-		pollServer.run();
+		// pollServer.buildPollServerArray();
+		// pollServer.run();
 		
 	} 
 	catch (const std::invalid_argument& e)

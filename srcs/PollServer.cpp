@@ -3,12 +3,35 @@
 //20260319 Alex: Init / Destroy
 PollServer::PollServer() : _pollServer(), _servers() {};
 
-PollServer::PollServer(std::vector<Server> servers) : _pollServer(), _servers(servers) {};
+PollServer::PollServer(std::vector<Server> servers) : _pollServer(), _servers(servers) {
+	setIpPortsPair();
+};
 
 PollServer::~PollServer() {
 	for (std::vector<int>::iterator it = _listenSockets.begin(); it != _listenSockets.end(); it++)
 		close (*it);
 };
+
+// 20260325 Alex fills set<string, int> ip:port
+void PollServer::setIpPortsPair()
+{
+	_virtualHosts.clear();
+	
+	for (size_t i = 0; i < _servers.size(); ++i)
+	{
+		const std::string &host = _servers[i].getIp();
+		const std::vector<int> &ports = _servers[i].getPorts();
+		
+		for (size_t j = 0; j < ports.size(); ++j)
+		{
+			std::pair<std::string, int> addr(host, ports[j]);
+			_virtualHosts[addr].push_back(&_servers[i]);
+			
+			std::cout << "Registered: " << host << ":" << ports[j]
+			<< " for server_name " << _servers[i].getServerName() << std::endl;
+		}
+	}
+}
 
 // Methods
 

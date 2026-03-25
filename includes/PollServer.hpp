@@ -26,10 +26,14 @@ public:
 	void run();
 
 private:
+	std::map<std::pair<std::string, int>, std::vector<Server*> > _virtualHosts;
 	std::map<int, Server*> _pollServer; // Store a vector pair of socketFD and Server
 	std::vector<struct pollfd> _pollFd;
 	std::vector<int> _listenSockets;
 	std::vector<Server> _servers;
+
+	// Build
+	void setIpPortsPair();
 
 	// Methods
 	void handleNewConnection(int listenSock, Server& owner);
