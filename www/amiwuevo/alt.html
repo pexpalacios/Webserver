@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+	<head>
+		<title class="title">AMIWUEVO</title>
+		<link rel="stylesheet" type="text/css" href="styles.css">
+		<meta charset="utf-8">
+	</head>
+	<body>
+		<script src="alt.js"></script>
+		<!--main image, occupies most of the screen-->
+		<div class="empty"></div>
+		<div class="main-div">
+			<dialog class="modal" id="dialogNameInput">
+				<h2>Otorgale una identidad a tu AmiWevo</h2>
+				<input type="text" id="nameInput" placeholder="Enter name" maxlength="30">
+				<button onclick="saveName()">Guardar</button>
+			</dialog>
+
+			<!-- Inputs para fondos -->
+			<input type="file" id="bgFileInput" accept="image/png,image/jpeg,image/gif" style="display:none">
+
+			<div class="title">
+				<p id="display-name">Cargando...</p>
+			</div>
+			<div class="content">
+				<div class="content-left">
+					<div class="tamagotchi-container">
+  						<div class="egg-base"></div>
+  						<img src="/images/gifs/dead.gif" class="egg" alt="Egg">
+					</div>
+				</div>
+
+				<div class="button-div">
+					<button><img src="/images/icons/bowl-food-solid.svg" alt="give food"></button>
+					<button><img src="/images/icons/shirt-solid.svg" alt="change outfit"></button>
+					<button class="change-bg-btn"><img src="/images/icons/image-solid.svg" alt="change decor"></button>
+					<button><img src="/images/icons/xmark-solid.svg" alt="kill amiwuevo"></button>
+				</div>
+			</div>
+
+			<div class="status-bar"></div>
+			<div class="text">
+				<p id="dialogue">...</p>
+			</div>
+			<div class="button-div-bottom">
+					<button onclick= "readFile()"><img src="/images/icons/text.svg" alt="Talk to amiwevo"></button>
+			</div>
+		</div>
+		<div class="usage-buttons">
+			<a href="/redirect"><img src="" alt="internal redirect"></a>
+			<a href="/external"><img src="" alt="external redirect"></a>
+			<a href="/error"><img src="" alt="error pages"></a>
+			<a href="/images"><img src="" alt="images"></a>
+		</div>
+	</body>
+</html>

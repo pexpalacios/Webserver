@@ -1,13 +1,34 @@
 
 // Cargar nombre al iniciar
+window.onbeforeunload = function()
+{
+	console.log("onclose");
+	isAlive().then(val => 
+		{
+			if (val === "1")
+				deathSound();
+		});
+
+		fetch('/cgi-bin/change_status.sh').then(response => 	
+		{
+			console.log("");
+			if (!response.ok)
+				throw new Error("CGI Error");
+			window.location.href = "alt.html";
+			return (response.text());
+		});
+};
+
 window.onload = function() 
 {
 	fetch('/api/name')
 	.then(response => {
-		if (!response.ok) throw new Error();
-		return response.text();
+		if (!response.ok) 
+			throw (new Error());
+		return (response.text());
 	})
-	.then(name => {
+	.then(name => 
+	{
 		if (name)
 			document.getElementById("display-name").textContent = name;
 		else
@@ -15,6 +36,20 @@ window.onload = function()
 	})
 	.catch(() => {
 		document.getElementById("display-name").textContent = "amiwuevo name";
+	});
+
+	fetch('/api/alive').then(response => 
+	{
+		if (!response.ok)
+			throw (new Error());
+		return (response.text());
+	}).then(alive => 
+	{
+		if (alive)
+		{
+			if (alive.trim() === '0') 
+				window.location.href = "alt.html";
+		}
 	});
 
 	fetch('/cgi-bin/get_outfit.py').then(response => 
@@ -169,11 +204,10 @@ function loadBackground()
 
 	fetch("/api/background")
 	.then(r => r.text())
-	.then(bg => {
-
+	.then(bg =>
+	{
 		if (!bg)
 			return;
-
 		content.style.backgroundImage = "url('" + bg + "?v=" + Date.now() + "')";
 	});
 }
@@ -262,28 +296,26 @@ document.addEventListener('DOMContentLoaded', function()
 		return;
 	}
 
-	killBtn.addEventListener("click", function()
+	killBtn.addEventListener("click", function(e)
 	{
-		console.log("kill button click");
-
-		isAlive().then(val => {
-
+		e.preventDefault();
+		isAlive().then(val => 
+		{
 			if (val === "1")
 				deathSound();
-
-			fetch('/api/alive', {
-				method: 'POST',
-				body: "0"
-			})
-			.then(res => {
-				if (!res.ok)
-					console.log("Error updating alive state");
-			})
-			.catch(() => console.log("Network error"));
 		});
+
+		fetch('/cgi-bin/change_status.sh').then(response => 	
+		{
+			console.log("");
+			if (!response.ok)
+				throw new Error("CGI Error");
+			window.location.href = "alt.html";
+			return (response.text());
+		});
+
 	});
 });
-
 
 // 20260323 add eat, flush and death sounds (only if alive)
 function isAlive()
