@@ -1,5 +1,3 @@
-
-// Cargar nombre al iniciar
 window.onbeforeunload = function()
 {
 	console.log("onclose");
