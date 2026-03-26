@@ -6,7 +6,7 @@
 // main -> server.run() -> handleClientConnection() -> checkMaxSize()
 bool Server::checkMaxSize(long long contentLength) const
 {
-	long long maxSize = 100000000; // 100 MB, adjust as needed
+	long long maxSize = 1; // Max sie for any request body, in bytes
 
 	if (contentLength > maxSize)
 		return false;
@@ -63,6 +63,7 @@ std::string Server::recvRequest(int clientSock)
 
 						std::cout << "[CONTENT-LENGTH] " << contentLengthLL << std::endl;
 
+						// 20260325 Terto: Check if content length exceeds maximum allowed size
 						if (!checkMaxSize(contentLengthLL))
 						{
 							std::cout << "[ERROR] Payload Too Large (early)" << std::endl;
@@ -70,7 +71,7 @@ std::string Server::recvRequest(int clientSock)
 							Response res;
 							res.setStatusCode(413);
 							res.setHeader("Content-Type", "text/html");
-							res.setBody("<html><body><h1>413 Payload Too Large</h1></body></html>");
+							res.setBody(readFile("errors/413.html"));
 
 							std::string responseStr = res.toString();
 							send(clientSock, responseStr.c_str(), responseStr.size(), 0);
