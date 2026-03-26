@@ -26,14 +26,24 @@ public:
 	void run();
 
 private:
+	struct IpPortServerKey
+	{
+		std::string host;
+		int port;
+		std::vector<Server> _keyServers;
+
+		bool operator<(const IpPortServerKey &other) const;
+	};
 	std::map<std::pair<std::string, int>, std::vector<Server*> > _virtualHosts;
 	std::map<int, Server*> _pollServer; // Store a vector pair of socketFD and Server
 	std::vector<struct pollfd> _pollFd;
 	std::vector<int> _listenSockets;
 	std::vector<Server> _servers;
+	std::set<IpPortServerKey> IpPortsServerKeys;
 
 	// Build
 	void setIpPortsPair();
+	void setIpPortServerKeys();
 
 	// Methods
 	void handleNewConnection(int listenSock, Server& owner);

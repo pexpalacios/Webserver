@@ -4,7 +4,6 @@
 PollServer::PollServer() : _pollServer(), _servers() {};
 
 PollServer::PollServer(std::vector<Server> servers) : _pollServer(), _servers(servers) {
-	setIpPortsPair();
 };
 
 PollServer::~PollServer() {
@@ -12,30 +11,15 @@ PollServer::~PollServer() {
 		close (*it);
 };
 
-// 20260325 Alex fills set<string, int> ip:port
-void PollServer::setIpPortsPair()
-{
-	_virtualHosts.clear();
-	
-	for (size_t i = 0; i < _servers.size(); ++i)
-	{
-		const std::string &host = _servers[i].getIp();
-		const std::vector<int> &ports = _servers[i].getPorts();
-		
-		for (size_t j = 0; j < ports.size(); ++j)
-		{
-			std::pair<std::string, int> addr(host, ports[j]);
-			_virtualHosts[addr].push_back(&_servers[i]);
-			
-			std::cout << "Registered: " << host << ":" << ports[j]
-			<< " for server_name " << _servers[i].getServerName() << std::endl;
-		}
-	}
-}
 
 // Methods
+//20260326 Alex: builds a struct of diferent ip:ports and the Servers asociated to them
+void PollServer::setIpPortServerKeys()
+{
 
-//20260319 Alex: builds a Poll of servers to listen and loads to a map<int, Server>
+}
+
+//20260319 Alex: builds a Poll of se_virtualHostsrvers to listen and loads to a map<int, Server>
 // same logic as Server::buildPollFdArray()
 void PollServer::buildPollServerArray()
 {
@@ -201,4 +185,14 @@ void PollServer::handleClientConnection(int clientSock, Server& server)
 	std::cout << "-----------------------------------------------------\n" << std::endl;
 
 	close(clientSock);
+}
+
+// ListenKey Operators
+bool PollServer::IpPortServerKey::operator<(const IpPortServerKey &other) const
+{
+	if (this->host != other.host)
+		return this->host < other.host;
+	if (this->port != other.port)
+		return this->port < other.port;
+	return this->_keyServers < other._keyServers;
 }
