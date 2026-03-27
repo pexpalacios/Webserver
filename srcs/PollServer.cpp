@@ -11,7 +11,8 @@ PollServer::~PollServer()
 };
 
 // Public Methods
-// Reads from all servers, populates all structs and builds _pollFds;
+
+//20260327 Alex: Reads from all servers, populates all structs and builds _pollFds;
 void PollServer::buildPollServerArray()
 {
 	// Let's search in all servers
@@ -64,9 +65,8 @@ void PollServer::buildPollServerArray()
 }
 
 // Private methods
-// For sockets
 
-
+// 20260327 Alex: Create a listen socket with fcntl(O_NONBLOCK) and setsockopt(SO_REUSADDR) flags
 int PollServer::createListenSocket(std::string& host, int ip)
 {
 		// Let's init that addrinfo struct
@@ -114,6 +114,8 @@ int PollServer::createListenSocket(std::string& host, int ip)
 		freeaddrinfo(servinfo);
 		return (sock);
 }
+
+// 20260327 Alex: helper to load gettadrrinfo struct
 bool PollServer::loadAddrInfo(const std::string& host, int port, struct addrinfo **servinfo)
 {
 		int status;
@@ -133,7 +135,7 @@ bool PollServer::loadAddrInfo(const std::string& host, int port, struct addrinfo
 	return (true);
 }
 
-// Cleanup
+// 20260327 Alex: close all fds and clear structs
 void PollServer::cleanup()
 {
 	for (size_t i = 0; i < _pollFds.size(); ++i)

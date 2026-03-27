@@ -16,7 +16,7 @@
 class PollServer
 {
 public:
-	// Init / destructor
+	// Init / destructor, need to create OCF
 	PollServer();
 	PollServer(std::vector<Server>);
 	~PollServer();
@@ -44,19 +44,10 @@ private:
 	// Member function
 	int createListenSocket(std::string& host, int port);
 	bool loadAddrInfo(const std::string& host, int port, struct addrinfo **servinfo);
-
+	//	void handleNewConnection(int listenSock, Server& owner);
+	//	void handleClientConnection(int listenSock, Server& owner);
 	// Cleanup
 	void cleanup();
 };
-
-	// Build
-// 	void setIpPortsPair();
-// 	void setIpPortServerKeys();
-
-// 	// Methods
-// 	void handleNewConnection(int listenSock, Server& owner);
-// 	void handleClientConnection(int listenSock, Server& owner);
-
-// };
 
 # endif
