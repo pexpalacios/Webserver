@@ -6,9 +6,10 @@
 // main -> server.run() -> handleClientConnection() -> checkMaxSize()
 bool Server::checkMaxSize(long long contentLength) const
 {
-	long long maxSize = 1; // Max sie for any request body, in bytes
+	if (contentLength < 0)
+		return false;
 
-	if (contentLength > maxSize)
+	if (contentLength > _maxBodySize)
 		return false;
 
 	return true;
@@ -16,7 +17,7 @@ bool Server::checkMaxSize(long long contentLength) const
 
 
 //20260311 - Implemented request receiving and parsing logic, with error handling for invalid requests and internal server errors.
-// main -> server.run() -> handleClientConnection() -> recvRequest -> recv() + parse + handleRequest
+// main -> server.run() -> handleClientConnection() -> recvRequest
 std::string Server::recvRequest(int clientSock)
 {
 	char buffer[4096];
@@ -71,7 +72,7 @@ std::string Server::recvRequest(int clientSock)
 							Response res;
 							res.setStatusCode(413);
 							res.setHeader("Content-Type", "text/html");
-							res.setBody(readFile("errors/413.html"));
+							res.setBody("Payload too large\n");
 
 							std::string responseStr = res.toString();
 							send(clientSock, responseStr.c_str(), responseStr.size(), 0);
@@ -116,7 +117,8 @@ std::string Server::recvRequest(int clientSock)
 	return raw;
 }
 
-
+// Cambiado por el uso de PollServer, ahora el manejo de conexiones se hace ahí, no en Server
+/*
 //20260311 - Implemented request receiving and parsing logic, with error handling for invalid requests and internal server errors.
 // main -> server.run() -> handleClientConnection()
 void Server::handleClientConnection(int clientSock, Server& server)
@@ -170,3 +172,4 @@ void Server::handleClientConnection(int clientSock, Server& server)
 
 	close(clientSock);
 }
+*/

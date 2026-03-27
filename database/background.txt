@@ -1,1 +1,1 @@
-images/backgrounds/background.jpg
+/upload/bg_uploaded_01.png

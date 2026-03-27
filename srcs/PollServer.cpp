@@ -98,6 +98,7 @@ void PollServer::run()
 // Private methods
 
 // 20260319 Alex: Accept() new connection and added to the pollfd and map<socket, Server>
+// main -> server.run() -> handleClientConnection()
 void PollServer::handleNewConnection(int listenSock, Server& server)
 {
 	struct sockaddr_in clientAddr;
@@ -138,7 +139,7 @@ void PollServer::handleClientConnection(int clientSock, Server& server)
 		return;
 	}
 
-	std::cout << "Request received:\n" << raw << std::endl;
+	//std::cout << "Request received:\n" << raw << std::endl;
 
 	Request request;
 	if (!request.parse(raw))

@@ -30,6 +30,26 @@ window.onload = function()
 	});
 };
 
+
+// 20260327 Guardar nombre al pulsar Enter
+document.addEventListener('DOMContentLoaded', function()
+{
+	const nameInput = document.getElementById("nameInput");
+
+	if (!nameInput)
+		return;
+
+	nameInput.addEventListener("keydown", function(event)
+	{
+		if (event.key === "Enter")
+		{
+			event.preventDefault();
+			saveName();
+		}
+	});
+});
+
+
 // 20260307 SAVE NAME
 // 20260319 add music play on name save
 // 20260325 add alert on name save and error
@@ -49,6 +69,7 @@ function saveName()
 	})
 	.then(response => {
 
+		// Check for 413 Payload Too Large (name too long)
 		if (response.status === 413)
 		{
 			alert("Nombre demasiado largo ❌");

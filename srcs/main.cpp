@@ -39,6 +39,7 @@ int main(int ac, char **av)
 			server.configureServer(conf[i].getHost(), ports, conf[i].getRoot(), conf[i].getIndex());
 			server.configureErrorPages(conf[i].getRoot(), conf[i].getErrorPage());
 			server.configureLocations(conf[i].getLocations());
+			server.configureMaxBodySize(conf[i].getClientMaxSize());
 			server.printFinishedServerInfo();
 			server_array.push_back(server);
 		}
