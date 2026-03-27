@@ -1,5 +1,5 @@
 #ifndef POLLSERVER_HPP
-	#define POLLSERVER_HPP
+# define POLLSERVER_HPP
 
 #include "library.hpp"
 #include "parse/ConfigParser.hpp"
@@ -26,29 +26,37 @@ public:
 	void run();
 
 private:
-	struct IpPortServerKey
+	// Members struct
+	struct ListenerKey
 	{
-		std::string host;
-		int port;
-		std::vector<Server> _keyServers;
-
-		bool operator<(const IpPortServerKey &other) const;
+		std::string				_host;
+		int						_port;
+		
+		bool operator<(const ListenerKey& other) const;
 	};
-	std::map<std::pair<std::string, int>, std::vector<Server*> > _virtualHosts;
-	std::map<int, Server*> _pollServer; // Store a vector pair of socketFD and Server
-	std::vector<struct pollfd> _pollFd;
-	std::vector<int> _listenSockets;
-	std::vector<Server> _servers;
-	std::set<IpPortServerKey> IpPortsServerKeys;
+
+	// Members
+	std::vector<Server>								_servers;
+	std::map<ListenerKey, std::vector<Server*> >	_listeners;
+	std::map<int, ListenerKey>						_fdToListenerMap;
+	std::vector<struct pollfd>						_pollFds;
+
+	// Member function
+	int createListenSocket(std::string& host, int port);
+	bool loadAddrInfo(const std::string& host, int port, struct addrinfo **servinfo);
+
+	// Cleanup
+	void cleanup();
+};
 
 	// Build
-	void setIpPortsPair();
-	void setIpPortServerKeys();
+// 	void setIpPortsPair();
+// 	void setIpPortServerKeys();
 
-	// Methods
-	void handleNewConnection(int listenSock, Server& owner);
-	void handleClientConnection(int listenSock, Server& owner);
+// 	// Methods
+// 	void handleNewConnection(int listenSock, Server& owner);
+// 	void handleClientConnection(int listenSock, Server& owner);
 
-};
+// };
 
 # endif
