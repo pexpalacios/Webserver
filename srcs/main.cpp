@@ -47,7 +47,7 @@ int main(int ac, char **av)
 		// Add server_array into PollServer and init poll() logic
 		PollServer pollServer(server_array);
 		pollServer.buildPollServerArray();
-		// pollServer.run();
+		pollServer.run();
 		
 	} 
 	catch (const std::invalid_argument& e)

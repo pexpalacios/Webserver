@@ -15,6 +15,11 @@ PollServer::~PollServer()
 //20260327 Alex: Reads from all servers, populates all structs and builds _pollFds;
 void PollServer::buildPollServerArray()
 {
+	// Some cleanup in case
+	_pollFds.clear();
+	_listeners.clear();
+	_listenerServers.clear();
+
 	// Let's search in all servers
 	for (size_t i = 0; i < _servers.size(); ++i)
 	{
@@ -33,36 +38,89 @@ void PollServer::buildPollServerArray()
 			key._port = port;
 
 			// Let's search our ListenerKey in the map
-			std::map<ListenerKey, std::vector<Server*> >::iterator it 
-				= _listeners.find(key);
+			std::vector<Server*> &servers = _listeners[key];
 			
 			// If this key already exist, let's add our Server * to the ListenerKey
-			if (it != _listeners.end())
+			if (servers.empty())
 			{
-				it->second.push_back(server);
-				continue ;
+				// If this key doesn't exist, lets create a new socket and make a new key
+				// Create new listen socket
+				int fd = createListenSocket(key._host, key._port);
+				if (fd < 0)
+					throw std::runtime_error("Failed to create listen socket"); // Check if this throw is correct
+
+				// And finally, add the socket to _pollFds
+				struct pollfd pfd;
+				pfd.fd = fd;
+				pfd.events = POLLIN;  // watch for incoming connections
+				pfd.revents = 0;
+				_pollFds.push_back(pfd);
+
+				servers.push_back(server);
+				_listenerServers[fd] = servers;
 			}
-			// If this key doesn't exist, lets create a new socket and make a new key
-			// Create new listen socket
-			int fd = createListenSocket(key._host, key._port);
-			if (fd < 0)
-				throw std::runtime_error("Failed to create listen socket"); // Check if this throw is correct
-			
-			// Add server to _listener map
-			_listeners[key].push_back(server);
-
-			// Map fd to it's key
-			_fdToListenerMap[fd] = key;
-
-			// And finally, add the socket to _pollFds
-			struct pollfd pfd;
-			pfd.fd = fd;
-			pfd.events = POLLIN;  // watch for incoming connections
-			pfd.revents = 0;
-			_pollFds.push_back(pfd);
+			else
+				servers.push_back(server);
 		}
 	}
 }
+
+// Old version for buildPollServerArray() with _fdToListenerMap
+// void PollServer::buildPollServerArray()
+// {
+// 	// Some cleanup in case
+// 	_pollFds.clear();
+// 	_listeners.clear();
+// 	_fdToListenerMap.clear();
+
+// 	// Let's search in all servers
+// 	for (size_t i = 0; i < _servers.size(); ++i)
+// 	{
+// 		// Temporary server and his vector<int> ports
+// 		Server * server = &_servers[i];
+// 		const std::vector<int>& ports = server->getPorts();
+
+// 		// Lets search all individual ports inside a server...
+// 		for (size_t j = 0; j < ports.size(); ++j)
+// 		{
+// 			int port = ports[j];
+
+// 			// Let's build a ListenerKey(host, port)
+// 			ListenerKey key;
+// 			key._host = server->getIp();
+// 			key._port = port;
+
+// 			// Let's search our ListenerKey in the map
+// 			std::map<ListenerKey, std::vector<Server*> >::iterator it 
+// 				= _listeners.find(key);
+			
+// 			// If this key already exist, let's add our Server * to the ListenerKey
+// 			if (it != _listeners.end())
+// 			{
+// 				it->second.push_back(server);
+// 				continue ;
+// 			}
+// 			// If this key doesn't exist, lets create a new socket and make a new key
+// 			// Create new listen socket
+// 			int fd = createListenSocket(key._host, key._port);
+// 			if (fd < 0)
+// 				throw std::runtime_error("Failed to create listen socket"); // Check if this throw is correct
+			
+// 			// Add server to _listener map
+// 			_listeners[key].push_back(server);
+
+// 			// Map fd to it's key
+// 			_fdToListenerMap[fd] = key;
+
+// 			// And finally, add the socket to _pollFds
+// 			struct pollfd pfd;
+// 			pfd.fd = fd;
+// 			pfd.events = POLLIN;  // watch for incoming connections
+// 			pfd.revents = 0;
+// 			_pollFds.push_back(pfd);
+// 		}
+// 	}
+// }
 
 // Private methods
 
@@ -135,6 +193,245 @@ bool PollServer::loadAddrInfo(const std::string& host, int port, struct addrinfo
 	return (true);
 }
 
+// 20260330 Alex: main run() loop
+void PollServer::run(){
+	std::cout << "=== On PollServer::run()===" << std::endl;
+
+	while (SignalHandler::running == 1)
+	{
+		int ret = poll(_pollFds.data(), _pollFds.size(), -1);
+		if (ret < 0)
+		{
+			if (SignalHandler::running == 1)
+				std::cerr << "Error (0.1): poll () failed." << std::endl;
+			break;
+		}
+
+		// Check for events on each socket and use the handler of it's Server pair
+		for (size_t j = 0; j < _pollFds.size(); ++j)
+		{
+			int fd = _pollFds[j].fd;
+			if (_pollFds[j].revents & POLLIN)
+			{
+				if (_listenerServers.count(fd))
+				handleNewConnection(fd);
+				else
+				handleClientConnection(fd);
+			}
+			else if (_pollFds[j].revents & POLLERR) std::cerr << "FD " << fd << " error!" << std::endl;
+			else if (_pollFds[j].revents & POLLHUP) std::cerr << "FD " << fd << " hung up!" << std::endl;
+			else if (_pollFds[j].revents & POLLNVAL) std::cerr << "FD " << fd << " is invalid!" << std::endl;
+		}
+	}
+}
+
+void PollServer::handleNewConnection(int listenSock)
+{
+	struct sockaddr_in clientAddr;
+	socklen_t clientLen = sizeof(clientAddr);
+
+	int clientSock = accept(listenSock, (struct sockaddr*)&clientAddr, &clientLen);
+	if (clientSock < 0)
+	{
+		std::cerr << "accept() failed." << std::endl;
+		return;
+	}
+	std::cout << "Client connected. FD = " << clientSock << std::endl;
+
+	// Set client socket to non-blocking
+	fcntl(clientSock, F_SETFL, O_NONBLOCK);
+
+	// Add client socket to pollfd array
+	struct pollfd newPollFd;
+	newPollFd.fd = clientSock;
+	newPollFd.events = POLLIN;
+	newPollFd.revents = 0;
+
+	// Add the pollfd to the vector that poll() reads
+	_pollFds.push_back(newPollFd);
+
+	// Copies all the std::vector<Server*> that listen to that socket to the client socket
+	_clientCandidates[clientSock] = _listenerServers[listenSock];
+}
+
+// 20260319 Alex: recv() client connection, Server handler generates response
+void PollServer::handleClientConnection(int clientSock)
+{
+	// First, let's check if there's a clientcandidate with that socket
+	std::map<int, std::vector<Server*> >::iterator it = _clientCandidates.find(clientSock);
+	if (it == _clientCandidates.end())
+	{
+		std::cerr << "Unknown client fd " << clientSock << std::endl;
+		removePollFd(clientSock);
+		close(clientSock);
+		return;
+	}
+
+	// Let's get the Server vector from our clientSocket
+	std::vector<Server*>& candidates = it->second;
+	if (candidates.empty())
+	{
+		std::cerr << "No server candidates for client fd " << clientSock << std::endl;
+		removePollFd(clientSock);
+		close(clientSock);
+		_clientCandidates.erase(clientSock);
+		return;
+	}
+	//Lets set a default server in case something went wrong
+	Server *chosenServer = candidates[0];
+
+	// Let's receive the raw request
+	std::string raw = recvRequest(clientSock);
+	if (raw.empty())
+	{
+		removePollFd(clientSock);
+		close(clientSock);
+		_clientCandidates.erase(clientSock);
+		return;
+	}
+	
+	// // Let's parse that request!
+	Request request;
+	if (!request.parse(raw))
+	{
+		std::cerr << "[ERROR] Invalid HTTP request" << std::endl;
+
+		// All the handlers will work for this case?
+		RequestHandler handler(*chosenServer);
+		Response responseObj = handler.handleBadRequest();
+
+		std::string responseStr = responseObj.toString();
+		send(clientSock, responseStr.c_str(), responseStr.size(), 0);
+
+		std::cout << "[RESPONSE STATUS] " << responseObj.getStatusCode() << std::endl;
+		std::cout << "-----------------------------------------------------\n" << std::endl;
+
+		close(clientSock);
+		return;
+	}
+
+	// // Finally, let's select our server based on host header!!!!
+	std::string hostHeader = request.getHeader("Host");
+	std::cout << "===Host Header for request===" << std::endl;
+	std::cout << hostHeader << std::endl;
+	// This will work only if
+	// We parse host as an string and not exactly as an Ipv4
+	// We set a /etc/hosts/ key
+	// As we can do any of that, I'll try to compare to an custom header in the future
+	for (size_t i = 0; i < candidates.size(); ++i)
+	{
+		if (candidates[i]->getIp() == hostHeader)
+		{
+			chosenServer = candidates[i];
+			break;
+		}
+	}
+
+	RequestHandler handler(*chosenServer);
+	Response responseObj;
+
+	try
+	{
+		responseObj = handler.handleRequest(request);
+	}
+	catch (...)
+	{
+		std::cerr << "[ERROR] Internal Server Error" << std::endl;
+		responseObj = handler.handleInternalServerError();
+	}
+
+	std::string response = responseObj.toString();
+	send(clientSock, response.c_str(), response.size(), 0);
+
+	std::cout << "[RESPONSE STATUS] " << responseObj.getStatusCode() << std::endl;
+	std::cout << "-----------------------------------------------------\n" << std::endl;
+
+	removePollFd(clientSock);
+	close(clientSock);
+	_clientCandidates.erase(clientSock);
+}
+
+// 20260330 Alex: same as Server::recvRequest()
+std::string PollServer::recvRequest(int clientSock)
+{
+	char buffer[4096];
+	std::string raw;
+
+	size_t contentLength = 0;
+	bool headersParsed = false;
+	size_t headerEnd = std::string::npos;
+
+	while (true)
+	{
+		ssize_t bytesRead = recv(clientSock, buffer, sizeof(buffer), 0);
+
+		if (bytesRead > 0)
+		{
+			raw.append(buffer, bytesRead);
+
+			if (!headersParsed)
+			{
+				headerEnd = raw.find("\r\n\r\n");
+
+				if (headerEnd != std::string::npos)
+				{
+					headersParsed = true;
+
+					size_t pos = raw.find("Content-Length:");
+					if (pos != std::string::npos)
+					{
+						size_t start = pos + 15;
+						while (raw[start] == ' ')
+							start++;
+
+						size_t end = raw.find("\r\n", start);
+						contentLength = std::atoi(raw.substr(start, end - start).c_str());
+					}
+
+					if (contentLength == 0)
+						break;
+				}
+			}
+
+			if (headersParsed)
+			{
+				size_t bodyStart = headerEnd + 4;
+
+				if (raw.size() >= bodyStart + contentLength)
+					break;
+			}
+		}
+		else if (bytesRead == 0)
+		{
+			break;
+		}
+		else
+		{
+			if (errno == EAGAIN || errno == EWOULDBLOCK)
+				continue;
+
+			std::cerr << "recv() failed: " << strerror(errno) << std::endl;
+			return "";
+		}
+	}
+
+	return raw;
+}
+
+
+// 20260330 Alex: remove an specific fd from the poll
+void PollServer::removePollFd(int fd)
+{
+	for (size_t i = 0; i < _pollFds.size(); ++i)
+	{
+		if (_pollFds[i].fd == fd)
+		{
+			_pollFds.erase(_pollFds.begin() + i);
+			return;
+		}
+	}
+}
+
 // 20260327 Alex: close all fds and clear structs
 void PollServer::cleanup()
 {
@@ -142,15 +439,14 @@ void PollServer::cleanup()
 	{
 		int fd = _pollFds[i].fd;
 		if (fd >= 0)
-		{
 			close(fd); // close the socket
-		}
 	}
 
 	// Clear your vectors/maps to avoid dangling pointers
 	_pollFds.clear();
-	_fdToListenerMap.clear();
 	_listeners.clear();
+	_listenerServers.clear();
+	_clientCandidates.clear();
 }
 
 // Operators
@@ -161,6 +457,7 @@ bool PollServer::ListenerKey::operator<(const ListenerKey& other) const
 			return _host < other._host;
 		return _port < other._port;
 }
+
 
 //// ======= OLD CODE FOR REFERENCE =======
 
