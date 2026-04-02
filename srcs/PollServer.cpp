@@ -15,117 +15,51 @@ PollServer::~PollServer()
 //20260327 Alex: Reads from all servers, populates all structs and builds _pollFds;
 void PollServer::buildPollServerArray()
 {
-	// Some cleanup in case
 	_pollFds.clear();
 	_listeners.clear();
 	_listenerServers.clear();
 
-	// Let's search in all servers
+	// Build _listener map
 	for (size_t i = 0; i < _servers.size(); ++i)
 	{
-		// Temporary server and his vector<int> ports
-		Server * server = &_servers[i];
+		Server* server = &_servers[i];
 		const std::vector<int>& ports = server->getPorts();
 
-		// Lets search all individual ports inside a server...
 		for (size_t j = 0; j < ports.size(); ++j)
 		{
-			int port = ports[j];
-
-			// Let's build a ListenerKey(host, port)
 			ListenerKey key;
 			key._host = server->getIp();
-			key._port = port;
+			key._port = ports[j];
 
-			// Let's search our ListenerKey in the map
-			std::vector<Server*> &servers = _listeners[key];
-			
-			// If this key already exist, let's add our Server * to the ListenerKey
-			if (servers.empty())
-			{
-				// If this key doesn't exist, lets create a new socket and make a new key
-				// Create new listen socket
-				int fd = createListenSocket(key._host, key._port);
-				if (fd < 0)
-					throw std::runtime_error("Failed to create listen socket"); // Check if this throw is correct
-
-				// And finally, add the socket to _pollFds
-				struct pollfd pfd;
-				pfd.fd = fd;
-				pfd.events = POLLIN;  // watch for incoming connections
-				pfd.revents = 0;
-				_pollFds.push_back(pfd);
-
-				servers.push_back(server);
-				_listenerServers[fd] = servers;
-			}
-			else
-				servers.push_back(server);
+			_listeners[key].push_back(server);
 		}
+	}
+
+	for (std::map<ListenerKey, std::vector<Server*> >::iterator it = _listeners.begin();
+		it != _listeners.end(); ++it)
+	{
+		const ListenerKey& key = it->first;
+		std::vector<Server*>& servers = it->second;
+
+		int fd = createListenSocket(key._host, key._port);
+		if (fd < 0)
+			throw std::runtime_error("Failed to create listen socket");
+
+		struct pollfd pfd;
+		pfd.fd = fd;
+		pfd.events = POLLIN; 
+		pfd.revents = 0;
+		_pollFds.push_back(pfd);
+
+		_listenerServers[fd] = servers; 
 	}
 }
 
-// Old version for buildPollServerArray() with _fdToListenerMap
-// void PollServer::buildPollServerArray()
-// {
-// 	// Some cleanup in case
-// 	_pollFds.clear();
-// 	_listeners.clear();
-// 	_fdToListenerMap.clear();
-
-// 	// Let's search in all servers
-// 	for (size_t i = 0; i < _servers.size(); ++i)
-// 	{
-// 		// Temporary server and his vector<int> ports
-// 		Server * server = &_servers[i];
-// 		const std::vector<int>& ports = server->getPorts();
-
-// 		// Lets search all individual ports inside a server...
-// 		for (size_t j = 0; j < ports.size(); ++j)
-// 		{
-// 			int port = ports[j];
-
-// 			// Let's build a ListenerKey(host, port)
-// 			ListenerKey key;
-// 			key._host = server->getIp();
-// 			key._port = port;
-
-// 			// Let's search our ListenerKey in the map
-// 			std::map<ListenerKey, std::vector<Server*> >::iterator it 
-// 				= _listeners.find(key);
-			
-// 			// If this key already exist, let's add our Server * to the ListenerKey
-// 			if (it != _listeners.end())
-// 			{
-// 				it->second.push_back(server);
-// 				continue ;
-// 			}
-// 			// If this key doesn't exist, lets create a new socket and make a new key
-// 			// Create new listen socket
-// 			int fd = createListenSocket(key._host, key._port);
-// 			if (fd < 0)
-// 				throw std::runtime_error("Failed to create listen socket"); // Check if this throw is correct
-			
-// 			// Add server to _listener map
-// 			_listeners[key].push_back(server);
-
-// 			// Map fd to it's key
-// 			_fdToListenerMap[fd] = key;
-
-// 			// And finally, add the socket to _pollFds
-// 			struct pollfd pfd;
-// 			pfd.fd = fd;
-// 			pfd.events = POLLIN;  // watch for incoming connections
-// 			pfd.revents = 0;
-// 			_pollFds.push_back(pfd);
-// 		}
-// 	}
-// }
 
 // Private methods
 
 // 20260327 Alex: Create a listen socket with fcntl(O_NONBLOCK) and setsockopt(SO_REUSADDR) flags
-int PollServer::createListenSocket(std::string& host, int ip)
+int PollServer::createListenSocket(const std::string& host, int ip)
 {
 		// Let's init that addrinfo struct
 		struct addrinfo *servinfo = NULL;
@@ -318,10 +252,15 @@ void PollServer::handleClientConnection(int clientSock)
 	// We parse host as an string and not exactly as an Ipv4
 	// We set a /etc/hosts/ key
 	// As we can do any of that, I'll try to compare to an custom header in the future
+	std::cout << "=== Candidates size ===" << std::endl;
+	std::cout << candidates.size() << std::endl;
 	for (size_t i = 0; i < candidates.size(); ++i)
 	{
-		if (candidates[i]->getIp() == hostHeader)
+		std::cout << "===Host Header Candidates===" << std::endl;
+		std::cout << candidates[i]->getServerName() << std::endl;
+		if (candidates[i]->getServerName() == hostHeader)
 		{
+			std::cout << "=== Candidate choosen ===" << std::endl;
 			chosenServer = candidates[i];
 			break;
 		}

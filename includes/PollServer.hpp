@@ -44,7 +44,7 @@ private:
 	std::vector<struct pollfd>						_pollFds;
 
 	// Member function
-	int createListenSocket(std::string& host, int port);
+	int createListenSocket(const std::string& host, int port);
 	bool loadAddrInfo(const std::string& host, int port, struct addrinfo **servinfo);
 	void handleNewConnection(int listenSock);
 	void handleClientConnection(int clientSock);
