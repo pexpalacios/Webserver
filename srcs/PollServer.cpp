@@ -28,7 +28,7 @@ void PollServer::buildPollServerArray()
 		for (size_t j = 0; j < ports.size(); ++j)
 		{
 			ListenerKey key;
-			key._host = server->getIp();
+			key._host = server->getHost();
 			key._port = ports[j];
 
 			_listeners[key].push_back(server);
@@ -245,7 +245,11 @@ void PollServer::handleClientConnection(int clientSock)
 	}
 
 	// // Finally, let's select our server based on host header!!!!
-	std::string hostHeader = request.getHeader("Host");
+	std::string host = request.getHeader("Host");
+	std::string hostHeader = host;
+	size_t colon = host.find(':');
+	if (colon != std::string::npos)
+		hostHeader = host.substr(0,colon);
 	std::cout << "===Host Header for request===" << std::endl;
 	std::cout << hostHeader << std::endl;
 	// This will work only if

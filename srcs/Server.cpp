@@ -10,8 +10,8 @@ Server::~Server() {}
 const std::string& Server::getServerName() const
 {return serverName;};
 
-const std::string& Server::getIp() const
-{return ip;};
+const std::string& Server::getHost() const
+{return host;};
 
 const std::vector<int>& Server::getPorts() const
 {return ports;};
@@ -109,14 +109,14 @@ void Server::listenOn(const std::string& ip, std::vector<int> ports)
 }
 
 //20250322 Alex: set ip addres
-// main -> server.configureServer -> server.setIp
-void	Server::setIp(const std::string& ip)
+// main -> server.configureServer -> server.setHost
+void	Server::setHost(const std::string& host)
 {
-	this->ip = ip;
+	this->host = host;
 }
 
 //20250322 Alex: set vector<int> ports
-// main -> server.configureServer -> server.setIp
+// main -> server.configureServer -> server.setHost
 void	Server::setPorts(const std::vector<int>& ports)
 {
 	this->ports = ports;
@@ -151,11 +151,11 @@ void Server::configureServerName(const std::string &server_name)
 
 //20260212 Terto: Configura IP, puerto, carpeta base e index
 // main -> server.configureServer() -> server.listenOn() + server.setStaticRoot()
-void Server::configureServer(const std::string& ip, std::vector<int> ports, const std::string& root, const std::string& indexFile)
+void Server::configureServer(const std::string& host, std::vector<int> ports, const std::string& root, const std::string& indexFile)
 {
 	try
 	{
-	setIp(ip);
+	setHost(host);
 	setPorts(ports);
 	// listenOn(ip, ports); Socket logic will be managed by pollServer
 	setStaticRoot(root, indexFile);
@@ -214,7 +214,7 @@ void Server::printFinishedServerInfo()
 {
 	std::cout << std::endl << "--- Finished Server Info ---" << std::endl << std::endl;
 	std::cout << "--- Server Name ---" << std::endl << getServerName() << std::endl;
-	std::cout << "--- IP ---" << std::endl << getIp() << std::endl;
+	std::cout << "--- Host ---" << std::endl << getHost() << std::endl;
 	std::cout << "--- Ports ---" << std::endl;
 	for (std::vector<int>::iterator it = ports.begin(); it != ports.end(); it++)
 		std::cout << *it << std::endl;
