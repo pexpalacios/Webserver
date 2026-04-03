@@ -36,12 +36,11 @@ private:
 	};
 
 	// Members
-	std::vector<Server>								_servers;
-	std::map<ListenerKey, std::vector<Server*> >	_listeners;
-	// std::map<int, ListenerKey>						_fdToListenerMap;
-	std::map<int, std::vector<Server*> >			_listenerServers;
-	std::map<int, std::vector<Server*> >			_clientCandidates;
-	std::vector<struct pollfd>						_pollFds;
+	std::vector<Server>								_servers; // Array of Servers after parsing
+	std::map<ListenerKey, std::vector<Server*> >	_listeners; // A map of the ListenerKey(Host:Port) and the array of vector that listen to that key
+	std::map<int, std::vector<Server*> >			_listenerServers; // Map of listen sockets and the servers associated to each one
+	std::map<int, std::vector<Server*> >			_clientCandidates; // Map of client sockets and the Servers associated to each one
+	std::vector<struct pollfd>						_pollFds; // Fds to poll()
 
 	// Member function
 	int createListenSocket(const std::string& host, int port);

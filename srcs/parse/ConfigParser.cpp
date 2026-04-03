@@ -326,7 +326,8 @@ std::vector<ServerConfig> ConfigParser::parse(const std::string &filename)
 			setServerBlockVars(defaultServer, key, tokens);
 		}
 	}
-	// Check for matching ip:port in ServerConfig vector
+	// Check for matching ip:port with same server_name in ServerConfig vector. 
+	// As we now do keys and return 1st result, is redundant. Delete for avoidind duplicates, or just default to first server
 	checkIpPortPairs(servers);
 	// These two check if the file is empty or missing brackets
 	if (inServer)

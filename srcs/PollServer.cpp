@@ -12,7 +12,7 @@ PollServer::~PollServer()
 
 // Public Methods
 
-//20260327 Alex: Reads from all servers, populates all structs and builds _pollFds;
+//20260327 Alex: Reads from all servers, populates all structs and builds _pollFds _listeners key
 void PollServer::buildPollServerArray()
 {
 	_pollFds.clear();
@@ -20,37 +20,53 @@ void PollServer::buildPollServerArray()
 	_listenerServers.clear();
 
 	// Build _listener map
+	// Let's iterate throught all vectors
 	for (size_t i = 0; i < _servers.size(); ++i)
 	{
 		Server* server = &_servers[i];
+		// And get it's listening ports
 		const std::vector<int>& ports = server->getPorts();
 
+		// For each port, we built a key = host port
 		for (size_t j = 0; j < ports.size(); ++j)
 		{
 			ListenerKey key;
 			key._host = server->getHost();
 			key._port = ports[j];
 
+			// We push the key of host:port to the map
+			// If the key doesn't exist, it creates and entry and pushes the first server to it's vector
+			// If the key exists, it just push a new server to that vector
+			// If both exists, nothing happens
 			_listeners[key].push_back(server);
 		}
 	}
 
+	// Once we've populated or _listener<ListenerKey, vector<Server*> map and we made sure all keys are unique
+	// Let's create an unique socket of every key and transfer the property of the vector<Server> to it's socket
 	for (std::map<ListenerKey, std::vector<Server*> >::iterator it = _listeners.begin();
 		it != _listeners.end(); ++it)
 	{
+		// Let's get the key and vector for every entry of the map
 		const ListenerKey& key = it->first;
-		std::vector<Server*>& servers = it->second;
+		const std::vector<Server*>& servers = it->second;
 
+		// Create a listen socket for each unique key
 		int fd = createListenSocket(key._host, key._port);
+		// If it fails, abort
 		if (fd < 0)
+		{
+			cleanup();
 			throw std::runtime_error("Failed to create listen socket");
-
+		}
+		// Populate the pollfd struct and push it to the _pollFds
 		struct pollfd pfd;
 		pfd.fd = fd;
 		pfd.events = POLLIN; 
 		pfd.revents = 0;
 		_pollFds.push_back(pfd);
 
+		// Use the socket as a new key for the _ListenerServers(int, vector<Server*>) map
 		_listenerServers[fd] = servers; 
 	}
 }
@@ -159,6 +175,8 @@ void PollServer::run(){
 	}
 }
 
+
+// 20260331 Alex: accepts a new connection. Uses _listenerServer[fd] key to transfer the listenServers<Server*> to the new client
 void PollServer::handleNewConnection(int listenSock)
 {
 	struct sockaddr_in clientAddr;
@@ -189,6 +207,7 @@ void PollServer::handleNewConnection(int listenSock)
 }
 
 // 20260319 Alex: recv() client connection, Server handler generates response
+// Compares the Host header against all the vector<Servers*> associated to that client to determine wich server is calling to
 void PollServer::handleClientConnection(int clientSock)
 {
 	// First, let's check if there's a clientcandidate with that socket
@@ -211,6 +230,7 @@ void PollServer::handleClientConnection(int clientSock)
 		_clientCandidates.erase(clientSock);
 		return;
 	}
+
 	//Lets set a default server in case something went wrong
 	Server *chosenServer = candidates[0];
 
@@ -244,7 +264,7 @@ void PollServer::handleClientConnection(int clientSock)
 		return;
 	}
 
-	// // Finally, let's select our server based on host header!!!!
+	// Finally, let's select our server based on host header!!!!
 	std::string host = request.getHeader("Host");
 	std::string hostHeader = host;
 	size_t colon = host.find(':');
@@ -252,10 +272,8 @@ void PollServer::handleClientConnection(int clientSock)
 		hostHeader = host.substr(0,colon);
 	std::cout << "===Host Header for request===" << std::endl;
 	std::cout << hostHeader << std::endl;
-	// This will work only if
-	// We parse host as an string and not exactly as an Ipv4
-	// We set a /etc/hosts/ key
-	// As we can do any of that, I'll try to compare to an custom header in the future
+	// This will work only if we parse host header and compare it agaisnt server_name
+	// We set a /etc/hosts/ key As we can do any of that, we'll try with Modify Header Value Firefox plugin.
 	std::cout << "=== Candidates size ===" << std::endl;
 	std::cout << candidates.size() << std::endl;
 	for (size_t i = 0; i < candidates.size(); ++i)
@@ -397,173 +415,3 @@ bool PollServer::ListenerKey::operator<(const ListenerKey& other) const
 			return _host < other._host;
 		return _port < other._port;
 }
-
-
-//// ======= OLD CODE FOR REFERENCE =======
-
-//20260319 Alex: builds a Poll of se_virtualHostsrvers to listen and loads to a map<int, Server>
-// // same logic as Server::buildPollFdArray()
-// void PollServer::buildPollServerArray()
-// {
-// 	// Let's cleanup just in case
-// 	_pollFd.clear();
-// 	_pollServer.clear();
-// 	_listenSockets.clear();
-
-// 	// Iterate through all Servers...
-// 	for (std::vector<Server>::iterator it = _servers.begin(); it != _servers.end(); it++)
-// 	{
-// 		// Get all listenSockets and pair them with their Server
-// 		std::vector<int> socketsVector = it->getListenSockets();
-
-// 		// Let's iterate through all sockets
-// 		for (size_t i = 0; i < socketsVector.size(); i++)
-// 		{
-// 			// Add the socket to a pullfd
-// 			struct pollfd pfd;
-// 			pfd.fd = socketsVector[i];
-// 			pfd.events = POLLIN;
-// 			pfd.revents = 0;
-
-// 			// Add the pollfd to the vector that poll() reads
-// 			_pollFd.push_back(pfd);
-
-// 			// Map the fd to the addres of the current Server object
-// 			_pollServer[socketsVector[i]] = &(*it);
-
-// 			// Track this socket as a listenting socket for acceptt()
-// 			_listenSockets.push_back(socketsVector[i]);
-
-// 			std::cout << "Successfully registered listening FD " << socketsVector[i]
-// 				<< " for Server: " << it->getStaticRoot() << std::endl;
-// 		}
-// 	}
-// }
-
-//20260319 Alex: main poll() logic.
-// poll() keeps track of diferent sockets ready for listen() and accept()
-// If a socket is ready, the handler are called with their respective Server via map<socket, Server>
-// void PollServer::run()
-// {
-// 	std::cout << "=== On PollServer::run()===" << std::endl;
-// 	while (SignalHandler::running == 1)
-// 	{
-// 		int ret = poll(_pollFd.data(), _pollFd.size(), -1);
-// 		if (ret < 0)
-// 		{
-// 			if (SignalHandler::running == 1)
-// 				std::cerr << "Error (0.1): poll() failed." << std::endl;
-// 			break;
-// 		}
-
-// 		// Check for events on each socket and use the handle of it Serve pair
-// 		size_t j = 0;
-// 		while (j < _pollFd.size())
-// 		{
-// 			int fd = _pollFd[j].fd;
-// 			if (_pollFd[j].revents & POLLIN)
-// 			{
-// 				// Call to respective Server configuration for each socket
-// 				Server *owner = _pollServer[fd];
-
-// 				if (std::find(_listenSockets.begin(), _listenSockets.end(), fd) != _listenSockets.end()) 
-// 					handleNewConnection(fd, *owner);
-// 				else 
-// 				{
-// 					handleClientConnection(fd, *owner);
-// 					_pollFd.erase(_pollFd.begin() + j); // I would remove this logic from here and movet to handleClientConnection()
-// 					continue;
-// 				}
-// 			}
-// 			// Some debugs 'cause why not
-// 			else if (_pollFd[j].revents & POLLERR) std::cerr << "FD " << fd << " error!" << std::endl;
-// 			else if (_pollFd[j].revents & POLLHUP) std::cerr << "FD " << fd << " hung up!" << std::endl;
-// 			else if (_pollFd[j].revents & POLLNVAL) std::cerr << "FD " << fd << " is invalid!" << std::endl;
-// 			++j;
-// 		}
-// 	}
-// }
-
-// Private methods
-
-// // 20260319 Alex: Accept() new connection and added to the pollfd and map<socket, Server>
-// void PollServer::handleNewConnection(int listenSock, Server& server)
-// {
-// 	struct sockaddr_in clientAddr;
-// 	socklen_t clientLen = sizeof(clientAddr);
-
-// 	int clientSock = accept(listenSock, (struct sockaddr*)&clientAddr, &clientLen);
-// 	if (clientSock < 0)
-// 	{
-// 		std::cerr << "accept() failed." << std::endl;
-// 		return;
-// 	}
-// 	std::cout << "Client connected. FD = " << clientSock << std::endl;
-
-// 	// Set client socket to non-blocking
-// 	fcntl(clientSock, F_SETFL, O_NONBLOCK);
-
-// 	// Add client socket to pollfd array
-// 	struct pollfd newPollFd;
-// 	newPollFd.fd = clientSock;
-// 	newPollFd.events = POLLIN;
-// 	newPollFd.revents = 0;
-
-// 	// Add the pollfd to the vector that poll() reads
-// 	_pollFd.push_back(newPollFd);
-
-// 	// Map the fd to the addres of the current Server object
-// 	_pollServer[clientSock] = &server;
-// }
-
-// // 20260319 Alex: recv() client connection, Server handler generates response
-// void PollServer::handleClientConnection(int clientSock, Server& server)
-// {
-// 	std::string raw = server.recvRequest(clientSock);
-
-// 	if (raw.empty())
-// 	{
-// 		close(clientSock);
-// 		return;
-// 	}
-
-// 	Request request;
-// 	if (!request.parse(raw))
-// 	{
-// 		std::cerr << "[ERROR] Invalid HTTP request" << std::endl;
-
-// 		RequestHandler handler(server);
-// 		Response responseObj = handler.handleBadRequest();
-
-// 		std::string responseStr = responseObj.toString();
-// 		send(clientSock, responseStr.c_str(), responseStr.size(), 0);
-
-// 		std::cout << "[RESPONSE STATUS] " << responseObj.getStatusCode() << std::endl;
-// 		std::cout << "-----------------------------------------------------\n" << std::endl;
-
-// 		close(clientSock);
-// 		return;
-// 	}
-
-// 	RequestHandler handler(server);
-// 	Response responseObj;
-
-// 	try
-// 	{
-// 		responseObj = handler.handleRequest(request);
-// 	}
-// 	catch (...)
-// 	{
-// 		std::cerr << "[ERROR] Internal Server Error" << std::endl;
-// 		responseObj = handler.handleInternalServerError();
-// 	}
-
-// 	std::string response = responseObj.toString();
-// 	send(clientSock, response.c_str(), response.size(), 0);
-
-// 	std::cout << "[RESPONSE STATUS] " << responseObj.getStatusCode() << std::endl;
-// 	std::cout << "-----------------------------------------------------\n" << std::endl;
-
-// 	close(clientSock);
-// }
-
