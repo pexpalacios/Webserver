@@ -18,9 +18,11 @@ As the subject let's you choose wichever content you prefer to display, we proud
 
 ![Amiwuevo](www/amiwuevo/images/gifs/base_idle.gif)
 
-Amiwuevo is your field companion during this exercise evaluation. As it's existence will abrutly end when your finish this assessment, you will have to nurture him, customize his clothes and help it overcome the dread of a futile existence and evade the absurd... Have fun!
+Amiwuevo is your field companion during this evaluation. As it's existence will abrutly end when your finish this assessment, you will have to nurture him, customize his clothes and help it overcome the dread of a futile existence and evade the absurd... Have fun!
 
 ## Instructions
+
+### Initial setup
 
 Clone the repository in your local machine
 
@@ -48,9 +50,114 @@ Or run with default .conf file (/config/default.conf)
 ./webserver
 ```
 
+### Server Configuration
+#### Setting an ip:port and server_name
+
 Once the server is running, go to your prefered web browser and enter the ip:port address of your choosing, as stablished in your .conf file
 
-For example, 
+For example, this basic server will display a "Hello World!" HTML page at url http://127.0.0.1:8080/ (or http://localhost:8080). Neat!
+
+```
+server {
+	listen 8080;
+	host 127.0.0.1;
+	server_name hello_world;
+	root ./www/hello_world;
+	index ./www/hello_world/index.html;
+	client_max_body_size 100Mb;
+}
+```
+
+You can also make a server listen to multiple ports, like 8080 and 8081, for example. It will display a web page if you call either http://127.0.0.1:8080 or http://127.0.0.1:8081
+
+```
+server {
+	listen 8080 8081;
+	host 127.0.0.1;
+	server_name hello_world;
+	root ./www/hello_world;
+	index ./www/hello_world/index.html;
+	client_max_body_size 100Mb;
+}
+```
+
+You can also run multiple servers with different ip:port...
+
+```
+server {
+	listen 8080;
+	host 127.0.0.1;
+	server_name hello_world;
+	root ./www/hello_world;
+	index ./www/hello_world/index.html;
+	client_max_body_size 100Mb;
+}
+
+server {
+	listen 8081;
+	host 127.0.0.1;
+	server_name hello_world_2;
+	root ./www/hello_world_2;
+	index ./www/hello_world_2/index.html;
+	client_max_body_size 100Mb;
+}
+```
+
+... or even the same ip:port! In this case, the server will be dictated by the Host header and the server_name, for example http://localhost:8080 and http://hello_world:8080 (so you'll need to configure your /etc/hosts file).
+
+```
+# http://localhost:8080
+server {
+	listen 8080;
+	host 127.0.0.1;
+	server_name locahost;
+	root ./www/localhost;
+	index ./www/localhost/index.html;
+	client_max_body_size 100Mb;
+}
+
+# http:://hello_world:8080
+server {
+	listen 8080;
+	host 127.0.0.1;
+	server_name hello_world;
+	root ./www/hello_world;
+	index ./www/hello_world/index.html;
+	client_max_body_size 100Mb;
+}
+```
+
+If multiple servers listen to the same ip:port and not Host header is specified (just a call to the ip:port, like http://127.0.0.1:8080), only the first server will be shown in the explorer
+
+
+```
+# With http://127.0.0.1:8080, only this first server will display in the browser
+server {
+	listen 8080;
+	host 127.0.0.1;
+	server_name locahost;
+	root ./www/localhost;
+	index ./www/localhost/index.html;
+	client_max_body_size 100Mb;
+}
+
+# This server will not be shown!
+server {
+	listen 8080;
+	host 127.0.0.1;
+	server_name hello_world;
+	root ./www/hello_world;
+	index ./www/hello_world/index.html;
+	client_max_body_size 100Mb;
+}
+```
+
+Also, if two servers have the same ip:port and server_name, only the first one will persist.
+
+#### Locations
+
+#### CGI
+
 
 ## Resources
 ### Documentation
