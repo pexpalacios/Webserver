@@ -16,7 +16,9 @@ In this project you will learn some useful skills in this areas:
 
 As the subject let's you choose wichever content you prefer to display, we proudly introduce you to Amiwuevo!
 
-![Amiwuevo](www/amiwuevo/images/gifs/base_idle.gif)
+<p align="center">
+	  <img src="www/amiwuevo/images/gifs/base_idle.gif"/>
+</p>
 
 Amiwuevo is your field companion during this evaluation. As it's existence will abrutly end when your finish this assessment, you will have to nurture him, customize his clothes and help it overcome the dread of a futile existence and evade the absurd... Have fun!
 
