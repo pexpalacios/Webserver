@@ -52,7 +52,40 @@ Or run with default .conf file (/config/default.conf)
 ./webserver
 ```
 
+If you come across some CGI issues while running the project default .conf file (most likely `can't find CGI_PATH`), you can install the neccesary dependencies (mostly Python and PHP) using `make dependencies` (remember to run sudo permissions)
+
+```
+make dependencies
+```
+
 ### Server Configuration
+
+#### Setting a basic configuration
+
+Ok, so now you have your server running! But what can you do with that? Well, let's try to configure a simple Hello World! html page.
+
+For a simple server configuration, you will have to specify a server object and list at lest these directives:
+
+- Listen: the port where this server will list on
+- Host: the ip direction where this server will list on. It must be a IPv4 compliant ip address.
+- Server Name: a name of your choosing to refer to this server
+- Root: the folder where you will store all the resources of your server, like html or image files
+- Index: the default page that the server will show. It must include the same path as root, and point to an index.html file
+- Client max body size: defines the maximun allowed size of the client request body
+
+So, a basic configuration will look like this
+
+```
+server {
+	listen 8080;
+	host 127.0.0.1;
+	server_name hello_world;
+	root ./www/hello_world;
+	index ./www/hello_world/index.html;
+	client_max_body_size 100Mb;
+}
+```
+
 #### Setting an ip:port and server_name
 
 Once the server is running, go to your prefered web browser and enter the ip:port address of your choosing, as stablished in your .conf file
@@ -154,12 +187,11 @@ server {
 }
 ```
 
-Also, if two servers have the same ip:port and server_name, only the first one will persist.
+Also, if two servers have the same ip:port and server_name, only the first one will persist. The rest won't be a part of the server.
 
 #### Locations
 
 #### CGI
-
 
 ## Resources
 ### Documentation
