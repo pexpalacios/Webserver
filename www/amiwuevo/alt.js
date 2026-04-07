@@ -21,14 +21,13 @@ window.onload = function()
 // 20260323 CHANGE BACKGROUND (CUSTOM UPLOAD)
 document.addEventListener('DOMContentLoaded', function()
 {
-	console.log("chnage bg");
 	const btn = document.querySelector('.change-bg-btn');
 	if (!btn)
 		console.log("btn");
 	const fileInput = document.getElementById("bgFileInput");
 	if (!fileInput)
 		console.log("input");
-	const content = document.querySelector('.content');
+	const content = document.querySelector('.main-content');
 	if (!content)
 		console.log("content");
 
@@ -102,7 +101,7 @@ document.addEventListener('DOMContentLoaded', function()
 //20260311 CARGAR BACKGROUND (AL INICIO Y DESPUÉS DE SUBIR/ELIMINAR)
 function loadBackground()
 {
-	const content = document.querySelector('.content');
+	const content = document.querySelector('.main-content');
 
 	fetch("/api/background")
 	.then(r => r.text())
@@ -114,3 +113,28 @@ function loadBackground()
 		content.style.backgroundImage = "url('" + bg + "?v=" + Date.now() + "')";
 	});
 }
+
+//405 button
+document.addEventListener('DOMContentLoaded', function()
+{
+	const btn = document.querySelector('.trigger-405');
+	if (!btn)
+	{
+		console.log("Button not found");
+		return;
+	}
+	btn.addEventListener('click', function(e)
+	{
+		e.preventDefault();
+		fetch('/api/name', 
+		{ 
+			method: 'UPDATE',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ key: 'value' })
+		}).then(res => 
+		{
+			if (!res.ok)
+			return;
+		});;
+	});
+});

@@ -6,7 +6,7 @@
 		<meta charset="utf-8">
 	</head>
 	<body>
-		<script src="script.js"></script>
+		<script src="alt.js"></script>
 		<!-- Empty div to give margin -->
 		<div class="left-content"></div>
 		<!-- main content div -->
@@ -17,27 +17,6 @@
 				<input type="text" id="nameInput" placeholder="Enter name" maxlength="30">
 				<button onclick="saveName()">Guardar</button>
 			</dialog>
-			<!-- <script>
-				const dialog = document.getElementById("dialogNameInput")
-				dialog.showModal()
-			</script> -->
-
-			<!-- Sound inputs -->
-			<audio id="bg-music" loop>
-				<source src="/sounds/music.mp3" type="audio/mpeg">
-			</audio>
-			<audio id="voice-sound">
-				<source src="/sounds/voice.mp3" type="audio/mpeg">
-			</audio>
-			<audio id="eat-sound">
-				<source src="/sounds/eat.mp3" type="audio/mpeg">
-			</audio>
-			<audio id="flush-sound">
-				<source src="/sounds/flush.mp3" type="audio/mpeg">
-			</audio>
-			<audio id="death-sound">
-				<source src="/sounds/death.mp3" type="audio/mpeg">
-			</audio>
 
 			<!-- Main amiwuevo visual content -->
 			<div class="amiwuevo-name default-text">
@@ -55,7 +34,7 @@
 					<button class="trigger-eat-btn"><img src="/images/icons/bowl-food-solid.svg" alt="give food"></button>
 					<button class="change-fit-btn"><img src="/images/icons/shirt-solid.svg" alt="change outfit"></button>
 					<button class="change-bg-btn"><img src="/images/icons/image-solid.svg" alt="change decor"></button>
-					<button class="kill-btn"><img src="/images/icons/xmark-solid.svg" alt="kill amiwuevo"></button>
+					<button class="kill-btn"><img src="/images/icons/skull-solid.svg" alt="kill amiwuevo"></button>
 				</div>
 			</div>
 			<!-- Dialogue box -->
@@ -70,7 +49,7 @@
 		<div class="right-content">
 			<a href="/redirect"><img src="/images/icons/arrow-turn-up-solid.svg" alt="internal redirect"></a>
 			<a href="/external"><img src="/images/icons/arrow-up-right-from-square-solid.svg" alt="external redirect"></a>
-			<a href="/"><img src="/images/icons/405-solid.svg" alt="error pages"></a>
+			<button class="trigger-405"><img src="/images/icons/405-solid.svg" alt="error pages"></button>
 			<a href="/images"><img src="/images/icons/image-solid.svg" alt="images"></a>
 		</div>
 	</body>

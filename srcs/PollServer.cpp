@@ -163,7 +163,7 @@ void PollServer::handleClientConnection(int clientSock, Server& server)
 
 	try
 	{
-		responseObj = handler.handleRequest(request);
+		responseObj = handler.handleRequest(request, server);
 	}
 	catch (...)
 	{

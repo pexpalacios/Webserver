@@ -306,12 +306,32 @@ Response RequestHandler::handleGet(const Request &request)
 }
 
 
+int checkMethod(Request request, Server& server)
+{
+	std::vector<LocationConfig> locs = server.getLocations();
+
+	for (std::vector<LocationConfig>::iterator it = locs.begin(); it != locs.end(); ++it)
+	{
+		std::vector<std::string> methods = it->getMethods();
+		for (std::vector<std::string>::iterator ite = methods.begin(); ite != methods.end(); ++ite)
+		{
+			if (request.getMethod() == *ite)
+				return (true);
+		}
+	}
+	return (false);
+}
+
 // 20260223 - switched to route requests based on HTTP method
 //  main -> server.run() -> handleClientConnection() -> handleRequest
-Response RequestHandler::handleRequest(const Request &request)
+Response RequestHandler::handleRequest(const Request &request, Server& server)
 {
 	std::cout << "[METHOD RECEIVED] " << request.getMethod() << std::endl;
 	std::cout << "[PATH RECEIVED] " << request.getPath() << std::endl;
+
+	if (!checkMethod(request, server))
+		return(buildErrorResponse(405));
+
 	if (request.getMethod() == "GET")
 		return handleGet(request);
 	else if (request.getMethod() == "POST")

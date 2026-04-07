@@ -13,7 +13,7 @@ class RequestHandler
 {
 public:
 	RequestHandler(const Server& server);
-	Response	handleRequest(const Request& request);
+	Response	handleRequest(const Request& request, Server& server);
 	Response	handleBadRequest();
 	Response	handleInternalServerError();
 
