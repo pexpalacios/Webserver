@@ -7,6 +7,15 @@ Server::Server() {}
 // This is actually wrong, remove
 Server::~Server() {}
 
+const std::string& Server::getServerName() const
+{return serverName;};
+
+const std::string& Server::getHost() const
+{return host;};
+
+const std::vector<int>& Server::getPorts() const
+{return ports;};
+
 const std::string& Server::getStaticRoot() const
 {return staticRoot;}
 
@@ -21,6 +30,9 @@ const std::vector<LocationConfig>& Server::getLocations() const
 
 const std::vector<int>& Server::getListenSockets() const
 {return listenSockets;}
+
+void Server::configureMaxBodySize(long long size)
+{_maxBodySize = size;}
 
 // 20260322 Alex: load struct addrinfo
 bool Server::loadAddrinfo(const std::string& ip, int port, struct addrinfo **servinfo)
@@ -99,6 +111,19 @@ void Server::listenOn(const std::string& ip, std::vector<int> ports)
 	}
 }
 
+//20250322 Alex: set ip addres
+// main -> server.configureServer -> server.setHost
+void	Server::setHost(const std::string& host)
+{
+	this->host = host;
+}
+
+//20250322 Alex: set vector<int> ports
+// main -> server.configureServer -> server.setHost
+void	Server::setPorts(const std::vector<int>& ports)
+{
+	this->ports = ports;
+}
 
 //20260212 Terto: define static root folder for serving static files (www/index.html)
 // main -> server.configureServer() -> server.setStaticRoot()
@@ -120,14 +145,22 @@ void Server::setErrorPage(int code, const std::string& filePath)
 	std::cout << "Error page " << code << " set to: " << filePath << std::endl;
 }
 
+//20260321 Alex: configures server_name for future storage to pollServer map<socket, Server>
+//main->server.configureName();
+void Server::configureServerName(const std::string &server_name)
+{
+	serverName = server_name;
+}
 
 //20260212 Terto: Configura IP, puerto, carpeta base e index
 // main -> server.configureServer() -> server.listenOn() + server.setStaticRoot()
-void Server::configureServer(const std::string& ip, std::vector<int> ports, const std::string& root, const std::string& indexFile)
+void Server::configureServer(const std::string& host, std::vector<int> ports, const std::string& root, const std::string& indexFile)
 {
 	try
 	{
-	listenOn(ip, ports);
+	setHost(host);
+	setPorts(ports);
+	// listenOn(ip, ports); Socket logic will be managed by pollServer
 	setStaticRoot(root, indexFile);
 	std::cout << " Root: " << root << " | Index: " << indexFile << std::endl;
 	}
@@ -183,9 +216,14 @@ void Server::configureErrorPages(const std::string& root, const std::vector<std:
 void Server::printFinishedServerInfo()
 {
 	std::cout << std::endl << "--- Finished Server Info ---" << std::endl << std::endl;
-	std::cout << "--- Listen Sockets---" << std::endl;
-	for (std::vector<int>::iterator it = listenSockets.begin(); it != listenSockets.end(); it++)
+	std::cout << "--- Server Name ---" << std::endl << getServerName() << std::endl;
+	std::cout << "--- Host ---" << std::endl << getHost() << std::endl;
+	std::cout << "--- Ports ---" << std::endl;
+	for (std::vector<int>::iterator it = ports.begin(); it != ports.end(); it++)
 		std::cout << *it << std::endl;
+	// std::cout << "--- Listen Sockets---" << std::endl;
+	// for (std::vector<int>::iterator it = listenSockets.begin(); it != listenSockets.end(); it++)
+	// 	std::cout << *it << std::endl;
 	std::cout << "--- Static Root ---" << std::endl << staticRoot << std::endl;
 	std::cout << "--- Index File ---" << std::endl << indexFile << std::endl;
 	std::cout << "--- Error Pages ---" << std::endl;

@@ -25,6 +25,17 @@ class ConfigParser
 		std::string omitSpaces(const std::string &str);
 	private:
 		void checkIpPortPairs(std::vector<ServerConfig> &servers);
+		// 20260325 Alex: small struct to check for reapeated ip:port server_name
+		// Believe me, it was this or use a very ugly std::set<std::pair<std::pair<std::string, int>, std::string> > seen_pairs;
+		struct ListenKey
+		{
+			std::string host;
+			int port;
+			std::string name;
+
+			bool operator<(const ListenKey &other) const;
+		};
+		
 };
 
 #endif

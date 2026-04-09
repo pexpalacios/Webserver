@@ -159,35 +159,47 @@ static void setServerBlockVars(ServerConfig &currentServer, const std::string &k
 // 20260320 Alex: checks all vector<ServerConfig> and deletes repeats of ip:port
 void ConfigParser::checkIpPortPairs(std::vector<ServerConfig> &servers)
 {
-	std::set<std::pair<std::string, int> > seen_pairs;
+	std::set<ListenKey> seen;
+	std::vector<ServerConfig> unique_servers;
 
 	std::vector<ServerConfig>::iterator it = servers.begin();
-	while (it != servers.end())
+	for (; it != servers.end(); it++)
 	{
 		bool is_dup = false;
 		const std::string &host = it->getHost();
 		const std::vector<int> &ports = it->getListen();
+		const std::string &name = it->getServerName();
 		
 		//Check every port this server listen on
 		for (size_t i = 0; i < ports.size(); ++i)
 		{
-			std::pair<std::string, int>  current_pair(host, ports[i]);
-			if (seen_pairs.find(current_pair) != seen_pairs.end())
+			ListenKey key;
+			key.host = host;
+			key.port = ports[i];
+			key.name = name;
+
+			if (seen.find(key) != seen.end())
 			{
-				std::cout  << "Conflict : " << host << ":" << ports[i] << std::endl;
+				std::cout  << "Conflict : " << host << ":" << ports[i] << name << std::endl;
 				is_dup = true;
 				break;
 			}
 		}
-		if (is_dup)
-			it = servers.erase(it);
-		else
+		if (!is_dup)
 		{
 			for(size_t i = 0; i < ports.size(); ++i)
-				seen_pairs.insert(std::make_pair(host, ports[i]));
-			++it;
+			{
+			ListenKey key;
+			key.host = host;
+			key.port = ports[i];
+			key.name = name;
+
+			seen.insert(key);
+			}
+			unique_servers.push_back(*it);
 		}
 	}
+	servers.swap(unique_servers);
 }
 
 void putInDefaultValues(ServerConfig &defaultServer, ServerConfig &currentServer)
@@ -314,7 +326,8 @@ std::vector<ServerConfig> ConfigParser::parse(const std::string &filename)
 			setServerBlockVars(defaultServer, key, tokens);
 		}
 	}
-	// Check for matching ip:port in ServerConfig vector
+	// Check for matching ip:port with same server_name in ServerConfig vector. 
+	// As we now do keys and return 1st result, is redundant. Delete for avoidind duplicates, or just default to first server
 	checkIpPortPairs(servers);
 	// These two check if the file is empty or missing brackets
 	if (inServer)
@@ -322,4 +335,14 @@ std::vector<ServerConfig> ConfigParser::parse(const std::string &filename)
 	if (!inServer && servers.empty())
 		throw(std::runtime_error("Config file is empty"));
 	return (servers);
+}
+
+// ListenKey Operators
+bool ConfigParser::ListenKey::operator<(const ListenKey &other) const
+{
+	if (this->host != other.host)
+		return this->host < other.host;
+	if (this->port != other.port)
+		return this->port < other.port;
+	return this->name < other.name;
 }

@@ -1,0 +1,10 @@
+<script>
+fetch('http://127.0.0.1:8001/index.html', {
+    headers: {
+        'X-Server-Name': 'hello_world'
+    }
+})
+.then(response => response.text())
+.then(data => console.log(data))
+.catch(err => console.error(err));
+</script>
