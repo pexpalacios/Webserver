@@ -14,13 +14,13 @@ In this project you will learn some useful skills in this areas:
 - Object-oriented programming
 - NGINX open source software
 
-As the subject let's you choose wichever content you prefer to display, we proudly introduce you to Amiwuevo!
+As the subject let's you choose whichever content you prefer to display, we proudly introduce you to Amiwuevo!
 
 <p align="center">
 	  <img src="www/amiwuevo/images/gifs/base_idle.gif"/>
 </p>
 
-Amiwuevo is your field companion during this evaluation. As it's existence will abrutly end when your finish this assessment, you will have to nurture him, customize his clothes and help it overcome the dread of a futile existence and evade the absurd... Have fun!
+Amiwuevo is your field companion during this evaluation. As it's existence will abruptly end when your finish this assessment, you will have to nurture him, customize his clothes and help it overcome the dread of a futile existence and evade the absurd... Have fun!
 
 ## Instructions
 
@@ -52,7 +52,7 @@ Or run with default .conf file (/config/default.conf)
 ./webserver
 ```
 
-If you come across some CGI issues while running the project default .conf file (most likely `can't find CGI_PATH`), you can install the neccesary dependencies (mostly Python and PHP) using `make dependencies` (remember to run sudo permissions)
+If you come across some CGI issues while running the project default .conf file (most likely `can't find CGI_PATH`), you can install the necessary dependencies (mostly Python and PHP) using `make dependencies` (remember to run sudo permissions)
 
 ```
 make dependencies
@@ -71,7 +71,8 @@ For a simple server configuration, you will have to specify a server object and 
 - Server Name: a name of your choosing to refer to this server
 - Root: the folder where you will store all the resources of your server, like html or image files
 - Index: the default page that the server will show. It must include the same path as root, and point to an index.html file
-- Client max body size: defines the maximun allowed size of the client request body
+- Client max body size: defines the maximum allowed size of the client request body
+- Location /: controls how the request of this URI is processed, mainly it's allowed_methods (Webserver only admits `GET`, `POST` and `DELETE`).
 
 So, a basic configuration will look like this
 
@@ -83,12 +84,16 @@ server {
 	root ./www/hello_world;
 	index ./www/hello_world/index.html;
 	client_max_body_size 100Mb;
+	location /
+	{
+		allow_methods GET POST DELETE;
+	}
 }
 ```
 
 #### Setting an ip:port and server_name
 
-Once the server is running, go to your prefered web browser and enter the ip:port address of your choosing, as stablished in your .conf file
+Once the server is running, go to your preferred web browser and enter the ip:port address of your choosing, as stablish in your .conf file
 
 For example, this basic server will display a "Hello World!" HTML page at url http://127.0.0.1:8080/ (or http://localhost:8080). Neat!
 
@@ -100,6 +105,10 @@ server {
 	root ./www/hello_world;
 	index ./www/hello_world/index.html;
 	client_max_body_size 100Mb;
+	location /
+	{
+		allow_methods GET POST DELETE;
+	}
 }
 ```
 
@@ -113,6 +122,10 @@ server {
 	root ./www/hello_world;
 	index ./www/hello_world/index.html;
 	client_max_body_size 100Mb;
+	location /
+	{
+		allow_methods GET POST DELETE;
+	}
 }
 ```
 
@@ -126,6 +139,10 @@ server {
 	root ./www/hello_world;
 	index ./www/hello_world/index.html;
 	client_max_body_size 100Mb;
+	location /
+	{
+		allow_methods GET POST DELETE;
+	}
 }
 
 server {
@@ -135,6 +152,10 @@ server {
 	root ./www/hello_world_2;
 	index ./www/hello_world_2/index.html;
 	client_max_body_size 100Mb;
+	location /
+	{
+		allow_methods GET POST DELETE;
+	}
 }
 ```
 
@@ -145,10 +166,14 @@ server {
 server {
 	listen 8080;
 	host 127.0.0.1;
-	server_name locahost;
+	server_name localhost;
 	root ./www/localhost;
 	index ./www/localhost/index.html;
 	client_max_body_size 100Mb;
+	location /
+	{
+		allow_methods GET POST DELETE;
+	}
 }
 
 # http:://hello_world:8080
@@ -159,6 +184,10 @@ server {
 	root ./www/hello_world;
 	index ./www/hello_world/index.html;
 	client_max_body_size 100Mb;
+	location /
+	{
+		allow_methods GET POST DELETE;
+	}
 }
 ```
 
@@ -170,13 +199,80 @@ If multiple servers listen to the same ip:port and not Host header is specified 
 server {
 	listen 8080;
 	host 127.0.0.1;
-	server_name locahost;
+	server_name hello_world;
+	root ./www/hello_world;
+	index ./www/hello_world/index.html;
+	client_max_body_size 100Mb;
+	location /
+	{
+		allow_methods GET POST DELETE;
+	}
+}
+
+# This server will not be shown unless you request for http://localhost:8080!
+server {
+	listen 8080;
+	host 127.0.0.1;
+	server_name localhost;
 	root ./www/localhost;
 	index ./www/localhost/index.html;
 	client_max_body_size 100Mb;
+	location /
+	{
+		allow_methods GET POST DELETE;
+	}
 }
 
-# This server will not be shown!
+
+```
+
+Also, if two servers have the same ip:port and server_name, only the first one will persist. The rest won't be a part of the server.
+
+#### Locations
+You are already familiar with the '/' location, which defines the behavior of the request URI (i.e http://hello_world:8080/). But serving just one static html file with plain text is to boring! With the location directive you can dictate others resources and folders that your server can make use of, like a location /images or a location /sound for media files, or a location /error for custom error pages. The sky is the limit!
+
+A location directive can hold the following parameters:
+
+- allow_methods: with HTTP methods are allowed in the request to an specific location
+- autoindex: switch this option to off or on if to product a directory listing to any request ending with the character \ 
+- root: set the root directory for the request
+- index: define which file will be used as index (must be an 'index.html' file)
+
+There's an example location for images
+
+```
+	location /images {
+		allow_methods GET POST DELETE;
+		autoindex on;
+		root ./www/hello_world;
+		index ./www/hello_word/images/index.html;
+		}
+```
+
+#### CGI
+
+Did you know that this webserver is more than capable to just serve an static site? It also can do stuff! Thanks to the Common Gateway Interface (CGI) you can run basics scripts and generate dynamic content. You just need to specify which scripts are gonna run, which path holds the necessary files to run it, and CGI will care of the rest
+
+Only to extra fields are necessary to configure a /cgi-location:
+- cgi_path: the path that holds the program you want to run (i.e /usr/bin/bash)
+- cgi_ext: the extension your script will use (i.e .sh)
+
+This is how a location /cgi-bin would be like:
+
+```
+	location /cgi-bin {
+		root ./www/hello_world;
+		autoindex off;
+		cgi_path /usr/bin/python3 /usr/bin/php /usr/bin/bash;
+		cgi_ext .py .php .sh;
+	}
+```
+
+#### TL;DR
+
+To run this Webserv, you will need to set a .conf file following NGINX grammar with a minimum of a server block that can hold multiple locations blocks and can stablish CGI support.
+
+```
 server {
 	listen 8080;
 	host 127.0.0.1;
@@ -184,14 +280,25 @@ server {
 	root ./www/hello_world;
 	index ./www/hello_world/index.html;
 	client_max_body_size 100Mb;
+
+	location / {
+		allow_methods GET POST DELETE;
+		autoindex on;
+		index ./www/hello_world/index.html;
+	}
+
+	location /images {
+		root ./www/hello_world;
+		autoindex on;
+		}
+
+	location /cgi-bin {
+		root ./www/hello_world;
+		cgi_path /usr/bin/python3 /usr/bin/php /usr/bin/bash;
+		cgi_ext .py .php .sh;
+	}
 }
 ```
-
-Also, if two servers have the same ip:port and server_name, only the first one will persist. The rest won't be a part of the server.
-
-#### Locations
-
-#### CGI
 
 ## Resources
 ### Documentation
