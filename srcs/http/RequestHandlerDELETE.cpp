@@ -42,7 +42,7 @@ Response RequestHandler::handleDeleteUploadedBackground() const
 	if (!db.is_open())
 		return buildErrorResponse(500);
 
-	db << "images/backgrounds/background.jpg" << std::endl;
+	db << "images/backgrounds/background_room.png" << std::endl;
 	db.close();
 
 	std::cout << "[UPDATE] background reset to default" << std::endl << std::endl;

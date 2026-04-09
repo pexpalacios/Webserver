@@ -178,7 +178,7 @@ void PollServer::run(){
 
 // 20260319 Alex: Accept() new connection and added to the pollfd and map<socket, Server>
 // main -> server.run() -> handleClientConnection()
-void PollServer::handleNewConnection(int listenSock, Server& server)
+void PollServer::handleNewConnection(int listenSock)
 {
 	struct sockaddr_in clientAddr;
 	socklen_t clientLen = sizeof(clientAddr);
@@ -294,7 +294,7 @@ void PollServer::handleClientConnection(int clientSock)
 
 	try
 	{
-		responseObj = handler.handleRequest(request, server);
+		responseObj = handler.handleRequest(request, *chosenServer);
 	}
 	catch (...)
 	{
@@ -369,7 +369,7 @@ std::string PollServer::recvRequest(int clientSock)
 		}
 		else
 		{
-			std::cerr << "recv() failed: " << std::endl;
+			std::cerr << "recv() failed: " << strerror(errno) << std::endl;
 			return "";
 		}
 	}

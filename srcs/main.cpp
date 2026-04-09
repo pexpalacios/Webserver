@@ -22,12 +22,12 @@ int main(int ac, char **av)
 
 
 		// Check server .conf Files
-		std::cout << "===Server conf file===" << std::endl << std::endl;
-		for (size_t i = 0; i < conf.size(); i++){
-			std::cout << std::endl << "===Server " << i << "===" << std::endl;
-			conf[i].printServer();
-		}
-		std::cout << "===End conf file===" << std::endl << std::endl;
+		// std::cout << "===Server conf file===" << std::endl << std::endl;
+		// for (size_t i = 0; i < conf.size(); i++){
+		// 	std::cout << std::endl << "===Server " << i << "===" << std::endl;
+		// 	conf[i].printServer();
+		// }
+		// std::cout << "===End conf file===" << std::endl << std::endl;
 
 
 		// Store Server class into an array

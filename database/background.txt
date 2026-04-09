@@ -1,1 +1,1 @@
-images/backgrounds/background.jpg
+images/backgrounds/background_room.png

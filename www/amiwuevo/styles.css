@@ -92,9 +92,6 @@ body {
 }
 
 .music-credits {
-	display:flex;
-	flex-direction: row;
-	align-items: center;
 
 	background-color: var(--color-green);
 	border-radius: 0 5rem 5rem 0;
@@ -105,6 +102,12 @@ body {
 	width: 350px;
 	margin-top: 30px;
 	padding: 5px;
+}
+
+.music-credits a {
+	display:flex;
+	flex-direction: row;
+	align-items: center;
 }
 
 .left-side {

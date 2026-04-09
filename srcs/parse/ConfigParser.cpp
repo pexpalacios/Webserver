@@ -217,7 +217,7 @@ void putInDefaultValues(ServerConfig &defaultServer, ServerConfig &currentServer
 	if (currentServer.getIndex().empty())
 		currentServer.setIndex(defaultServer.getIndex());
 
-	// Set error pages thta might not exist in servers but do in default
+	// Set error pages that might not exist in servers but do in default
 	const std::vector<std::string> &defaultErrors = defaultServer.getErrorPage();
 	std::vector<std::string> serverErrors = currentServer.getErrorPage();
 

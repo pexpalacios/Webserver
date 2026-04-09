@@ -154,7 +154,7 @@ document.addEventListener('DOMContentLoaded', function()
 		.then(r => r.text())
 		.then(path => {
 
-			if (path.includes("images/backgrounds/background.jpg"))
+			if (path.includes("images/backgrounds/background_room.png"))
 			{
 				fileInput.click();
 			}
