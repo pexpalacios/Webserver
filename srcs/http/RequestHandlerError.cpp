@@ -5,15 +5,16 @@
 Response RequestHandler::handleBadRequest()
 {return buildErrorResponse(400);}
 
+// 20260223 - Basic method for not allowed response
+// main -> handleRequest -> methodNotAllowed
+Response RequestHandler::methodNotAllowed()
+{return buildErrorResponse(405);}
+
 // 20260303 - Internal server error response builder, used for 500 errors and as a fallback for other error responses
 // main -> server.run() -> handleClientConnection() -> handleRequest -> handleGet/handlePost/handleDelete -> handleInternalServerError
 Response RequestHandler::handleInternalServerError()
 {return buildErrorResponse(500);}
 
-// 20260223 - Basic method for not allowed response
-// main -> handleRequest -> methodNotAllowed
-Response RequestHandler::methodNotAllowed()
-{return buildErrorResponse(405);}
 
 //20260223 - Implemented basic GET request handling, including file reading and response generation.
 // main -> server.run() -> handleClientConnection() -> handleRequest -> handleGet/handlePost/handleDelete -> isPathSafe

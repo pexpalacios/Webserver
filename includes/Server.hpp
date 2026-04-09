@@ -23,10 +23,12 @@ public:
 	void		configureServer(const std::string& ip, std::vector<int> ports, const std::string& root, const std::string& indexFile);
 	void		configureLocations(const std::vector<LocationConfig>& locations);
 	void		configureErrorPages(const std::string& root, const std::vector<std::string>& errorPaths);
+	void		configureMaxBodySize(long long maxSize);
 	void		handleNewConnection(int listenSock, std::vector<struct pollfd>& fds);
-	void		handleClientConnection(int clientSock, Server& server);
+	//void		handleClientConnection(int clientSock, Server& server);
 	std::string	recvRequest(int clientSock);
-	void		run();	
+	bool		checkMaxSize(long long contentLength) const;
+	//void		run();	
 
 	const std::string&	getServerName() const;
 	const std::string&	getHost() const;
@@ -57,6 +59,7 @@ private:
 	std::string 				indexFile;		// Archivo index (index.html)
 	std::map<int, std::string>	errorPages;		// Mapa de códigos de error y rutas a sus páginas
 	std::vector<LocationConfig>	locations;		// Configuraciones de ubicación (locations)
+	long long					_maxBodySize;	// Tamaño máximo del cuerpo de la solicitud
 };
 
 # endif

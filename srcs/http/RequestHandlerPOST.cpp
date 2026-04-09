@@ -68,7 +68,7 @@ Response RequestHandler::handleSetName(const Request& request)
 	std::cout << "[UPDATE] Name set to: " << name << std::endl;
 
 	Response res;
-	res.setStatusCode(200);
+	res.setStatusCode(201);
 	res.setBody("Name saved\n");
 	return res;
 }

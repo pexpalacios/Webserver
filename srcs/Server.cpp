@@ -31,6 +31,9 @@ const std::vector<LocationConfig>& Server::getLocations() const
 const std::vector<int>& Server::getListenSockets() const
 {return listenSockets;}
 
+void Server::configureMaxBodySize(long long size)
+{_maxBodySize = size;}
+
 // 20260322 Alex: load struct addrinfo
 bool Server::loadAddrinfo(const std::string& ip, int port, struct addrinfo **servinfo)
 {

@@ -176,8 +176,9 @@ void PollServer::run(){
 }
 
 
-// 20260331 Alex: accepts a new connection. Uses _listenerServer[fd] key to transfer the listenServers<Server*> to the new client
-void PollServer::handleNewConnection(int listenSock)
+// 20260319 Alex: Accept() new connection and added to the pollfd and map<socket, Server>
+// main -> server.run() -> handleClientConnection()
+void PollServer::handleNewConnection(int listenSock, Server& server)
 {
 	struct sockaddr_in clientAddr;
 	socklen_t clientLen = sizeof(clientAddr);
