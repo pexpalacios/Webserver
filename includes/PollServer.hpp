@@ -1,5 +1,5 @@
 #ifndef POLLSERVER_HPP
-	#define POLLSERVER_HPP
+# define POLLSERVER_HPP
 
 #include "library.hpp"
 #include "parse/ConfigParser.hpp"
@@ -16,7 +16,7 @@
 class PollServer
 {
 public:
-	// Init / destructor
+	// Init / destructor, need to create OCF
 	PollServer();
 	PollServer(std::vector<Server>);
 	~PollServer();
@@ -26,15 +26,31 @@ public:
 	void run();
 
 private:
-	std::map<int, Server*> _pollServer; // Store a vector pair of socketFD and Server
-	std::vector<struct pollfd> _pollFd;
-	std::vector<int> _listenSockets;
-	std::vector<Server> _servers;
+	// Members struct
+	struct ListenerKey
+	{
+		std::string				_host;
+		int						_port;
 
-	// Methods
-	void handleNewConnection(int listenSock, Server& owner);
-	void handleClientConnection(int listenSock, Server& owner);
+		bool operator<(const ListenerKey& other) const;
+	};
 
+	// Members
+	std::vector<Server>								_servers; // Array of Servers after parsing
+	std::map<ListenerKey, std::vector<Server*> >	_listeners; // A map of the ListenerKey(Host:Port) and the array of vector that listen to that key
+	std::map<int, std::vector<Server*> >			_listenerServers; // Map of listen sockets and the servers associated to each one
+	std::map<int, std::vector<Server*> >			_clientCandidates; // Map of client sockets and the Servers associated to each one
+	std::vector<struct pollfd>						_pollFds; // Fds to poll()
+
+	// Member function
+	int createListenSocket(const std::string& host, int port);
+	bool loadAddrInfo(const std::string& host, int port, struct addrinfo **servinfo);
+	void handleNewConnection(int listenSock);
+	void handleClientConnection(int clientSock);
+	std::string recvRequest(int clientSock);
+	// Cleanup
+	void cleanup();
+	void removePollFd(int fd);
 };
 
 # endif

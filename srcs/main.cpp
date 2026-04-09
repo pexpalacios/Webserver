@@ -36,6 +36,7 @@ int main(int ac, char **av)
 		{
 			Server 			server;
 			std::vector<int> ports = conf[i].getListen();
+			server.configureServerName(conf[i].getServerName());
 			server.configureServer(conf[i].getHost(), ports, conf[i].getRoot(), conf[i].getIndex());
 			server.configureErrorPages(conf[i].getRoot(), conf[i].getErrorPage());
 			server.configureLocations(conf[i].getLocations());
@@ -55,11 +56,15 @@ int main(int ac, char **av)
 		std::cerr << "Error in configure server:\n" << e.what() << std::endl;
 		return (1);
 	}
-	catch (const std::exception& e)
+	catch (const std::invalid_argument& e)
 	{
 		std::cerr << "Error in config parsing:\n" << e.what() << std::endl;
 		return (1);
 	}
-
+	catch (const std::exception& e)
+	{
+		std::cerr << "Another type of error occurred:\n" << e.what() << std::endl;
+		return (1);
+	}
 	return 0;
 }

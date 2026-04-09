@@ -106,7 +106,7 @@ std::string Server::recvRequest(int clientSock)
 		}
 		else
 		{
-			std::cerr << "recv() failed" << std::endl;
+			std::cerr << "recv() failed: " << std::endl;
 			return "";
 		}
 	}
