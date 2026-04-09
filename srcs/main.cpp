@@ -39,6 +39,7 @@ int main(int ac, char **av)
 			server.configureServer(conf[i].getHost(), ports, conf[i].getRoot(), conf[i].getIndex());
 			server.configureErrorPages(conf[i].getRoot(), conf[i].getErrorPage());
 			server.configureLocations(conf[i].getLocations());
+			server.configureMaxBodySize(conf[i].getClientMaxSize());
 			server.printFinishedServerInfo();
 			server_array.push_back(server);
 		}
@@ -49,15 +50,16 @@ int main(int ac, char **av)
 		pollServer.run();
 		
 	} 
-	catch (const std::exception& e)
-	{
-		std::cerr << "Error in config parsing:\n" << e.what() << std::endl;
-		return (1);
-	}
 	catch (const std::runtime_error& e)
 	{
 		std::cerr << "Error in configure server:\n" << e.what() << std::endl;
 		return (1);
 	}
+	catch (const std::exception& e)
+	{
+		std::cerr << "Error in config parsing:\n" << e.what() << std::endl;
+		return (1);
+	}
+
 	return 0;
 }

@@ -1,8 +1,23 @@
 #include "../includes/Server.hpp"
 #include "../includes/http/RequestHandler.hpp"
 
+
+//20260325 - Implemented request receiving and parsing logic, with error handling for invalid requests and internal server errors.
+// main -> server.run() -> handleClientConnection() -> checkMaxSize()
+bool Server::checkMaxSize(long long contentLength) const
+{
+	if (contentLength < 0)
+		return false;
+
+	if (contentLength > _maxBodySize)
+		return false;
+
+	return true;
+}
+
+
 //20260311 - Implemented request receiving and parsing logic, with error handling for invalid requests and internal server errors.
-// main -> server.run() -> handleClientConnection() -> recvRequest -> recv() + parse + handleRequest
+// main -> server.run() -> handleClientConnection() -> recvRequest
 std::string Server::recvRequest(int clientSock)
 {
 	char buffer[4096];
@@ -36,7 +51,40 @@ std::string Server::recvRequest(int clientSock)
 							start++;
 
 						size_t end = raw.find("\r\n", start);
-						contentLength = std::atoi(raw.substr(start, end - start).c_str());
+						std::string lenStr = raw.substr(start, end - start);
+
+						long long contentLengthLL = 0;
+						std::istringstream iss(lenStr);
+
+						if (!(iss >> contentLengthLL) || contentLengthLL < 0)
+						{
+							std::cerr << "[ERROR] Invalid Content-Length" << std::endl;
+							return "";
+						}
+
+						std::cout << "[CONTENT-LENGTH] " << contentLengthLL << std::endl;
+
+						// 20260325 Terto: Check if content length exceeds maximum allowed size
+						if (!checkMaxSize(contentLengthLL))
+						{
+							std::cout << "[ERROR] Payload Too Large (early)" << std::endl;
+
+							Response res;
+							res.setStatusCode(413);
+							res.setHeader("Content-Type", "text/html");
+							res.setBody("Payload too large\n");
+
+							std::string responseStr = res.toString();
+							send(clientSock, responseStr.c_str(), responseStr.size(), 0);
+
+							std::cout << "[RESPONSE STATUS] 413" << std::endl;
+							std::cout << "-----------------------------------------------------\n" << std::endl;
+
+							close(clientSock);
+							return "";
+						}
+
+						contentLength = static_cast<size_t>(contentLengthLL);
 					}
 
 					if (contentLength == 0)
@@ -58,10 +106,7 @@ std::string Server::recvRequest(int clientSock)
 		}
 		else
 		{
-			if (errno == EAGAIN || errno == EWOULDBLOCK)
-				continue;
-
-			std::cerr << "recv() failed: " << strerror(errno) << std::endl;
+			std::cerr << "recv() failed" << std::endl;
 			return "";
 		}
 	}
@@ -69,7 +114,8 @@ std::string Server::recvRequest(int clientSock)
 	return raw;
 }
 
-
+// Cambiado por el uso de PollServer, ahora el manejo de conexiones se hace ahí, no en Server
+/*
 //20260311 - Implemented request receiving and parsing logic, with error handling for invalid requests and internal server errors.
 // main -> server.run() -> handleClientConnection()
 void Server::handleClientConnection(int clientSock, Server& server)
@@ -123,3 +169,4 @@ void Server::handleClientConnection(int clientSock, Server& server)
 
 	close(clientSock);
 }
+*/
