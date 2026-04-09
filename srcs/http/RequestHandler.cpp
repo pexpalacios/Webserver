@@ -305,7 +305,7 @@ Response RequestHandler::handleGet(const Request &request)
 	return buildFileResponse(content, filePath);
 }
 
-
+// 20260407 - made this extra function to check if a given method is allowed by the server, previously, this was not checked
 int checkMethod(Request request, Server& server)
 {
 	std::vector<LocationConfig> locs = server.getLocations();
@@ -330,7 +330,7 @@ Response RequestHandler::handleRequest(const Request &request, Server& server)
 	std::cout << "[PATH RECEIVED] " << request.getPath() << std::endl;
 
 	if (!checkMethod(request, server))
-		return(buildErrorResponse(405));
+		return(methodNotAllowed());
 
 	if (request.getMethod() == "GET")
 		return handleGet(request);
@@ -339,5 +339,5 @@ Response RequestHandler::handleRequest(const Request &request, Server& server)
 	else if (request.getMethod() == "DELETE")
 		return handleDelete(request);
 	else
-		return methodNotAllowed(); // Protection 405 → Method Not Allowed
+		return methodNotAllowed();
 }
