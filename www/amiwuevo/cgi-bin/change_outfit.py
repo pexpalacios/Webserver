@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os
 
+print("Python CGI executed\n")
 print("Content-Type: text/plain\n")
 
 #Get all outfits into an array

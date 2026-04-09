@@ -1,13 +1,32 @@
+window.onbeforeunload = function()
+{
+	console.log("onclose");
+	isAlive().then(val => 
+		{
+			if (val === "1")
+				deathSound();
+		});
 
-// Cargar nombre al iniciar
+		fetch('/cgi-bin/change_status.sh').then(response => 	
+		{
+			console.log("");
+			if (!response.ok)
+				throw new Error("CGI Error");
+			window.location.href = "alt.html";
+			return (response.text());
+		});
+};
+
 window.onload = function() 
 {
 	fetch('/api/name')
 	.then(response => {
-		if (!response.ok) throw new Error();
-		return response.text();
+		if (!response.ok) 
+			throw (new Error());
+		return (response.text());
 	})
-	.then(name => {
+	.then(name => 
+	{
 		if (name)
 			document.getElementById("display-name").textContent = name;
 		else
@@ -15,6 +34,20 @@ window.onload = function()
 	})
 	.catch(() => {
 		document.getElementById("display-name").textContent = "amiwuevo name";
+	});
+
+	fetch('/api/alive').then(response => 
+	{
+		if (!response.ok)
+			throw (new Error());
+		return (response.text());
+	}).then(alive => 
+	{
+		if (alive)
+		{
+			if (alive.trim() === '0') 
+				window.location.href = "alt.html";
+		}
 	});
 
 	fetch('/cgi-bin/get_outfit.py').then(response => 
@@ -105,7 +138,7 @@ document.addEventListener('DOMContentLoaded', function()
 	const fileInput = document.getElementById("bgFileInput");
 	if (!fileInput)
 		console.log("input");
-	const content = document.querySelector('.content');
+	const content = document.querySelector('.main-content');
 	if (!content)
 		console.log("content");
 
@@ -196,15 +229,14 @@ document.addEventListener('DOMContentLoaded', function()
 //20260311 CARGAR BACKGROUND (AL INICIO Y DESPUÉS DE SUBIR/ELIMINAR)
 function loadBackground()
 {
-	const content = document.querySelector('.content');
+	const content = document.querySelector('.main-content');
 
 	fetch("/api/background")
 	.then(r => r.text())
-	.then(bg => {
-
+	.then(bg =>
+	{
 		if (!bg)
 			return;
-
 		content.style.backgroundImage = "url('" + bg + "?v=" + Date.now() + "')";
 	});
 }
@@ -215,7 +247,7 @@ document.addEventListener('DOMContentLoaded', function()
 	const btn = document.querySelector('.trigger-eat-btn');
 	if (!btn)
 	{
-		console.log("Button ot found");
+		console.log("Button not found");
 		return;
 	}
 	btn.addEventListener('click', function(e)
@@ -281,7 +313,6 @@ function readFile() {
 	});
 };
 
-
 // 20260323 KILL AMIWUEVO (UPDATE ALIVE STATE)
 document.addEventListener('DOMContentLoaded', function()
 {
@@ -293,28 +324,50 @@ document.addEventListener('DOMContentLoaded', function()
 		return;
 	}
 
-	killBtn.addEventListener("click", function()
+	killBtn.addEventListener("click", function(e)
 	{
-		console.log("kill button click");
-
-		isAlive().then(val => {
-
+		e.preventDefault();
+		isAlive().then(val => 
+		{
 			if (val === "1")
 				deathSound();
-
-			fetch('/api/alive', {
-				method: 'POST',
-				body: "0"
-			})
-			.then(res => {
-				if (!res.ok)
-					console.log("Error updating alive state");
-			})
-			.catch(() => console.log("Network error"));
 		});
+
+		fetch('/cgi-bin/change_status.sh').then(response => 	
+		{
+			console.log("");
+			if (!response.ok)
+				throw new Error("CGI Error");
+			window.location.href = "alt.html";
+			return (response.text());
+		});
+
 	});
 });
 
+document.addEventListener('DOMContentLoaded', function()
+{
+	const btn = document.querySelector('.trigger-405');
+	if (!btn)
+	{
+		console.log("Button not found");
+		return;
+	}
+	btn.addEventListener('click', function(e)
+	{
+		e.preventDefault();
+		fetch('/api/name', 
+		{ 
+			method: 'UPDATE',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ key: 'value' })
+		}).then(res => 
+		{
+			if (!res.ok)
+			return;
+		});;
+	});
+});
 
 // 20260323 add eat, flush and death sounds (only if alive)
 function isAlive()
