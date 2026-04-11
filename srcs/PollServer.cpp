@@ -209,6 +209,7 @@ void PollServer::handleNewConnection(int listenSock)
 
 // 20260319 Alex: recv() client connection, Server handler generates response
 // Compares the Host header against all the vector<Servers*> associated to that client to determine wich server is calling to
+// 20260411 Terto: Cambios para manejar casos de recv() incompleto, cierre y errores (sin usar errno)
 void PollServer::handleClientConnection(int clientSock)
 {
 	// First, let's check if there's a clientcandidate with that socket
@@ -237,11 +238,31 @@ void PollServer::handleClientConnection(int clientSock)
 
 	// Let's receive the raw request
 	std::string raw = recvRequest(clientSock);
-	if (raw.empty())
+
+	// 20260411 Terto: request incompleta → NO cerrar conexión
+	if (raw == "")
+	{
+		return;
+	}
+
+	// 20260411 Terto: cliente cerró conexión
+	if (raw == "__CLOSE__")
 	{
 		removePollFd(clientSock);
 		close(clientSock);
 		_clientCandidates.erase(clientSock);
+		_partialRequests.erase(clientSock); // 🔥 limpiar buffer
+		return;
+	}
+
+	// 20260411 Terto: error real de socket
+	if (raw == "__ERROR__")
+	{
+		std::cerr << "[ERROR] recv() failed" << clientSock << std::endl;
+		removePollFd(clientSock);
+		close(clientSock);
+		_clientCandidates.erase(clientSock);
+		_partialRequests.erase(clientSock); // 🔥 limpiar buffer
 		return;
 	}
 	
@@ -261,7 +282,11 @@ void PollServer::handleClientConnection(int clientSock)
 		std::cout << "[RESPONSE STATUS] " << responseObj.getStatusCode() << std::endl;
 		std::cout << "-----------------------------------------------------\n" << std::endl;
 
+		// 20260411 Terto: Cierre correcto del bucle de lectura y limpieza de estructuras
+		removePollFd(clientSock);
 		close(clientSock);
+		_clientCandidates.erase(clientSock);
+		_partialRequests.erase(clientSock);
 		return;
 	}
 
@@ -271,16 +296,18 @@ void PollServer::handleClientConnection(int clientSock)
 	size_t colon = host.find(':');
 	if (colon != std::string::npos)
 		hostHeader = host.substr(0,colon);
+
 	std::cout << "===Host Header for request===" << std::endl;
 	std::cout << hostHeader << std::endl;
-	// This will work only if we parse host header and compare it agaisnt server_name
-	// We set a /etc/hosts/ key As we can do any of that, we'll try with Modify Header Value Firefox plugin.
+
 	std::cout << "=== Candidates size ===" << std::endl;
 	std::cout << candidates.size() << std::endl;
+
 	for (size_t i = 0; i < candidates.size(); ++i)
 	{
 		std::cout << "===Host Header Candidates===" << std::endl;
 		std::cout << candidates[i]->getServerName() << std::endl;
+
 		if (candidates[i]->getServerName() == hostHeader)
 		{
 			std::cout << "=== Candidate choosen ===" << std::endl;
@@ -311,16 +338,16 @@ void PollServer::handleClientConnection(int clientSock)
 	removePollFd(clientSock);
 	close(clientSock);
 	_clientCandidates.erase(clientSock);
+	_partialRequests.erase(clientSock);
 }
 
-// 20260330 Alex: same as Server::recvRequest()
+
+// 20260411 Terto: improved recvRequest with state distinction
 std::string PollServer::recvRequest(int clientSock)
 {
 	char buffer[4096];
-	std::string raw;
-
+	std::string& raw = _partialRequests[clientSock];
 	size_t contentLength = 0;
-	bool headersParsed = false;
 	size_t headerEnd = std::string::npos;
 
 	while (true)
@@ -330,51 +357,61 @@ std::string PollServer::recvRequest(int clientSock)
 		if (bytesRead > 0)
 		{
 			raw.append(buffer, bytesRead);
+			headerEnd = raw.find("\r\n\r\n");
 
-			if (!headersParsed)
+			if (headerEnd != std::string::npos)
 			{
-				headerEnd = raw.find("\r\n\r\n");
-
-				if (headerEnd != std::string::npos)
+				// 20260411 Terto: Content-Length from RAW
+				size_t pos = raw.find("Content-Length:");
+				if (pos != std::string::npos)
 				{
-					headersParsed = true;
+					size_t start = pos + 15;
+					while (start < raw.size() && raw[start] == ' ')
+						start++;
 
-					size_t pos = raw.find("Content-Length:");
-					if (pos != std::string::npos)
-					{
-						size_t start = pos + 15;
-						while (raw[start] == ' ')
-							start++;
-
-						size_t end = raw.find("\r\n", start);
-						contentLength = std::atoi(raw.substr(start, end - start).c_str());
-					}
-
-					if (contentLength == 0)
-						break;
+					size_t end = raw.find("\r\n", start);
+					contentLength = std::atoi(raw.substr(start, end - start).c_str());
 				}
-			}
 
-			if (headersParsed)
-			{
+				// 20260411 Terto: if content length is 0, we can consider the request complete after headers
+				if (contentLength == 0)
+				{
+					std::string complete = raw;
+					_partialRequests.erase(clientSock);
+					return complete;
+				}
+
 				size_t bodyStart = headerEnd + 4;
 
 				if (raw.size() >= bodyStart + contentLength)
-					break;
+				{
+					std::string complete = raw;
+					_partialRequests.erase(clientSock);
+					return complete;
+				}
 			}
 		}
 		else if (bytesRead == 0)
 		{
+			// 20260411 Terto: client cerró la conexión
+			_partialRequests.erase(clientSock);
+			return "__CLOSE__"; // 20260411 Terto: new state
+		}
+		else if (bytesRead < 0)
+		{
+			// 20260411 Terto: no more data to read (EAGAIN/EWOULDBLOCK)
 			break;
 		}
 		else
 		{
-			std::cerr << "recv() failed: " << strerror(errno) << std::endl;
-			return "";
+			// 20260411 Terto: real socket error
+			_partialRequests.erase(clientSock);
+			return "__ERROR__"; // 20260411 Terto: new state
 		}
 	}
 
-	return raw;
+	// 20260411 Terto: request incompleta → seguir esperando más datos
+	return "";
 }
 
 
