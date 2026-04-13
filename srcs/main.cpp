@@ -41,13 +41,18 @@ int main(int ac, char **av)
 			server.configureLocations(conf[i].getLocations());
 			
 			std::vector<LocationConfig> locations = server.getLocations();
+			bool found = false;
 			for (std::vector<LocationConfig>::iterator it = locations.begin(); it != locations.end(); ++it)
 			{
 				if (it->getPath() == "error")
+				{
 					server.configureErrorPages(conf[i].getRoot(), conf[i].getErrorPage());
-				else
-					server.configureErrorPages("", conf[i].getErrorPage());
+					found = true;
+					break;
+				}
 			}
+			if (!found)
+				server.configureErrorPages("", conf[i].getErrorPage());
 			
 			server.configureMaxBodySize(conf[i].getClientMaxSize());
 			//server.printFinishedServerInfo();
