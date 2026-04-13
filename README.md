@@ -8,7 +8,7 @@ Webserv is a 42 School project about writing an [HTTP (Hyper Text Transfer Proto
 In this project you will learn some useful skills in this areas:
 - Common Gateway Interface (CGI) interface specification
 - UNIX Network programming
-- TCP/ IP protocols
+- TCP/IP protocols
 - HTTP protocol
 - HTML language
 - Object-oriented programming
@@ -20,7 +20,7 @@ As the subject let's you choose whichever content you prefer to display, we prou
 	  <img src="www/amiwuevo/images/gifs/base_idle.gif"/>
 </p>
 
-Amiwuevo is your field companion during this evaluation. As it's existence will abruptly end when your finish this assessment, you will have to nurture him, customize his clothes and help it overcome the dread of a futile existence and evade the absurd... Have fun!
+Amiwuevo will be your loyal companion during this evaluation. As it's existence will abruptly end when your finish this assessment, you will have to nurture him, customize his clothes and help it overcome the dread of a futile existence and evade the absurd... Have fun!
 
 ## Instructions
 
@@ -38,7 +38,7 @@ Go to the folder and run the make command
 cd Webserver && make
 ```
 
-Here, your can run Webserver with a .conf file or your choosing as an argument (it must comply with the same rules as a NGINX .conf file), or run it without arguments (/config/default.conf file will be used)
+Here, your can run Webserver with a .conf file of your choosing as an argument (it must comply with the same rules as a NGINX .conf file), or run it without arguments and use the default configuration (/config/default.conf file will be used)
 
 Run with your desired .conf file
 
@@ -66,9 +66,9 @@ Ok, so now you have your server running! But what can you do with that? Well, le
 
 For a simple server configuration, you will have to specify a server object and list at lest these directives:
 
-- Listen: the port where this server will list on
-- Host: the ip direction where this server will list on. It must be a IPv4 compliant ip address.
-- Server Name: a name of your choosing to refer to this server
+- Listen: the port where this server will list on (ie.8080)
+- Host: the ip direction where this server will list on. It must be a IPv4 compliant ip address (i.e 127.0.0.1).
+- Server Name: a name of your choosing to refer to this server (it will be use for name-based virtual host logic inside your network)
 - Root: the folder where you will store all the resources of your server, like html or image files
 - Index: the default page that the server will show. It must include the same path as root, and point to an index.html file
 - Client max body size: defines the maximum allowed size of the client request body
@@ -93,7 +93,7 @@ server {
 
 #### Setting an ip:port and server_name
 
-Once the server is running, go to your preferred web browser and enter the ip:port address of your choosing, as stablish in your .conf file
+Once the server is running, go to your preferred web browser and enter the ip:port address of your choosing as stablish in your .conf file
 
 For example, this basic server will display a "Hello World!" HTML page at url http://127.0.0.1:8080/ (or http://localhost:8080). Neat!
 
@@ -112,7 +112,7 @@ server {
 }
 ```
 
-You can also make a server listen to multiple ports, like 8080 and 8081, for example. It will display a web page if you call either http://127.0.0.1:8080 or http://127.0.0.1:8081
+You can also make a server listen to multiple ports, like 8080 and 8081. In this case, this configuration will will display the same web page if you call either http://127.0.0.1:8080 or http://127.0.0.1:8081
 
 ```
 server {
@@ -159,7 +159,7 @@ server {
 }
 ```
 
-... or even the same ip:port! In this case, the server will be dictated by the Host header and the server_name, for example http://localhost:8080 and http://hello_world:8080 (so you'll need to configure your /etc/hosts file).
+... or even the same ip:port! In this case, the server shown will be dictated by the Host header and the server_name, for example http://localhost:8080 and http://hello_world:8080 (so you'll need to configure your /etc/hosts file with sudo permissions).
 
 ```
 # http://localhost:8080
@@ -226,15 +226,15 @@ server {
 
 ```
 
-Also, if two servers have the same ip:port and server_name, only the first one will persist. The rest won't be a part of the server.
+Also, if two servers have the same ip:port and server_name, only the first one will persist. The rest won't be a part of the configuration of this Webserv.
 
 #### Locations
-You are already familiar with the '/' location, which defines the behavior of the request URI (i.e http://hello_world:8080/). But serving just one static html file with plain text is to boring! With the location directive you can dictate others resources and folders that your server can make use of, like a location /images or a location /sound for media files, or a location /error for custom error pages. The sky is the limit!
+You are already familiar with the '/' location, which defines the behavior of the request URI (i.e http://hello_world:8080/). But serving just one static html file with plain text is too boring! With the location directive you can dictate others resources and folders that your server can make use of, like a location /images or a location /sound for media files, or a location /error for custom error pages. The sky is the limit!
 
 A location directive can hold the following parameters:
 
 - allow_methods: with HTTP methods are allowed in the request to an specific location
-- autoindex: switch this option to off or on if to product a directory listing to any request ending with the character \ 
+- autoindex: switch this option to off or on if if you want to access a directory listing to any request ending with the character \ 
 - root: set the root directory for the request
 - index: define which file will be used as index (must be an 'index.html' file)
 
@@ -251,9 +251,9 @@ There's an example location for images
 
 #### CGI
 
-Did you know that this webserver is more than capable to just serve an static site? It also can do stuff! Thanks to the Common Gateway Interface (CGI) you can run basics scripts and generate dynamic content. You just need to specify which scripts are gonna run, which path holds the necessary files to run it, and CGI will care of the rest
+Did you know that this webserver is more than capable to just serve an static site? It also can do stuff! Thanks to the Common Gateway Interface (CGI) you can run basics scripts and generate dynamic content. You just need to specify which scripts are gonna run, which path holds the necessary files to run it, and our CGI implementation will care of the rest.
 
-Only to extra fields are necessary to configure a /cgi-location:
+Only to extra fields are necessary to configure a /cgi-location from any other location:
 - cgi_path: the path that holds the program you want to run (i.e /usr/bin/bash)
 - cgi_ext: the extension your script will use (i.e .sh)
 
@@ -270,7 +270,7 @@ This is how a location /cgi-bin would be like:
 
 #### TL;DR
 
-To run this Webserv, you will need to set a .conf file following NGINX grammar with a minimum of a server block that can hold multiple locations blocks and can stablish CGI support.
+To run this Webserv you will need to set a .conf file following NGINX grammar with a minimum of a server block, which can hold multiple locations blocks and can run external scripts via CGI.
 
 ```
 server {
