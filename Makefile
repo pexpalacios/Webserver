@@ -60,4 +60,4 @@ dependencies:
 	$ sudo apt install bash
 
 
-.PHONY: all clean fclean re up
+.PHONY: all clean fclean re up dependencies
