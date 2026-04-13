@@ -52,4 +52,12 @@ fclean: clean
 
 re: fclean all
 
+dependencies: 
+	@echo "Installing dependencies (Python3, PHP, Bash)"
+	$ sudo apt update
+	$ sudo apt install phyton3 
+	$ sudo apt install php
+	$ sudo apt install bash
+
+
 .PHONY: all clean fclean re up
