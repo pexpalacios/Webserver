@@ -38,8 +38,22 @@ int main(int ac, char **av)
 			std::vector<int> ports = conf[i].getListen();
 			server.configureServerName(conf[i].getServerName());
 			server.configureServer(conf[i].getHost(), ports, conf[i].getRoot(), conf[i].getIndex());
-			server.configureErrorPages(conf[i].getRoot(), conf[i].getErrorPage());
 			server.configureLocations(conf[i].getLocations());
+			
+			std::vector<LocationConfig> locations = server.getLocations();
+			bool found = false;
+			for (std::vector<LocationConfig>::iterator it = locations.begin(); it != locations.end(); ++it)
+			{
+				if (it->getPath() == "error")
+				{
+					server.configureErrorPages(conf[i].getRoot(), conf[i].getErrorPage());
+					found = true;
+					break;
+				}
+			}
+			if (!found)
+				server.configureErrorPages("", conf[i].getErrorPage());
+			
 			server.configureMaxBodySize(conf[i].getClientMaxSize());
 			//server.printFinishedServerInfo();
 			server_array.push_back(server);

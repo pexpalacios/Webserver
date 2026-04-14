@@ -88,6 +88,8 @@ Response RequestHandler::buildErrorResponse(int statusCode) const
 		try
 		{
 			body = readFileContent(filePath);
+			if (body.empty())
+				throw std::runtime_error("Error page file is empty or not found");
 		}
 		catch (...)
 		{

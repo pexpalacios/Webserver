@@ -99,30 +99,43 @@ void ConfigParser::checkServerValues(ServerConfig &server)
 	if (!findServer(server.getServerName()))
 		throw std::invalid_argument("Server: " + server.getServerName() + " does not exist or is innaccesible");
 
-	std::vector<std::string> errorPages = server.getErrorPage();
-	for (size_t i = 0; i < errorPages.size(); i++)
-	{
-		errorPages[i] = cleanPageUrl(errorPages[i], server.getRoot());
-		if (!errorPages[i].empty() && !findPage(errorPages[i], server.getRoot()))
-			throw std::invalid_argument("Page: " + errorPages[i] + " does not exist in Server: " + server.getServerName());
-	}
-	server.setErrorPage(errorPages);
-
-	std::cout << "Mb: " << server.getClientMaxSize() << std::endl;
 	if (server.getClientMaxSize() == 0)
-		throw std::invalid_argument("Client max body size in server: " + server.getServerName() + " is zero");
+	throw std::invalid_argument("Client max body size in server: " + server.getServerName() + " is zero");
 	if (server.getClientMaxSize() > 1073741824) // 1GB max
-		throw std::invalid_argument("Client max body size in server: " + server.getServerName() + " exceeds maximum (1GB)");
-
+	throw std::invalid_argument("Client max body size in server: " + server.getServerName() + " exceeds maximum (1GB)");
+	
 	struct stat st;
 	if (lstat(server.getRoot().c_str(), &st) != 0 || !S_ISDIR(st.st_mode))
-		throw std::invalid_argument("Root directory: " + server.getRoot() + " does not exist or is not a directory");
+	throw std::invalid_argument("Root directory: " + server.getRoot() + " does not exist or is not a directory");
 	server.setIndex(cleanPageUrl(server.getIndex(), server.getRoot()));
-
+	
 	if (!findPage(server.getIndex(), server.getRoot()))
 		throw std::invalid_argument("Index page: " + server.getIndex() + " does not exist");
-
+		
+	std::vector<std::string> errorPages = server.getErrorPage();
 	std::vector<LocationConfig> locations = server.getLocations();
+	for (std::vector<LocationConfig>::iterator it = locations.begin(); it != locations.end(); ++it)
+	{
+		if (it->getPath() == "error")
+		{
+			for (size_t i = 0; i < errorPages.size(); i++)
+			{
+				errorPages[i] = cleanPageUrl(errorPages[i], server.getRoot());
+				if (!errorPages[i].empty() && !findPage(errorPages[i], server.getRoot()))
+					throw std::invalid_argument("Page: " + errorPages[i] + " does not exist in Server: " + server.getServerName());
+			}
+			server.setErrorPage(errorPages);
+		}
+		else
+		for (size_t i = 0; i < errorPages.size(); i++)
+		{
+			errorPages[i] = cleanPageUrl(errorPages[i], "");
+			if (!errorPages[i].empty() && !findPage(errorPages[i], ""))
+				throw std::invalid_argument("Page: " + errorPages[i] + " does not exist in Server: " + server.getServerName());
+		}
+		server.setErrorPage(errorPages);
+	}
+
 	for (std::vector<LocationConfig>::iterator it = locations.begin(); it != locations.end(); ++it)
 		checkLocationValues(*it, server.getRoot());
 }
