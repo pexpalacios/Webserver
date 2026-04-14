@@ -5,7 +5,11 @@ echo "Bash CGI executed"
 echo "Content-type: text/plain"
 echo ""
 
-ALIVE_FILE="/home/penpalac/Desktop/Webserv/database/alive.txt"
+#!Debug
+echo "---"
+ALIVE_FILE="database/alive.txt"
+echo "---"
+echo | cat $ALIVE_FILE;
 
 # Check write permission
 if [ ! -w "$ALIVE_FILE" ]; then

@@ -1,21 +1,24 @@
-window.onbeforeunload = function()
-{
-	console.log("onclose");
-	isAlive().then(val => 
-		{
-			if (val === "1")
-				deathSound();
-		});
-
-		fetch('/cgi-bin/change_status.sh').then(response => 	
-		{
-			console.log("");
-			if (!response.ok)
-				throw new Error("CGI Error");
-			window.location.href = "alt.html";
-			return (response.text());
-		});
-};
+// window.addEventListener('beforeunload', () =>
+// {
+// 	if (!this.performance.getEntriesByType("navigation")[0].type === "reload")
+// 	{
+// 		console.log("Nav i not a reload");
+// 		isAlive().then(val => 
+// 			{
+// 				if (val === "1")
+// 				{
+// 					deathSound();	
+// 				}
+// 			});
+// 			fetch('/cgi-bin/change_status.sh').then(response => 	
+// 			{
+// 				console.log("");
+// 				if (!response.ok)
+// 					throw new Error("CGI Error");
+// 				return (response.text());
+// 			});
+// 	}
+// });
 
 window.onload = function() 
 {
@@ -331,17 +334,16 @@ document.addEventListener('DOMContentLoaded', function()
 		{
 			if (val === "1")
 				deathSound();
+			fetch('/cgi-bin/change_status.sh').then(response =>
+				response.text().then(text => {
+					console.log("CGI change_status.sh output:", text); 	
+			
+				if (!response.ok)
+					throw new Error("CGI Error");
+				window.location.href = "alt.html";
+				return (response.text());
+			}));
 		});
-
-		fetch('/cgi-bin/change_status.sh').then(response => 	
-		{
-			console.log("");
-			if (!response.ok)
-				throw new Error("CGI Error");
-			window.location.href = "alt.html";
-			return (response.text());
-		});
-
 	});
 });
 
