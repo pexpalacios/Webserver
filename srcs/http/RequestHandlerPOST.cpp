@@ -168,22 +168,22 @@ Response RequestHandler::handleSetHope(const Request& request) const
 }
 
 
-// 20260323 - KILL THTE AMIWUEVO BY SETTING ALIVE TO 0
-// main -> server.run() -> handleClientConnection() -> handleRequest -> handlePost -> handleSetAlive
-Response RequestHandler::handleSetAlive() const
-{
-	std::ofstream file("./database/alive.txt");
+// // 20260323 - KILL THTE AMIWUEVO BY SETTING ALIVE TO 0
+// // main -> server.run() -> handleClientConnection() -> handleRequest -> handlePost -> handleSetAlive
+// Response RequestHandler::handleSetAlive() const
+// {
+// 	std::ofstream file("./database/alive.txt");
 
-	if (!file.is_open())
-		return buildErrorResponse(500);
+// 	if (!file.is_open())
+// 		return buildErrorResponse(500);
 
-	file << "0";
-	file.close();
+// 	file << "0";
+// 	file.close();
 
-	std::cout << "[UPDATE] alive set to 0 (dead)" << std::endl;
+// 	std::cout << "[UPDATE] alive set to 0 (dead)" << std::endl;
 
-	Response res;
-	res.setStatusCode(200);
-	res.setBody("OK");
-	return res;
-}
+// 	Response res;
+// 	res.setStatusCode(200);
+// 	res.setBody("OK");
+// 	return res;
+// }

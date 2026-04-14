@@ -42,6 +42,9 @@ private:
 	std::map<int, std::vector<Server*> >			_clientCandidates; // Map of client sockets and the Servers associated to each one
 	std::vector<struct pollfd>						_pollFds; // Fds to poll()
 
+	// 20260411 Terto: Buffer parcial por cliente para recv
+	std::map<int, std::string>						_partialRequests; // Buffer parcial por cliente para reconstruir requests fragmentadas
+
 	// Member function
 	int createListenSocket(const std::string& host, int port);
 	bool loadAddrInfo(const std::string& host, int port, struct addrinfo **servinfo);

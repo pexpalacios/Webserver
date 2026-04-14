@@ -108,7 +108,7 @@ Response RequestHandler::handlePost(const Request &request)
 		return handleFeed();
 
 	if (path == "/api/alive")
-		return handleSetAlive();
+		return getAlive();
 
 	return buildErrorResponse(404);
 }
