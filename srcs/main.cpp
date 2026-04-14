@@ -20,16 +20,6 @@ int main(int ac, char **av)
 		else 
 			conf = parser.parse("./config/default.conf");
 
-
-		// Check server .conf Files
-		// std::cout << "===Server conf file===" << std::endl << std::endl;
-		// for (size_t i = 0; i < conf.size(); i++){
-		// 	std::cout << std::endl << "===Server " << i << "===" << std::endl;
-		// 	conf[i].printServer();
-		// }
-		// std::cout << "===End conf file===" << std::endl << std::endl;
-
-
 		// Store Server class into an array
 		std::vector<Server> server_array;
 		for (size_t i = 0; i < conf.size(); i++)
@@ -55,7 +45,6 @@ int main(int ac, char **av)
 				server.configureErrorPages("", conf[i].getErrorPage());
 			
 			server.configureMaxBodySize(conf[i].getClientMaxSize());
-			//server.printFinishedServerInfo();
 			server_array.push_back(server);
 		}
 

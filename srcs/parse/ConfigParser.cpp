@@ -180,7 +180,7 @@ void ConfigParser::checkIpPortPairs(std::vector<ServerConfig> &servers)
 
 			if (seen.find(key) != seen.end())
 			{
-				std::cout  << "Conflict : " << host << ":" << ports[i] << name << std::endl;
+				std::cout  << "Conflict : " << host << ":" << ports[i] << " " << name << std::endl;
 				is_dup = true;
 				break;
 			}
@@ -204,7 +204,6 @@ void ConfigParser::checkIpPortPairs(std::vector<ServerConfig> &servers)
 
 void putInDefaultValues(ServerConfig &defaultServer, ServerConfig &currentServer)
 {
-	std::cout << "IN putInDeafultValues(). CurrentServer:" << currentServer.getServerName() << currentServer.getHost() << currentServer.getListen().at(0) << std::endl;
 
 	if (currentServer.getListen().empty())
 		currentServer.setListen(defaultServer.getListen());
@@ -223,27 +222,20 @@ void putInDefaultValues(ServerConfig &defaultServer, ServerConfig &currentServer
 	const std::vector<std::string> &defaultErrors = defaultServer.getErrorPage();
 	std::vector<std::string> serverErrors = currentServer.getErrorPage();
 
-	std::cout << "Default server currently has " << defaultErrors.size() << " error pages" << std::endl;
 	for (size_t d = 0; d < defaultErrors.size(); ++d)
 	{
 		std::string defaultCode = extractErrorCode(defaultErrors[d]);
 		bool found = false;
-		std::cout << "Looking for error code: " << defaultCode << std::endl;
 		for (size_t s = 0; s < serverErrors.size(); ++s)
 		{
 			if (extractErrorCode(serverErrors[s]) == defaultCode)
 			{
-				std::cout << "Code found in server!" << std::endl;
 				found = true;
 				break;
 			}
 		}
 		if (!found)
-		{
-			std::cout << "Could not found in server." << std::endl;
 			currentServer.addErrorPage(defaultErrors[d]);
-			std::cout << "ERROR PAGE " << defaultCode << " added to server " << currentServer.getServerName() << " with port " << currentServer.getHost() << ":" << currentServer.getListen().at(0) << std::endl;
-		}
 	}
 }
 

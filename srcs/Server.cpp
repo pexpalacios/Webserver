@@ -142,7 +142,6 @@ void Server::setStaticRoot(const std::string& root, const std::string& index)
 void Server::setErrorPage(int code, const std::string& filePath) 
 {
 	errorPages[code] = filePath;
-	std::cout << "Error page " << code << " set to: " << filePath << std::endl;
 }
 
 //20260321 Alex: configures server_name for future storage to pollServer map<socket, Server>
