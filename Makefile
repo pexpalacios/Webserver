@@ -30,6 +30,10 @@ all: $(NAME)
 $(NAME): $(OBJS)
 	@echo "Linking $(NAME)..."
 	$(CXX) $(CXXFLAGS) $(OBJS) -o $(NAME)
+	@echo "Making directories"
+	@mkdir -p www/amiwuevo/external
+	@mkdir -p www/amiwuevo/redirect
+	@mkdir -p www/amiwuevo/upload
 	@echo "✅ Build complete."
 
 %.o: %.cpp
@@ -48,4 +52,12 @@ fclean: clean
 
 re: fclean all
 
-.PHONY: all clean fclean re up
+dependencies: 
+	@echo "Installing dependencies (Python3, PHP, Bash)"
+	$ sudo apt update
+	$ sudo apt install phyton3 
+	$ sudo apt install php
+	$ sudo apt install bash
+
+
+.PHONY: all clean fclean re up dependencies

@@ -30,8 +30,24 @@
 				<button onclick="saveName()">Guardar</button>
 			</dialog>
 			<script>
-				const dialog = document.getElementById("dialogNameInput")
-				dialog.showModal()
+				const dialog = document.getElementById("dialogNameInput");
+
+				fetch("/api/name")
+				.then(res => res.text())
+				.then(name => {
+					console.log("RAW:", JSON.stringify(name));
+
+					if (name.trim() === "") {
+					console.log("EMPTY → showing modal");
+					dialog.showModal();
+					} else {
+					console.log("NOT EMPTY →", name);
+					}
+				})
+				.catch(err => {
+					console.error("FETCH ERROR:", err);
+					dialog.showModal();
+				});
 			</script>
 
 			<!-- Sound inputs -->

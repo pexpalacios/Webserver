@@ -30,10 +30,10 @@ window.onload = function()
 	})
 	.then(name => 
 	{
-		if (name)
+		// if (name)
 			document.getElementById("display-name").textContent = name;
-		else
-			document.getElementById("display-name").textContent = "amiwuevo name";
+		// else
+			// document.getElementById("display-name").textContent = "amiwuevo name";
 	})
 	.catch(() => {
 		document.getElementById("display-name").textContent = "amiwuevo name";
