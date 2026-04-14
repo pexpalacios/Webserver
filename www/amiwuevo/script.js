@@ -334,15 +334,17 @@ document.addEventListener('DOMContentLoaded', function()
 		{
 			if (val === "1")
 				deathSound();
-			fetch('/cgi-bin/change_status.sh').then(response =>
-				response.text().then(text => {
-					console.log("CGI change_status.sh output:", text); 	
-			
-				if (!response.ok)
-					throw new Error("CGI Error");
-				window.location.href = "alt.html";
-				return (response.text());
-			}));
+			setTimeout(() => {
+				fetch('/cgi-bin/change_status.sh').then(response =>
+					response.text().then(text => {
+						console.log("CGI change_status.sh output:", text); 	
+				
+					if (!response.ok)
+						throw new Error("CGI Error");
+					window.location.href = "alt.html";
+					return (response.text());
+				}));
+			}, 250);
 		});
 	});
 });
